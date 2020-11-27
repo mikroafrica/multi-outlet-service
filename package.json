@@ -1,0 +1,70 @@
+{
+  "name": "mikro-multi-outlet-service",
+  "version": "1.0.0",
+  "description": "Multi-outlet-service provides outlet owners the ability to manage their outlets from a central location",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "flow check && mocha -r @babel/register tests tests/unit/* --timeout 30000 -r dotenv/config",
+    "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/*",
+    "build": "npm run build",
+    "postinstall": "npm run build",
+    "start": "node src/index.js",
+    "heroku-prebuild": "bash preinstall.sh",
+    "heroku-postbuild": "bash postinstall.sh"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "git-format-staged -f 'prettier --stdin --stdin-filepath \"{}\"' '*.js' '*.jsx' '*.ts' '*.tsx' '*.css' '*.json' '*.gql'"
+    }
+  },
+  "keywords": [
+    "node",
+    "js"
+  ],
+  "engines": {
+    "node": "11.10.1"
+  },
+  "author": "Meshileya Seun (info@meshileyaseun.dev)",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/node": "^7.10.1",
+    "@babel/plugin-transform-async-to-generator": "^7.10.1",
+    "@babel/polyfill": "^7.10.1",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-flow": "^7.10.1",
+    "@babel/register": "^7.10.1",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-http": "^4.3.0",
+    "eslint": "^6.5.1",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "flow-bin": "^0.109.0",
+    "flow-copy-source": "^2.0.8",
+    "git-format-staged": "^2.1.0",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.11",
+    "mocha": "^6.2.3",
+    "prettier": "2.1.2",
+    "sinon": "^7.5.0",
+    "supertest": "^4.0.2"
+  },
+  "dependencies": {
+    "basic-auth": "^2.0.1",
+    "dotenv": "^8.2.0",
+    "joi": "^14.3.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.17",
+    "multer": "^1.4.2",
+    "redis": "^3.0.2",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
+    "restify": "^8.5.1",
+    "restify-clients": "^2.5.2",
+    "tsscmp": "^1.0.6",
+    "winston": "^3.2.1"
+  }
+}
