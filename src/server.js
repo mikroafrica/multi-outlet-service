@@ -2,7 +2,6 @@ import restify from "restify";
 import {secureRoute} from "./api/middleware.js";
 import dotenv from "dotenv";
 import {connect} from "./db.js";
-import auth from "./api/resources/user/index.js";
 import {initializeSwagger} from "./swagger.js";
 
 const server = restify.createServer({
@@ -22,7 +21,5 @@ dotenv.config();
 connect();
 
 initializeSwagger(server);
-
-auth({server: server, subBase: "/auth"});
 
 export default server;

@@ -64,6 +64,7 @@
     "request-promise": "^4.2.6",
     "restify": "^8.5.1",
     "restify-clients": "^2.5.2",
+    "restify-swagger-jsdoc": "^3.2.4",
     "tsscmp": "^1.0.6",
     "winston": "^3.2.1"
   }
