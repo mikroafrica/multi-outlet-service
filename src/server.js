@@ -2,7 +2,6 @@ import restify from "restify";
 import {secureRoute} from "./api/middleware.js";
 import dotenv from "dotenv";
 import {connect} from "./db.js";
-import {initializeSwagger} from "./swagger.js";
 
 const server = restify.createServer({
     name: "mk-multi-outlet-service"
@@ -19,7 +18,5 @@ server.use(restify.plugins.conditionalHandler({
 dotenv.config();
 
 connect();
-
-initializeSwagger(server);
 
 export default server;
