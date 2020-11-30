@@ -26,7 +26,7 @@ const schema = {
         type: String,
         required: [true, "Number of staff is required"],
     },
-    portraitPictureId: String,
+    profilePictureId: String,
     identificationId: String
 };
 

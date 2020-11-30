@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const schema = {
     outlet: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Outlet'
+        ref: 'outlet'
     },
     staffId: String
 };

@@ -1,10 +1,17 @@
 import mongoose from "mongoose";
+import {UserType} from "../user.type";
 
 const schema = {
-    outletOwnerId: String,
+    ownerId: String,
     firstName: String,
     lastName: String,
-    userType: String,
+    userType:  {
+        type: String,
+        enum: [
+            UserType.MANAGER,
+            UserType.SALES
+        ],
+    },
     gender: String,
     dateOfBirth: String,
     identificationId: String
