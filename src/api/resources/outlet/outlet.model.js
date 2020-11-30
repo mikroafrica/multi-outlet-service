@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const schema = {
-    outletOwnerId: String,
+    ownerId: String,
     outletId: String
 };
 
