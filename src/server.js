@@ -2,6 +2,7 @@ import restify from "restify";
 import { secureRoute } from "./api/middleware.js";
 import dotenv from "dotenv";
 import { connect } from "./db.js";
+import auth from "./api/resources/user/index.js";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -20,5 +21,7 @@ server.use(
 dotenv.config();
 
 connect();
+
+auth({ server: server, subBase: "/auth" });
 
 export default server;

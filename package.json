@@ -56,15 +56,11 @@
     "basic-auth": "^2.0.1",
     "dotenv": "^8.2.0",
     "joi": "^14.3.1",
-    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.17",
-    "multer": "^1.4.2",
-    "redis": "^3.0.2",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "restify": "^8.5.1",
     "restify-clients": "^2.5.2",
-    "restify-swagger-jsdoc": "^3.2.4",
     "tsscmp": "^1.0.6",
     "winston": "^3.2.1"
   }
