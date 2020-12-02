@@ -1,11 +1,11 @@
 export const UserType = {
-    ADMIN: 'ADMIN',
-    MANAGER: 'MANAGER',
-    SALES: 'SALES'
-}
+  ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
+  SALES: "SALES",
+};
 
 export const UserStatus = {
-    ACTIVE: 'ACTIVE',
-    INACTIVE: 'INACTIVE',
-    BLOCKED: 'BLOCKED'
-}
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  BLOCKED: "BLOCKED",
+};

@@ -1,4 +1,4 @@
 export const BusinessType = {
-    AGENT: 'AGENT',
-    MERCHANT: 'MERCHANT'
-}
+  AGENT: "AGENT",
+  MERCHANT: "MERCHANT",
+};

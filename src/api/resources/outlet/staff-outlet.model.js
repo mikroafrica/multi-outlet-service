@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
 const schema = {
-    outlet: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'outlet'
-    },
-    staffId: String
+  outlet: {
+    type: mongoose.Schema.ObjectId,
+    ref: "outlet",
+  },
+  staffId: String,
 };
 
-const staffOutletSchema = new mongoose.Schema(schema, {timeStamp: true});
+const staffOutletSchema = new mongoose.Schema(schema, { timeStamp: true });
 
-export const StaffOutlet = mongoose.model('staff_outlet', staffOutletSchema)
+export const StaffOutlet = mongoose.model("staff_outlet", staffOutletSchema);

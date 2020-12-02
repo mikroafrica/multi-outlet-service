@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 const schema = {
-    ownerId: String,
-    outletId: String
+  ownerId: String,
+  outletId: String,
 };
 
-const outletSchema = new mongoose.Schema(schema, {timeStamp: true});
+const outletSchema = new mongoose.Schema(schema, { timeStamp: true });
 
-export const Outlet = mongoose.model('outlet', outletSchema)
+export const Outlet = mongoose.model("outlet", outletSchema);
