@@ -9,15 +9,11 @@ const userAccountEmitter = new Emitter();
 userAccountEmitter.on(CLEAR_ACCOUNT_EVENT, function (userId) {
   deleteUserAccount(userId)
     .then((data) => {
-      logger.info(
-        `Temp user is successfully re-created with data [${JSON.stringify(
-          data
-        )}]`
-      );
+      logger.info(`Deleted user with [${JSON.stringify(data)}]`);
     })
     .catch((err) => {
       logger.error(
-        `Temp user with phone number [${phoneNumber}] and registration id [${registrationId}] failed to be created with error ${JSON.stringify(
+        `User with userId [${userId}] failed to be deleted with error ${JSON.stringify(
           err
         )} `
       );
