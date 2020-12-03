@@ -1,11 +1,13 @@
 import {
   resendVerificationEmail,
   signup,
+  login,
   validateVerificationEmail,
 } from "./user.controller.js";
 
 const auth = ({ server, subBase }) => {
   server.post(`${subBase}/signup`, signup);
+  server.post(`${subBase}/login`, login);
   server.post(`${subBase}/email-verification`, resendVerificationEmail);
   server.post(`${subBase}/email-validation`, validateVerificationEmail);
 };
