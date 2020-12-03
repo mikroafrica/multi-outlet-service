@@ -30,6 +30,10 @@ export const signupMultiOutletOwner = async (params) => {
 
       try {
         await AuthService.signup(authServiceSignUpParams(params, userId));
+        return Promise.resolve({
+          statusCode: OK,
+          data: outletOwnerData.data,
+        });
       } catch (e) {
         userAccountEmitter.emit(CLEAR_ACCOUNT_EVENT, userId);
         logger.error(
@@ -42,9 +46,6 @@ export const signupMultiOutletOwner = async (params) => {
           message: "Account creation failed. Please try again",
         });
       }
-
-      const verificationResponse = await sendVerificationEmail(userId);
-      return Promise.resolve(verificationResponse);
     })
     .catch((err) => {
       params = { ...params, password: "" };
