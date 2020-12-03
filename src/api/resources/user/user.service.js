@@ -105,6 +105,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
       return Promise.resolve({ statusCode: OK, data: loginResponse.data });
     } catch (e) {
       logger.error(`An error occurred while fetching user details login ${e}`);
+      console.log(e);
       if (e?.statusCode === 403) {
         return Promise.reject({
           statusCode: e?.statusCode,
@@ -334,7 +335,6 @@ export const changePassword = async ({ params }) => {
 
 const validateSignupParamsSchema = (params) => {
   const schema = Joi.object().keys({
-    referredCodeId: Joi.string().required(),
     personalPhoneNumber: Joi.string(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
@@ -347,7 +347,6 @@ const validateSignupParamsSchema = (params) => {
     state: Joi.string().required(),
     lga: Joi.string().required(),
     profileImageId: Joi.string(),
-    referralCode: Joi.string(),
     dob: Joi.string().required(),
   });
 
