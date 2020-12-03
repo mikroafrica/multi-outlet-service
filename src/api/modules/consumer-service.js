@@ -1,5 +1,5 @@
 import restify from "restify-clients";
-import { post, put } from "./request.js";
+import { post, put, get } from "./request.js";
 
 const restifyRequest = function () {
   const restifyClient = restify.createJSONClient({
@@ -15,40 +15,36 @@ const restifyRequest = function () {
   return restifyClient;
 };
 
-export const signup = async (params) => {
+export const signup = (params) => {
   const client = restifyRequest();
-
-  const path = {
-    path: "/user/create/OUTLET_OWNER",
-  };
+  const path = "/user/create/OUTLET_OWNER";
 
   return post({ client, path, params });
 };
 
-export const requestVerificationEmail = async (params) => {
+export const deleteUserAccount = (userId) => {
   const client = restifyRequest();
+  const path = `/user/${userId}/recreate-web`;
+  const params = {};
+  return put({ client, path, params });
+};
 
-  const path = {
-    path: "/user/email-verification",
+export const getUserDetails = async (userId) => {
+  const client = restifyRequest();
+  const path = `/user/${userId}/details`;
+  return await get({ client, path });
+};
 
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
+export const requestVerificationEmail = (params) => {
+  const client = restifyRequest();
+  const path = "/user/email-verification";
 
   return post({ client, path, params });
 };
 
-export const validateVerificationOtp = async (params) => {
+export const validateVerificationOtp = (params) => {
   const client = restifyRequest();
-
-  const path = {
-    path: "/user/email-validation",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
+  const path = "/user/email-validation";
 
   return post({ client, path, params });
 };

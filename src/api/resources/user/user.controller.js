@@ -3,11 +3,20 @@ import {
   sendVerificationEmail,
   validateEmail,
 } from "./user.service.js";
+import { OK } from "../../modules/status.js";
+import { loginMultiOutletOwner } from "./user.service.js";
 
 export const signup = (req, res) => {
   const params = req.body;
 
   signupMultiOutletOwner(params)
+    .then((data) => res.send(data))
+    .catch((error) => res.send(error));
+};
+
+export const login = (req, res) => {
+  const params = req.body;
+  loginMultiOutletOwner({ params })
     .then((data) => res.send(data))
     .catch((error) => res.send(error));
 };
