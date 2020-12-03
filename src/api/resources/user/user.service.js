@@ -31,7 +31,7 @@ export const signupMultiOutletOwner = async (params) => {
       try {
         await AuthService.signup(authServiceSignUpParams(params, userId));
         return Promise.resolve({
-          OK,
+          statusCode: OK,
           data: outletOwnerData.data,
         });
       } catch (e) {
