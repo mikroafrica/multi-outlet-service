@@ -177,6 +177,160 @@ export const validateEmail = async (params) => {
   }
 };
 
+export const requestResetPassword = async ({ params }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const validateSchema = validateRequestResetPasswordSchema(params);
+
+  if (validateSchema.error) {
+    logger.error(
+      `Invalid params during reset password request ${validateSchema.error.details[0].message}`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    const resetPasswordRequestResponse = await AuthService.resetPasswordRequest(
+      { username: params.email }
+    );
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: resetPasswordRequestResponse,
+    });
+  } catch (e) {
+    logger.error("An error occurred when requesting for password reset");
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.parse(e.message)?.message,
+    });
+  }
+};
+
+export const validateResetPasswordOtp = async ({ params }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const validateSchema = validateResetPasswordOtpSchema(params);
+
+  if (validateSchema.error) {
+    logger.error(
+      `Invalid params when validating reset password otp ${validateSchema.error.details[0].message}`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    const otpValidationResponse = await AuthService.validateOtpForPasswordReset(
+      params
+    );
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: otpValidationResponse,
+    });
+  } catch (e) {
+    logger.error("An error occurred when validating reset password otp");
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.parse(e.message)?.message,
+    });
+  }
+};
+
+export const resetPassword = async ({ params }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const validateSchema = validateResetPasswordSchema(params);
+
+  if (validateSchema.error) {
+    logger.error(
+      `Invalid params when resetting password ${validateSchema.error.details[0].message}`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    const resetPasswordResponse = await AuthService.resetPassword(params);
+    return Promise.resolve({
+      statusCode: OK,
+      data: resetPasswordResponse,
+    });
+  } catch (e) {
+    logger.error("An error occurred when resetting password");
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.parse(e.message)?.message,
+    });
+  }
+};
+
+export const changePassword = async ({ params }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const validateSchema = validateChangePasswordSchema(params);
+
+  if (validateSchema.error) {
+    logger.error(
+      `Invalid params when resetting password ${validateSchema.error.details[0].message}`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    const resetPasswordResponse = await AuthService.changePassword(params);
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: resetPasswordResponse,
+    });
+  } catch (e) {
+    logger.error("An error occurred when changing password");
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.parse(e.message)?.message,
+    });
+  }
+};
+
 const validateSignupParamsSchema = (params) => {
   const schema = Joi.object().keys({
     referredCodeId: Joi.string().required(),
@@ -203,6 +357,42 @@ const validateLoginSchema = (params) => {
   const schema = Joi.object().keys({
     email: Joi.string().required(),
     password: Joi.string().required(),
+  });
+
+  return Joi.validate(params, schema);
+};
+
+const validateRequestResetPasswordSchema = (params) => {
+  const schema = Joi.object().keys({
+    email: Joi.string().required(),
+  });
+
+  return Joi.validate(params, schema);
+};
+
+const validateResetPasswordOtpSchema = (params) => {
+  const schema = Joi.object().keys({
+    id: Joi.string().required(),
+    otp: Joi.string().required(),
+  });
+
+  return Joi.validate(params, schema);
+};
+
+const validateResetPasswordSchema = (params) => {
+  const schema = Joi.object().keys({
+    id: Joi.string().required(),
+    password: Joi.string().required(),
+  });
+
+  return Joi.validate(params, schema);
+};
+
+const validateChangePasswordSchema = (params) => {
+  const schema = Joi.object().keys({
+    userId: Joi.string().required(),
+    currentPassword: Joi.string().required(),
+    newPassword: Joi.string().required(),
   });
 
   return Joi.validate(params, schema);

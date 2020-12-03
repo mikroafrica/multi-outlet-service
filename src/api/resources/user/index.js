@@ -3,6 +3,10 @@ import {
   signup,
   login,
   validateVerificationEmail,
+  changePasswordRequest,
+  resetMultiOutletOwnerPassword,
+  resetPasswordRequest,
+  validateResetPassword,
 } from "./user.controller.js";
 
 const auth = ({ server, subBase }) => {
@@ -10,6 +14,10 @@ const auth = ({ server, subBase }) => {
   server.post(`${subBase}/login`, login);
   server.post(`${subBase}/email-verification`, resendVerificationEmail);
   server.post(`${subBase}/email-validation`, validateVerificationEmail);
+  server.post(`${subBase}/reset-password-request`, resetPasswordRequest);
+  server.put(`${subBase}/validate-reset-password`, validateResetPassword);
+  server.put(`${subBase}/reset-password`, resetMultiOutletOwnerPassword);
+  server.put(`${subBase}/change-password`, changePasswordRequest);
 };
 
 export default auth;

@@ -14,25 +14,45 @@ const restifyRequest = function () {
   return restifyClient;
 };
 
-export const signup = async (params) => {
+export const signup = (params) => {
   const client = restifyRequest();
+  const path = "/auth/create";
 
-  const path = {
-    path: "/auth/create",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
   return post({ client, path, params });
 };
 
-export const login = async (params) => {
+export const login = (params) => {
   const client = restifyRequest();
-  const path = {
-    path: "/auth/login",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  return await post({ client, path, params });
+  const path = "/auth/login";
+
+  return post({ client, path, params });
+};
+
+export const resetPasswordRequest = (params) => {
+  params.source = "mobile";
+  const client = restifyRequest();
+  const path = "/password/reset-request";
+
+  return post({ client, path, params });
+};
+
+export const validateOtpForPasswordReset = (params) => {
+  const client = restifyRequest();
+  const path = "/password/validate-forgot-password";
+
+  return put({ client, path, params });
+};
+
+export const resetPassword = (params) => {
+  const client = restifyRequest();
+  const path = "/password/reset-password-mobile";
+
+  return post({ client, path, params });
+};
+
+export const changePassword = (params) => {
+  const client = restifyRequest();
+  const path = "/password/change";
+
+  return put({ client, path, params });
 };
