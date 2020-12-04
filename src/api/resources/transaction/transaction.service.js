@@ -19,33 +19,34 @@ export const fetchUserTransactions = async ({
     });
   }
 
-  try {
-    const responseData = await TransactionService.fetchTransactions({
-      userId,
-      dateFrom,
-      dateTo,
-      page,
-      limit,
-      status,
-      type,
-      customerBillerId,
+  return TransactionService.fetchTransactions({
+    userId,
+    dateFrom,
+    dateTo,
+    page,
+    limit,
+    status,
+    type,
+    customerBillerId,
+  })
+    .then((responseData) => {
+      const transactionData = responseData.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: transactionData,
+      });
+    })
+    .catch((e) => {
+      logger.error(
+        `Error occurred while fetching transaction by user id ${userId} with error ${JSON.stringify(
+          e
+        )}`
+      );
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message:
+          JSON.parse(e.message).message ||
+          "Something went wrong. Please try again",
+      });
     });
-    const transactionData = responseData.data;
-    return Promise.resolve({
-      statusCode: OK,
-      data: transactionData,
-    });
-  } catch (e) {
-    logger.error(
-      `Error occurred while fetching transaction by user id ${userId} with error ${JSON.stringify(
-        e
-      )}`
-    );
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message:
-        JSON.parse(e.message).message ||
-        "Something went wrong. Please try again",
-    });
-  }
 };
