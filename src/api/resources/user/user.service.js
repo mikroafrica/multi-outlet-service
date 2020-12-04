@@ -143,7 +143,10 @@ export const sendVerificationEmail = async (userId) => {
     });
   } catch (e) {
     logger.error("An error occurred while sending verification email");
-    return Promise.reject({ statusCode: BAD_REQUEST, message: e });
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.parse(e.message)?.message,
+    });
   }
 };
 
@@ -174,7 +177,10 @@ export const validateEmail = async (params) => {
     });
   } catch (e) {
     logger.error("An error occurred while verifying OTP sent to email");
-    return Promise.reject({ statusCode: BAD_REQUEST, message: e?.message });
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.parse(e.message)?.message,
+    });
   }
 };
 
@@ -206,50 +212,10 @@ export const requestResetPassword = async ({ params }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: resetPasswordRequestResponse,
+      data: resetPasswordRequestResponse.data,
     });
   } catch (e) {
     logger.error("An error occurred when requesting for password reset");
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
-    });
-  }
-};
-
-export const validateResetPasswordOtp = async ({ params }) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "request body is required",
-    });
-  }
-
-  const validateSchema = validateResetPasswordOtpSchema(params);
-
-  if (validateSchema.error) {
-    logger.error(
-      `Invalid params when validating reset password otp ${validateSchema.error.details[0].message}`
-    );
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  try {
-    const otpValidationResponse = await AuthService.validateOtpForPasswordReset(
-      params
-    );
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: otpValidationResponse,
-    });
-  } catch (e) {
-    logger.error("An error occurred when validating reset password otp");
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -283,7 +249,7 @@ export const resetPassword = async ({ params }) => {
     const resetPasswordResponse = await AuthService.resetPassword(params);
     return Promise.resolve({
       statusCode: OK,
-      data: resetPasswordResponse,
+      data: resetPasswordResponse.data,
     });
   } catch (e) {
     logger.error("An error occurred when resetting password");
@@ -321,7 +287,7 @@ export const changePassword = async ({ params }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: resetPasswordResponse,
+      data: resetPasswordResponse.data,
     });
   } catch (e) {
     logger.error("An error occurred when changing password");
@@ -369,18 +335,9 @@ const validateRequestResetPasswordSchema = (params) => {
   return Joi.validate(params, schema);
 };
 
-const validateResetPasswordOtpSchema = (params) => {
-  const schema = Joi.object().keys({
-    id: Joi.string().required(),
-    otp: Joi.string().required(),
-  });
-
-  return Joi.validate(params, schema);
-};
-
 const validateResetPasswordSchema = (params) => {
   const schema = Joi.object().keys({
-    id: Joi.string().required(),
+    token: Joi.string().required(),
     password: Joi.string().required(),
   });
 

@@ -5,7 +5,6 @@ import {
   changePassword,
   requestResetPassword,
   resetPassword,
-  validateResetPasswordOtp,
 } from "./user.service.js";
 import { loginMultiOutletOwner } from "./user.service.js";
 
@@ -13,61 +12,81 @@ export const signup = (req, res) => {
   const params = req.body;
 
   signupMultiOutletOwner(params)
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
 
 export const login = (req, res) => {
   const params = req.body;
   loginMultiOutletOwner({ params })
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message, data }) =>
+      res.send(statusCode, { status: false, message, data })
+    );
 };
 
 export const resendVerificationEmail = (req, res) => {
   const params = req.body;
 
   sendVerificationEmail(params.userId)
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
 
 export const validateVerificationEmail = (req, res) => {
   const params = req.body;
 
   validateEmail(params)
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
 
 export const resetPasswordRequest = (req, res) => {
   const params = req.body;
 
   requestResetPassword({ params })
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
-};
-
-export const validateResetPassword = (req, res) => {
-  const params = req.body;
-
-  validateResetPasswordOtp({ params })
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
 
 export const resetMultiOutletOwnerPassword = (req, res) => {
   const params = req.body;
 
   resetPassword({ params })
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
 
 export const changePasswordRequest = (req, res) => {
   const params = req.body;
 
   changePassword({ params })
-    .then((data) => res.send(data))
-    .catch((error) => res.send(error));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };

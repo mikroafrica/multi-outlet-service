@@ -36,18 +36,11 @@ export const resetPasswordRequest = (params) => {
   return post({ client, path, params });
 };
 
-export const validateOtpForPasswordReset = (params) => {
-  const client = restifyRequest();
-  const path = "/password/validate-forgot-password";
-
-  return put({ client, path, params });
-};
-
 export const resetPassword = (params) => {
   const client = restifyRequest();
-  const path = "/password/reset-password-mobile";
+  const path = "/password/reset-password-web";
 
-  return post({ client, path, params });
+  return put({ client, path, params });
 };
 
 export const changePassword = (params) => {
