@@ -1,7 +1,7 @@
 import restify from "restify-clients";
-import { get } from "./request";
+import { get } from "./request.js";
 
-const request = () => {
+const restifyRequest = () => {
   const client = restify.createJSONClient({
     url: process.env.WALLET_SERVICE_URL,
     version: "*",
@@ -12,7 +12,8 @@ const request = () => {
 };
 
 export const fetchWalletSummaryById = (id) => {
-  return get({ client: request, path: `/transactions/${id}/balancee` });
+  const client = restifyRequest();
+  return get({ client, path: `/transactions/${id}/balance` });
 };
 
 export const fetchWalletTransactions = ({
@@ -23,6 +24,8 @@ export const fetchWalletTransactions = ({
   dateTo,
   transactionType,
 }) => {
+  const client = restifyRequest();
+
   const path = {
     path: `/transactions/${walletId}`,
     query: {
@@ -33,5 +36,5 @@ export const fetchWalletTransactions = ({
       type: transactionType,
     },
   };
-  return get({ client: request, path });
+  return get({ client, path });
 };

@@ -1,9 +1,9 @@
 import {
   fetchWalletSummaryById,
   fetchWalletTransactions,
-} from "../../modules/wallet-service";
-import logger from "../../../logger";
-import { NOT_FOUND, OK } from "../../modules/status";
+} from "../../modules/wallet-service.js";
+import logger from "../../../logger.js";
+import { NOT_FOUND, OK } from "../../modules/status.js";
 
 export const walletTransactionsById = async ({
   walletId,
@@ -22,10 +22,10 @@ export const walletTransactionsById = async ({
       dateTo,
       transactionType,
     });
-    const walletResponse = responseData.data;
+    const walletTransactions = responseData.data;
     return Promise.resolve({
       statusCode: OK,
-      data: walletResponse.data,
+      data: walletTransactions,
     });
   } catch (e) {
     logger.error(
@@ -43,10 +43,10 @@ export const walletTransactionsById = async ({
 export const walletSummaryById = async ({ walletId }) => {
   try {
     const responseData = await fetchWalletSummaryById(walletId);
-    const walletResponse = responseData.data;
+    const walletSummary = responseData.data;
     return Promise.resolve({
       statusCode: OK,
-      data: walletResponse.data,
+      data: walletSummary,
     });
   } catch (e) {
     logger.error(
