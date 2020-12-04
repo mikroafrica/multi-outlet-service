@@ -43,7 +43,9 @@ export const fetchUserTransactions = async ({
     );
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: e.message || "Something went wrong. Please try again",
+      message:
+        JSON.parse(e.message).message ||
+        "Something went wrong. Please try again",
     });
   }
 };

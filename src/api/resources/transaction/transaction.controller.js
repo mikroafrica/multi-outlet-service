@@ -21,7 +21,10 @@ export const fetchTransactionsByUserId = (req, res) => {
     dateTo,
     customerBillerId,
   })
-    .then((data) => res.send(data))
-    .catch((e) => res.send(e));
-  //    service fetchUserTransactions(userId)
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
