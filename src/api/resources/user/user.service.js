@@ -105,7 +105,6 @@ export const loginMultiOutletOwner = async ({ params }) => {
       return Promise.resolve({ statusCode: OK, data: loginResponse.data });
     } catch (e) {
       logger.error(`An error occurred while fetching user details login ${e}`);
-      console.log(e);
       if (e?.statusCode === 403) {
         return Promise.reject({
           statusCode: e?.statusCode,

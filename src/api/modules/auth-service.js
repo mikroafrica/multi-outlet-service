@@ -29,7 +29,7 @@ export const login = (params) => {
 };
 
 export const resetPasswordRequest = (params) => {
-  params.source = "mobile";
+  params.source = "web";
   const client = restifyRequest();
   const path = "/password/reset-request";
 
