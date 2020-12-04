@@ -3,7 +3,7 @@ import {
   fetchWalletTransactions,
 } from "../../modules/wallet-service.js";
 import logger from "../../../logger.js";
-import { NOT_FOUND, OK } from "../../modules/status.js";
+import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 
 export const walletTransactionsById = async ({
   walletId,
@@ -34,8 +34,10 @@ export const walletTransactionsById = async ({
       )}`
     );
     return Promise.reject({
-      statusCode: NOT_FOUND,
-      message: e.message || "Something went wrong. Please try again",
+      statusCode: BAD_REQUEST,
+      message:
+        JSON.parse(e.message).message ||
+        "Something went wrong. Please try again",
     });
   }
 };
@@ -55,8 +57,10 @@ export const walletSummaryById = async ({ walletId }) => {
       )}`
     );
     return Promise.reject({
-      statusCode: NOT_FOUND,
-      message: e.message || "Something went wrong. Please try again",
+      statusCode: BAD_REQUEST,
+      message:
+        JSON.parse(e.message).message ||
+        "Something went wrong. Please try again",
     });
   }
 };

@@ -1,6 +1,5 @@
 import { walletTransactionsById, walletSummaryById } from "./wallet.service.js";
 
-//ADD FILTER BY OUTLET. FIGURE OUT HOW TO FILTER BY MULTIPLE OUTLETS
 export const getWalletTransactions = (req, res) => {
   const walletId = req.params.id;
   const { dateFrom, dateTo, page, limit, transactionType } = req.query;
@@ -13,14 +12,22 @@ export const getWalletTransactions = (req, res) => {
     limit,
     transactionType,
   })
-    .then((data) => res.send(data))
-    .catch((e) => res.send(e));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
 
 export const getWalletSummary = (req, res) => {
   const walletId = req.params.id;
 
   walletSummaryById({ walletId })
-    .then((data) => res.send(data))
-    .catch((e) => res.send(e));
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
 };
