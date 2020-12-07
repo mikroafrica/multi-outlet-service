@@ -56,3 +56,10 @@ export const changePassword = (params) => {
 
   return put({ client, path, params });
 };
+
+export const validateToken = (params) => {
+  const client = restifyRequest();
+  const path = "/auth/validate";
+
+  return post({ client, path, params });
+};
