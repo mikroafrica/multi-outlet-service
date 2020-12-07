@@ -84,14 +84,11 @@ const buildLoginRequest = ({ phoneNumber, pin }) => {
     username: phoneNumber,
     password: pin,
     role: "outlet",
-    deviceManufacturerId: "0917374",
-    assignedDeviceId: "5342",
-    deviceName: "itel",
   };
 };
 
 const sendVerificationOtp = async ({ email, phoneNumber }) => {
-  const params = { email, phoneNumber, type: "PHONE_NUMBER" };
+  const params = { email, phoneNumber };
   const otpResponse = await ConsumerService.generateOtp(params);
   return otpResponse.data;
 };
