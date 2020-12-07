@@ -17,11 +17,12 @@ export const fetchWalletSummaryById = (id) => {
 };
 
 export const fetchWalletTransactions = ({
-  walletId,
   page,
   limit,
+  walletId,
   dateFrom,
   dateTo,
+  transactionCategory,
   transactionType,
 }) => {
   const client = restifyRequest();

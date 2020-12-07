@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { connect } from "./db.js";
 import auth from "./api/resources/user/index.js";
 import wallet from "./api/resources/wallet/index.js";
+import outlet from "./api/resources/outlet/index.js";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -24,6 +25,7 @@ dotenv.config();
 connect();
 
 auth({ server: server, subBase: "/auth" });
+outlet({ server: server, subBase: "/outlet" });
 wallet({ server: server, subBase: "/wallet" });
 
 export default server;

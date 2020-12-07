@@ -1,16 +1,25 @@
 import { walletTransactionsById, walletSummaryById } from "./wallet.service.js";
 
 export const getWalletTransactions = (req, res) => {
-  const walletId = req.params.id;
-  const { dateFrom, dateTo, page, limit, transactionType } = req.query;
+  const userId = req.params.userId;
 
-  walletTransactionsById({
-    walletId,
+  const {
     dateFrom,
     dateTo,
     page,
     limit,
+    transactionCategory,
     transactionType,
+  } = req.query;
+
+  walletTransactionsById({
+    dateFrom,
+    dateTo,
+    page,
+    limit,
+    transactionCategory,
+    transactionType,
+    userId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
@@ -21,9 +30,9 @@ export const getWalletTransactions = (req, res) => {
 };
 
 export const getWalletSummary = (req, res) => {
-  const walletId = req.params.id;
+  const userId = req.params.userId;
 
-  walletSummaryById({ walletId })
+  walletSummaryById({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

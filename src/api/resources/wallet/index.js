@@ -4,8 +4,8 @@ import {
 } from "./wallet.controller.js";
 
 const wallet = ({ server, subBase }) => {
-  server.get(`${subBase}/:id`, getWalletTransactions);
-  server.get(`${subBase}/:id/summary`, getWalletSummary);
+  server.get(`${subBase}/:userId`, getWalletTransactions);
+  server.get(`${subBase}/:userId/summary`, getWalletSummary);
 };
 
 export default wallet;
