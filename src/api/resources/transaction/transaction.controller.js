@@ -1,8 +1,9 @@
 import { fetchUserTransactions } from "./transaction.service.js";
 
 export const fetchTransactionsByUserId = (req, res) => {
+  const userId = req.user.userId;
+
   const {
-    userId,
     type,
     status,
     page,
