@@ -27,7 +27,6 @@ export const secureRoute = (req, res, next) => {
       return next();
     })
     .catch((err) => {
-      console.log(err);
       logger.error(
         `failed to validate token with error ${JSON.stringify(err)}`
       );
