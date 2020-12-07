@@ -53,10 +53,9 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     }
 
     const email = userDetailsData.email;
-    const phoneNumber = userDetailsData.phoneNumber;
     const otpResponseData = await sendVerificationOtp({
       email,
-      phoneNumber,
+      phoneNumber: params.phoneNumber,
     });
     await saveVerification({
       verificationId: otpResponseData.id,
