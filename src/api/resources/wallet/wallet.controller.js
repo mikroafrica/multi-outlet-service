@@ -1,7 +1,7 @@
 import { walletTransactionsById, walletSummaryById } from "./wallet.service.js";
 
 export const getWalletTransactions = (req, res) => {
-  const userId = req.params.userId;
+  const userId = req.user.userId;
 
   const {
     dateFrom,
@@ -30,7 +30,7 @@ export const getWalletTransactions = (req, res) => {
 };
 
 export const getWalletSummary = (req, res) => {
-  const userId = req.params.userId;
+  const userId = req.user.userId;
 
   walletSummaryById({ userId })
     .then(({ statusCode, data }) =>

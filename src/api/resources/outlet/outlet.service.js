@@ -212,7 +212,7 @@ export const getOutlets = async ({ userId, page, limit }) => {
       {},
       { skip: page * limit, limit }
     );
-    const total = await Outlet.countDocuments({}).exec();
+    const total = await Outlet.countDocuments({ ownerId: userId }).exec();
     const outletDetails = await fetchOutletDetails(outlets);
 
     return Promise.resolve({
