@@ -208,3 +208,43 @@ const validateLinkOutletParams = (params) => {
 
   return Joi.validate(params, schema);
 };
+
+export const getOutlets = async ({ userId, page, limit }) => {
+  try {
+    const outlets = await Outlet.find(
+      { ownerId: userId },
+      {},
+      { skip: page * limit, limit }
+    );
+    const total = await Outlet.countDocuments({}).exec();
+    const outletDetails = await fetchOutletDetails(outlets);
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: {
+        page,
+        limit,
+        total,
+        list: outletDetails,
+      },
+    });
+  } catch (err) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "An error occurred when retrieving outlets",
+    });
+  }
+};
+
+const fetchOutletDetails = async (outlets) => {
+  const outletDetailsPromise = [];
+  for (let outlet of outlets) {
+    outletDetailsPromise.push(ConsumerService.getUserDetails(outlet.outletId));
+  }
+  const outletDetailsResponse = await Promise.all(outletDetailsPromise);
+  const outletDetails = [];
+  for (let outletDetail of outletDetailsResponse) {
+    outletDetails.push(outletDetail.data);
+  }
+  return outletDetails;
+};
