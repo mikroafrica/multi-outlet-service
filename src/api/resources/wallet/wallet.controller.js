@@ -1,7 +1,11 @@
-import { walletTransactionsById, walletSummaryById } from "./wallet.service.js";
+import {
+  walletTransactionsById,
+  walletSummaryById,
+  walletById,
+} from "./wallet.service.js";
 
 export const getWalletTransactions = (req, res) => {
-  const userId = req.user.userId;
+  const walletId = req.params.id;
 
   const {
     dateFrom,
@@ -19,7 +23,7 @@ export const getWalletTransactions = (req, res) => {
     limit,
     transactionCategory,
     transactionType,
-    userId,
+    walletId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
@@ -29,10 +33,23 @@ export const getWalletTransactions = (req, res) => {
     );
 };
 
-export const getWalletSummary = (req, res) => {
-  const userId = req.user.userId;
+export const getWallet = (req, res) => {
+  const walletId = req.params.id;
 
-  walletSummaryById({ userId })
+  walletById({ walletId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getWalletSummary = (req, res) => {
+  const walletId = req.params.id;
+  const { dateFrom, dateTo } = req.query;
+
+  walletSummaryById({ walletId, dateFrom, dateTo })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
