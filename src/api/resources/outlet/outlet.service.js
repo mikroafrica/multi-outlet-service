@@ -1,4 +1,5 @@
 import Joi from "joi";
+import async from "async";
 import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import { Outlet } from "./outlet.model.js";
@@ -168,8 +169,10 @@ export const verifyOutletLinking = async ({ params }) => {
   }
 
   try {
-    logger.info(`Verify outlet linking with request [${params}]`);
-    const otpValidationResponse = await ConsumerService.validateUserOtp();
+    logger.info(
+      `Verify outlet linking with request [${JSON.stringify(params)}]`
+    );
+    const otpValidationResponse = await ConsumerService.validateUserOtp(params);
     const verification = await Verification.findOne({
       verificationId: params.verificationId,
     });
@@ -211,4 +214,37 @@ export const verifyOutletLinking = async ({ params }) => {
 const saveNewOutletMapping = ({ ownerId, outletId }) => {
   const outlet = new Outlet({ ownerId, outletId });
   return outlet.save();
+};
+
+export const getOutlets = async ({ userId, page, limit }) => {
+  try {
+    const outlets = await Outlet.paginate({ ownerId: userId }, { page, limit });
+
+    const outletDetails = await fetchOutletDetails(outlets.docs);
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: {
+        page: outlets.page,
+        pages: outlets.pages,
+        limit: outlets.limit,
+        total: outlets.total,
+        list: outletDetails,
+      },
+    });
+  } catch (err) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "An error occurred when retrieving outlets",
+    });
+  }
+};
+
+const fetchOutletDetails = async (outlets) => {
+  let outletDetails = [];
+  await async.forEach(outlets, async (outlet, key, cb) => {
+    const response = await ConsumerService.getUserDetails(outlet.outletId);
+    outletDetails.push(response.data);
+  });
+  return outletDetails;
 };

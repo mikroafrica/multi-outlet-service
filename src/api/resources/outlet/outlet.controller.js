@@ -32,7 +32,7 @@ export const verifyLinkedOutlet = (req, res) => {
 export const fetchOutlets = (req, res) => {
   const userId = req.user.userId;
 
-  const page = parseInt(req.query.page, 10) || 0;
+  const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
   getOutlets({ userId, page, limit })
