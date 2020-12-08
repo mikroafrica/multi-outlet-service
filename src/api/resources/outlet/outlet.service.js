@@ -95,7 +95,7 @@ const buildLoginRequest = ({ phoneNumber, pin }) => {
 
 const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
-    const params = { phoneNumber, type: "PHONE_NUMBR" };
+    const params = { phoneNumber, type: "PHONE_NUMBER" };
     const otpResponse = await ConsumerService.generateOtp(params);
     return otpResponse.data;
   } catch (err) {
