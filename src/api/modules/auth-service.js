@@ -30,7 +30,7 @@ export const login = (params) => {
 
 export const loginWithPhoneNumber = (params) => {
   const client = restifyRequest();
-  const path = "/v1/auth/login";
+  const path = "/auth/login";
 
   return post({ client, path, params });
 };
