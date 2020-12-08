@@ -40,3 +40,23 @@ export const fetchTransactions = ({
   };
   return get({ client, path });
 };
+
+export const fetchTransactionsCategorySummary = ({
+  userId,
+  storeId,
+  dateFrom,
+  dateTo,
+}) => {
+  const client = restifyRequest();
+
+  const path = {
+    path: `/transactions/category-summary`,
+    query: {
+      dateFrom,
+      dateTo,
+      storeId,
+      userId,
+    },
+  };
+  return get({ client, path });
+};

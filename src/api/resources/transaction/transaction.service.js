@@ -19,7 +19,7 @@ export const fetchUserTransactions = async ({
     });
   }
 
-  return TransactionService.fetchTransactions({
+  const params = {
     userId,
     dateFrom,
     dateTo,
@@ -28,7 +28,13 @@ export const fetchUserTransactions = async ({
     status,
     type,
     customerBillerId,
-  })
+  };
+
+  logger.info(
+    `Fetch transactions by user request body ${JSON.stringify(params)}`
+  );
+
+  return TransactionService.fetchTransactions(params)
     .then((responseData) => {
       const transactionData = responseData.data;
       return Promise.resolve({
@@ -39,6 +45,53 @@ export const fetchUserTransactions = async ({
     .catch((e) => {
       logger.error(
         `Error occurred while fetching transaction by user id ${userId} with error ${JSON.stringify(
+          e
+        )}`
+      );
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message:
+          JSON.parse(e.message).message ||
+          "Something went wrong. Please try again",
+      });
+    });
+};
+
+export const getTransactionsCategorySummary = async ({
+  userId,
+  storeId,
+  dateFrom,
+  dateTo,
+}) => {
+  if (!userId) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "User Id is required",
+    });
+  }
+
+  const params = {
+    userId,
+    storeId,
+    dateFrom,
+    dateTo,
+  };
+
+  logger.info(
+    `Fetch transactions by user request body ${JSON.stringify(params)}`
+  );
+
+  return TransactionService.fetchTransactionsCategorySummary(params)
+    .then((responseData) => {
+      const transactionData = responseData.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: transactionData,
+      });
+    })
+    .catch((e) => {
+      logger.error(
+        `Error occurred while fetching transaction category for user id ${userId} with error ${JSON.stringify(
           e
         )}`
       );

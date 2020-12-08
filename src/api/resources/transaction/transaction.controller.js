@@ -1,7 +1,10 @@
-import { fetchUserTransactions } from "./transaction.service.js";
+import {
+  fetchUserTransactions,
+  getTransactionsCategorySummary,
+} from "./transaction.service.js";
 
 export const fetchTransactionsByUserId = (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.params.id;
 
   const {
     type,
@@ -21,6 +24,24 @@ export const fetchTransactionsByUserId = (req, res) => {
     dateFrom,
     dateTo,
     customerBillerId,
+  })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const fetchTransactionsByCategory = (req, res) => {
+  const userId = req.params.id;
+
+  const { storeId, dateFrom, dateTo } = req.query;
+  getTransactionsCategorySummary({
+    userId,
+    storeId,
+    dateFrom,
+    dateTo,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
