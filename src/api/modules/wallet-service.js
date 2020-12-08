@@ -11,9 +11,21 @@ const restifyRequest = () => {
   return client;
 };
 
-export const fetchWalletSummaryById = (id) => {
+export const getWalletById = (id) => {
   const client = restifyRequest();
-  return get({ client, path: `/transactions/${id}/balance` });
+  return get({ client, path: `/wallets/${id}` });
+};
+
+export const fetchWalletSummaryById = ({ walletId, dateFrom, dateTo }) => {
+  const client = restifyRequest();
+  const path = {
+    path: `/transactions/${walletId}/balance`,
+    query: {
+      dateFrom,
+      dateTo,
+    },
+  };
+  return get({ client, path });
 };
 
 export const fetchWalletTransactions = ({
