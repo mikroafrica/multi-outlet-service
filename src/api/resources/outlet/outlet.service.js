@@ -15,7 +15,12 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     });
   }
 
-  const validateSchema = validateLinkOutletParams(params);
+  const schema = Joi.object().keys({
+    phoneNumber: Joi.string().required(),
+    pin: Joi.string().required(),
+  });
+
+  const validateSchema = Joi.validate(params, schema);
 
   if (validateSchema.error) {
     return Promise.reject({
@@ -45,16 +50,14 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     const outletId = userDetailsData.id;
 
     const existingOutlet = await Outlet.findOne({ outletId });
-    if (existingOutlet != null) {
+    if (existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
         message: "Outlet has been added previously",
       });
     }
 
-    const email = userDetailsData.email;
     const otpResponseData = await sendVerificationOtp({
-      email,
       phoneNumber: params.phoneNumber,
     });
     await saveVerification({
@@ -72,9 +75,12 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     logger.error(
       `An error occurred while trying to link outlet: ${JSON.stringify(err)}`
     );
+
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(err.message)?.message,
+      message:
+        JSON.parse(err?.message)?.message ||
+        "Could not link outlet. Please try again",
     });
   }
 };
@@ -87,10 +93,20 @@ const buildLoginRequest = ({ phoneNumber, pin }) => {
   };
 };
 
-const sendVerificationOtp = async ({ email, phoneNumber }) => {
-  const params = { email, phoneNumber };
-  const otpResponse = await ConsumerService.generateOtp(params);
-  return otpResponse.data;
+const sendVerificationOtp = async ({ phoneNumber }) => {
+  try {
+    const params = { phoneNumber, type: "PHONE_NUMBR" };
+    const otpResponse = await ConsumerService.generateOtp(params);
+    return otpResponse.data;
+  } catch (err) {
+    logger.error("Could not send verification OTP");
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: JSON.stringify({
+        message: "Could not send verification OTP",
+      }),
+    });
+  }
 };
 
 const saveVerification = async ({
@@ -105,7 +121,7 @@ const saveVerification = async ({
   });
 
   // UPDATE AN EXISTING VERIFICATION IF IT ALREADY EXISTS
-  if (existingVerification != null) {
+  if (existingVerification) {
     await Verification.findOneAndUpdate(
       { outletId, ownerId },
       { $set: { verificationId } },
@@ -154,7 +170,7 @@ export const verifyOutletLinking = async ({ params }) => {
       verificationId: params.verificationId,
     });
 
-    if (verification == null) {
+    if (!verification) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
         message: "Outlet has been added previously",
@@ -165,23 +181,20 @@ export const verifyOutletLinking = async ({ params }) => {
     const outletId = verification.outletId;
 
     const existingOutlet = await Outlet.findOne({ outletId });
-    if (existingOutlet != null) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Outlet has been added previously",
+    if (existingOutlet) {
+      return Promise.resolve({
+        statusCode: OK,
+        data: existingOutlet,
       });
     }
 
     const outlet = await saveNewOutletMapping({ ownerId, outletId });
 
     // DELETE THE VERIFICATION ONCE VERIFICATION IS SUCCESSFUL
-    // await Verification.findOneAndDelete({ ownerId, outletId });
+    await Verification.findOneAndDelete({ ownerId, outletId });
     return Promise.resolve({
       statusCode: OK,
-      data: {
-        message: "Outlet has been mapped successfully",
-        outlet,
-      },
+      data: outlet,
     });
   } catch (err) {
     return Promise.reject({
@@ -194,53 +207,4 @@ export const verifyOutletLinking = async ({ params }) => {
 const saveNewOutletMapping = ({ ownerId, outletId }) => {
   const outlet = new Outlet({ ownerId, outletId });
   return outlet.save();
-};
-
-const validateLinkOutletParams = (params) => {
-  const schema = Joi.object().keys({
-    phoneNumber: Joi.string().required(),
-    pin: Joi.string().required(),
-  });
-
-  return Joi.validate(params, schema);
-};
-
-export const getOutlets = async ({ userId, page, limit }) => {
-  try {
-    const outlets = await Outlet.find(
-      { ownerId: userId },
-      {},
-      { skip: page * limit, limit }
-    );
-    const total = await Outlet.countDocuments({ ownerId: userId }).exec();
-    const outletDetails = await fetchOutletDetails(outlets);
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: {
-        page,
-        limit,
-        total,
-        list: outletDetails,
-      },
-    });
-  } catch (err) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "An error occurred when retrieving outlets",
-    });
-  }
-};
-
-const fetchOutletDetails = async (outlets) => {
-  const outletDetailsPromise = [];
-  for (let outlet of outlets) {
-    outletDetailsPromise.push(ConsumerService.getUserDetails(outlet.outletId));
-  }
-  const outletDetailsResponse = await Promise.all(outletDetailsPromise);
-  const outletDetails = [];
-  for (let outletDetail of outletDetailsResponse) {
-    outletDetails.push(outletDetail.data);
-  }
-  return outletDetails;
 };

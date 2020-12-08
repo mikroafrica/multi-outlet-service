@@ -17,7 +17,7 @@ export const linkOutlet = (req, res) => {
     });
 };
 
-export const verifyLinkOutlet = (req, res) => {
+export const verifyLinkedOutlet = (req, res) => {
   const params = req.body;
 
   verifyOutletLinking({ params })

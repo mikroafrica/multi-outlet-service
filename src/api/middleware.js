@@ -9,17 +9,17 @@ export const secureRoute = (req, res, next) => {
     return next();
   }
 
-  const token = req.headers.accessToken || req.headers.accesstoken;
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
-    logger.error(`valid bearer token is not provided`);
+  if (!authHeader || authHeader.split(" ").length < 2) {
+    logger.error(`Token wasn't supplied`);
     return res.send(UN_AUTHORISED, {
       status: false,
-      message:
-        "Session expired. Please login again with your valid credentials",
+      message: "Authorization is required",
     });
   }
 
+  const token = authHeader.split(" ")[1];
   const params = { token };
   AuthService.validateToken(params)
     .then((authResponse) => {
