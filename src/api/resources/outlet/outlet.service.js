@@ -41,6 +41,7 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
   }
 
   const loginRequest = buildLoginRequest({ phoneNumber, pin: params.pin });
+  logger.info(`Outlet login with request [${loginRequest}]`);
   try {
     const loginResponse = await AuthService.loginWithPhoneNumber(loginRequest);
 
@@ -57,6 +58,7 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
       });
     }
 
+    logger.info(`Sending verification OTP to ${params.phoneNumber}`);
     const otpResponseData = await sendVerificationOtp({
       phoneNumber: params.phoneNumber,
     });
@@ -95,7 +97,11 @@ const buildLoginRequest = ({ phoneNumber, pin }) => {
 
 const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
-    const params = { phoneNumber, type: "PHONE_NUMBR" };
+    const params = { phoneNumber, type: "PHONE_NUMBER" };
+
+    logger.info(
+      `Sending Verification during link outlet with request [${params}]`
+    );
     const otpResponse = await ConsumerService.generateOtp(params);
     return otpResponse.data;
   } catch (err) {
@@ -148,11 +154,12 @@ export const verifyOutletLinking = async ({ params }) => {
   }
 
   const schema = Joi.object().keys({
-    verificationId: Joi.string().required(),
     otpCode: Joi.string().required(),
+    verificationId: Joi.string().required(),
   });
 
   const validateSchema = Joi.validate(params, schema);
+
   if (validateSchema.error) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -160,12 +167,9 @@ export const verifyOutletLinking = async ({ params }) => {
     });
   }
 
-  const { verificationId, otpCode } = params;
   try {
-    const otpValidationResponse = await ConsumerService.validateUserOtp({
-      verificationId,
-      otpCode,
-    });
+    logger.info(`Verify outlet linking with request [${params}]`);
+    const otpValidationResponse = await ConsumerService.validateUserOtp();
     const verification = await Verification.findOne({
       verificationId: params.verificationId,
     });
