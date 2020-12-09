@@ -62,3 +62,8 @@ export const validateUserOtp = ({ verificationId, otpCode }) => {
     params: {},
   });
 };
+
+export const updateUserProfile = ({ params, userId }) => {
+  const client = restifyRequest();
+  return put({ client, path: `/user/${userId}/profile`, params });
+};

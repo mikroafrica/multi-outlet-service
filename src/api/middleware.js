@@ -5,7 +5,7 @@ import logger from "../logger.js";
 export const secureRoute = (req, res, next) => {
   const path = req.route.path;
 
-  if (path.includes("auth")) {
+  if (path.includes("auth") && !path.includes("update-profile")) {
     return next();
   }
 

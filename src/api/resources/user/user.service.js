@@ -298,9 +298,79 @@ export const changePassword = async ({ params }) => {
   }
 };
 
+export const updateUser = async ({ params, userId }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const schema = Joi.object().keys({
+    firstName: Joi.string(),
+    lastName: Joi.string(),
+    email: Joi.string().email(),
+    phoneNumber: Joi.string(),
+    businessName: Joi.string().required(),
+    address: Joi.string().required(),
+    gender: Joi.string().required(),
+    state: Joi.string().required(),
+    lga: Joi.string().required(),
+    profileImageId: Joi.string(),
+    dob: Joi.string(),
+  });
+
+  const validateSchema = Joi.validate(params, schema);
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    const userDetails = await ConsumerService.getUserDetails(userId);
+    const userDetailsData = userDetails.data;
+    const isBvnVerified = userDetailsData.bvnVerified;
+
+    // PREVENT A USER FROM UPDATING THEIR NAME, PHONE NUMBER OR DOB IF BVN IS VERIFIED
+    if (isBvnVerified) {
+      delete params.firstName;
+      delete params.lastName;
+      delete params.dob;
+      delete params.phoneNumber;
+    }
+
+    logger.info(
+      `Request body to update user ${userId} - ${JSON.stringify(params)}`
+    );
+    try {
+      const updateUserResponse = await ConsumerService.updateUserProfile({
+        params,
+        userId,
+      });
+      const responseData = updateUserResponse.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: responseData,
+      });
+    } catch (e) {
+      logger.error(`An error occurred while updating user with error ${e}`);
+      return Promise.reject({
+        statusCode:
+          JSON.parse(e.message)?.message ||
+          "Could not update user profile. Please try again",
+      });
+    }
+  } catch (e) {
+    return Promise.reject({
+      statusCode: "Could not update user profile. Please try again",
+    });
+  }
+};
+
 const validateSignupParamsSchema = (params) => {
   const schema = Joi.object().keys({
-    personalPhoneNumber: Joi.string(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
     email: Joi.string().email(),
