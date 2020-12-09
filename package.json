@@ -9,9 +9,7 @@
     "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/*",
     "build": "npm run build",
     "postinstall": "npm run build",
-    "start": "node src/index.js",
-    "heroku-prebuild": "bash preinstall.sh",
-    "heroku-postbuild": "bash postinstall.sh"
+    "start": "node src/index.js"
   },
   "husky": {
     "hooks": {
