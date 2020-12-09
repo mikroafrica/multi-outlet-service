@@ -88,6 +88,29 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
   }
 };
 
+export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
+  try {
+    logger.info(`User ${userId} request to unlink outlet ${outletId}`);
+    const existingOutlet = await Outlet.findOne({ outletId, ownerId: userId });
+    if (!existingOutlet) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Outlet not found. Please supply a valid outlet",
+      });
+    }
+    await Outlet.findOneAndDelete({ outletId, ownerId: userId });
+    return Promise.resolve({
+      statusCode: OK,
+    });
+  } catch (e) {
+    logger.error(`Failed to unlink outlet with the following error ${e}`);
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not delete outlet. Try again",
+    });
+  }
+};
+
 const buildLoginRequest = ({ phoneNumber, pin }) => {
   return {
     username: phoneNumber,
