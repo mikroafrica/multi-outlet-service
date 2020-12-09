@@ -125,6 +125,32 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
   }
 };
 
+export const suspendOutlet = async ({ outletId }) => {
+  logger.info(`Outlet owner request to suspend outlet ${outletId}`);
+  try {
+    // SET THE USER TO INACTIVE ON THE AUTH SERVICE (TO PREVENT ACCESS TO THE APP)
+    await AuthService.updateUserStatus({
+      userId: outletId,
+      status: "INACTIVE",
+    });
+
+    // SET USER TO INACTIVE ON CONSUMER SERVICE. UPDATES ONLY THE STATUS OF THE USER ON CONSUMER SERVICE
+    const params = { status: "INACTIVE" };
+    await ConsumerService.updateUserProfile({ params, userId: outletId });
+    return Promise.resolve({
+      statusCode: OK,
+    });
+  } catch (e) {
+    logger.error(
+      `Failed to suspend outlet ${outletId} with error ${JSON.stringify(e)}`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not suspend outlet. Try again",
+    });
+  }
+};
+
 const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
     const params = { phoneNumber, type: "PHONE_NUMBER" };

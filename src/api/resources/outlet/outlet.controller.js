@@ -3,6 +3,7 @@ import {
   verifyOutletLinking,
   getOutlets,
   unlinkOutletFromOwner,
+  suspendOutlet,
 } from "./outlet.service.js";
 
 export const linkOutlet = (req, res) => {
@@ -10,6 +11,18 @@ export const linkOutlet = (req, res) => {
   const userId = req.user.userId;
 
   linkOwnerToOutlet({ params, userId })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const verifyLinkedOutlet = (req, res) => {
+  const params = req.body;
+
+  verifyOutletLinking({ params })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
@@ -30,12 +43,13 @@ export const unlinkOutlet = (req, res) => {
       res.send(statusCode, { status: false, message });
     });
 };
-export const verifyLinkedOutlet = (req, res) => {
-  const params = req.body;
 
-  verifyOutletLinking({ params })
-    .then(({ statusCode, data }) => {
-      res.send(statusCode, { status: true, data });
+export const suspendOutletUser = (req, res) => {
+  const outletId = req.params.id;
+
+  suspendOutlet({ outletId })
+    .then(({ statusCode }) => {
+      res.send(statusCode, { status: true });
     })
     .catch(({ statusCode, message }) => {
       res.send(statusCode, { status: false, message });

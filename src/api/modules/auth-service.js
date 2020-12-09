@@ -63,3 +63,9 @@ export const validateToken = (params) => {
 
   return post({ client, path, params });
 };
+
+export const updateUserStatus = ({ userId, status }) => {
+  const client = restifyRequest();
+  const params = {};
+  return put({ client, path: `/auth/${userId}/${status}/status`, params });
+};
