@@ -5,11 +5,12 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "test": "flow check && mocha -r @babel/register tests tests/unit/* --timeout 30000 -r dotenv/config",
-    "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/*",
-    "build": "npm run build",
+    "test": "flow check && mocha -r @babel/register tests/*",
+    "build": "npm run build:lib && npm run build:flow",
+    "build:lib": "babel src/ -d lib/",
     "postinstall": "npm run build",
-    "start": "node src/index.js"
+    "build:flow": "flow-copy-source -v src/ lib/",
+    "start": "node lib/index.js"
   },
   "husky": {
     "hooks": {
