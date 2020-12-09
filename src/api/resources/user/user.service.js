@@ -24,6 +24,12 @@ export const signupMultiOutletOwner = async (params) => {
     });
   }
 
+  logger.info(
+    `Signup request with request body ${JSON.stringify({
+      ...params,
+      password: "",
+    })}`
+  );
   return ConsumerService.signup(params)
     .then(async (outletOwnerData) => {
       const userId = await outletOwnerData.data.id;
@@ -91,12 +97,19 @@ export const loginMultiOutletOwner = async ({ params }) => {
     });
   }
 
+  const loginRequest = {
+    username: params.email,
+    password: params.password,
+    role: "admin",
+  };
+  logger.info(
+    `Login request with request body ${JSON.stringify({
+      ...loginRequest,
+      password: "",
+    })}`
+  );
   try {
-    const loginResponse = await AuthService.login({
-      username: params.email,
-      password: params.password,
-      role: "admin",
-    });
+    const loginResponse = await AuthService.login(loginRequest);
     const userId = loginResponse.data?.userId;
 
     try {
@@ -133,6 +146,8 @@ export const sendVerificationEmail = async (userId) => {
       message: "User Id is required",
     });
   }
+
+  logger.info(`Request to send verification email to user with id ${userId}`);
   try {
     const response = await ConsumerService.requestVerificationEmail({ userId });
     response.data.userId = userId;
@@ -168,6 +183,9 @@ export const validateEmail = async (params) => {
     });
   }
 
+  logger.info(
+    `Validate email address with request body ${JSON.stringify(params)}`
+  );
   try {
     const response = await ConsumerService.validateVerificationOtp(params);
 
@@ -205,6 +223,9 @@ export const requestResetPassword = async ({ params }) => {
     });
   }
 
+  logger.info(
+    `Requested a password reset with request body ${JSON.stringify(params)}`
+  );
   try {
     const resetPasswordRequestResponse = await AuthService.resetPasswordRequest(
       { username: params.email }
