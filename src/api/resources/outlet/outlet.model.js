@@ -1,14 +1,18 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate";
-import { UserStatus } from "../user/user.type.js";
+import { OutletStatus } from "./outlet.status.js";
 
 const schema = {
   outletId: String,
   ownerId: String,
-  status: {
+  outletStatus: {
     type: String,
-    default: UserStatus.ACTIVE,
-    enum: [UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED],
+    default: OutletStatus.ACTIVE,
+    enum: [OutletStatus.ACTIVE, OutletStatus.INACTIVE, OutletStatus.BLOCKED],
+  },
+  isOutletSuspended: {
+    type: Boolean,
+    default: false,
   },
 };
 

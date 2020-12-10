@@ -7,7 +7,7 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
-import { UserStatus } from "../user/user.type.js";
+import { OutletStatus } from "./outlet.status.js";
 
 export const linkOwnerToOutlet = async ({ params, userId }) => {
   if (!params) {
@@ -59,7 +59,10 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     const userDetailsData = userDetails.data;
     const outletId = userDetailsData.id;
 
-    const existingOutlet = await Outlet.findOne({ outletId });
+    const existingOutlet = await Outlet.findOne({
+      outletId,
+      outletStatus: OutletStatus.ACTIVE,
+    });
     if (existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -110,7 +113,7 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
     }
     await Outlet.findOneAndUpdate(
       { outletId, ownerId: userId },
-      { $set: { status: UserStatus.INACTIVE } },
+      { $set: { outletStatus: OutletStatus.INACTIVE } },
       { new: true }
     ).exec();
     return Promise.resolve({
@@ -134,9 +137,13 @@ export const suspendOutlet = async ({ outletId }) => {
       status: "INACTIVE",
     });
 
-    // SET USER TO INACTIVE ON CONSUMER SERVICE. UPDATES ONLY THE STATUS OF THE USER ON CONSUMER SERVICE
-    const params = { status: "INACTIVE" };
-    await ConsumerService.updateUserProfile({ params, userId: outletId });
+    // SET USER SUSPENDED STATUS TO TRUE
+    await Outlet.findOneAndUpdate(
+      { outletId, outletStatus: OutletStatus.ACTIVE },
+      { $set: { isOutletSuspended: true } },
+      { new: true }
+    ).exec();
+
     return Promise.resolve({
       statusCode: OK,
     });
@@ -244,7 +251,10 @@ export const verifyOutletLinking = async ({ params }) => {
     const ownerId = verification.ownerId;
     const outletId = verification.outletId;
 
-    const existingOutlet = await Outlet.findOne({ outletId });
+    const existingOutlet = await Outlet.findOne({
+      outletId,
+      outletStatus: OutletStatus.ACTIVE,
+    });
     if (existingOutlet) {
       return Promise.resolve({
         statusCode: OK,
@@ -276,7 +286,7 @@ const saveNewOutletMapping = ({ ownerId, outletId }) => {
 export const getOutlets = async ({ userId, page, limit }) => {
   try {
     const outlets = await Outlet.paginate(
-      { ownerId: userId, status: UserStatus.ACTIVE },
+      { ownerId: userId, outletStatus: OutletStatus.ACTIVE },
       { page, limit }
     );
 
@@ -304,7 +314,10 @@ const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
   await async.forEach(outlets, async (outlet, key, cb) => {
     const response = await ConsumerService.getUserDetails(outlet.outletId);
-    outletDetails.push(response.data);
+    outletDetails.push({
+      ...response.data,
+      isOutletSuspended: outlet.isOutletSuspended,
+    });
   });
   return outletDetails;
 };
