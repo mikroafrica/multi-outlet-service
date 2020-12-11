@@ -149,7 +149,7 @@ describe("Outlet service Tests", function () {
       .put(`/auth/${outletId}/INACTIVE/status`)
       .reply(400, {
         statusCode: 400,
-        message: "Outlet could not be found",
+        message: "User not be found",
       });
 
     OutletService.suspendOutlet({
@@ -205,9 +205,14 @@ describe("Outlet service Tests", function () {
 
     const response = await OutletService.verifyOutletLinking({ params });
     console.log(response);
+    findOneVerification.restore();
+    sinon.assert.calledOnce(findOneVerification);
+
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
   });
 
-  it("should successfully verify outlet linking", async function () {
+  it("should fail to verify outlet linking when otp validation fails", async function () {
     const verificationId = "h47fbh4h44h49f";
     const otpCode = "903875";
 
@@ -218,21 +223,11 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/otp/${verificationId}/${otpCode}/validate`)
-      .reply(200, {
-        statusCode: 200,
+      .reply(400, {
+        statusCode: 400,
       });
-
-    const findOneVerification = sinon.stub(Verification, "findOne").resolves({
-      ownerId: "someid",
-      outletId: "outletId",
-    });
-
-    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
-      ownerId: "someid",
-      outletId: "outletId",
-    });
-
-    const response = await OutletService.verifyOutletLinking({ params });
-    console.log(response);
+    OutletService.verifyOutletLinking({ params })
+      .then()
+      .catch((err) => console.log(err));
   });
 });

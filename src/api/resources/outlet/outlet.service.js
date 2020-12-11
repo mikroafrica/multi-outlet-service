@@ -141,7 +141,6 @@ export const suspendOutlet = async ({ outletId, userId }) => {
       status: "INACTIVE",
     });
 
-    console.log("Got here");
     // SET USER SUSPENDED STATUS TO TRUE
     const findAndUpdateOutlet = await Outlet.findOneAndUpdate(
       { outletId, ownerId: userId, outletStatus: OutletStatus.ACTIVE },
