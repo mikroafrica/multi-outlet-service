@@ -81,9 +81,10 @@ export const resetMultiOutletOwnerPassword = (req, res) => {
 };
 
 export const changePasswordRequest = (req, res) => {
+  const userId = req.user.userId;
   const params = req.body;
 
-  changePassword({ params })
+  changePassword({ params, userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
