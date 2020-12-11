@@ -57,7 +57,7 @@ export const signupMultiOutletOwner = async (params) => {
 
       return Promise.reject({
         statusCode: err.statusCode,
-        message: JSON.parse(err.message)?.message,
+        message: JSON.parse(err.message).message,
       });
     });
 };
@@ -97,7 +97,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
       password: params.password,
       role: "admin",
     });
-    const userId = loginResponse.data?.userId;
+    const userId = loginResponse.data.userId;
 
     try {
       const userDetails = await ConsumerService.getUserDetails(userId);
@@ -105,23 +105,23 @@ export const loginMultiOutletOwner = async ({ params }) => {
       return Promise.resolve({ statusCode: OK, data: loginResponse.data });
     } catch (e) {
       logger.error(`An error occurred while fetching user details login ${e}`);
-      if (e?.statusCode === 403) {
+      if (e.statusCode === 403) {
         return Promise.reject({
-          statusCode: e?.statusCode,
+          statusCode: e.statusCode,
           message: "User account is not verified",
           data: { userId },
         });
       }
       return Promise.reject({
-        statusCode: e?.statusCode || BAD_REQUEST,
-        message: JSON.parse(e.message)?.message,
+        statusCode: e.statusCode || BAD_REQUEST,
+        message: JSON.parse(e.message).message,
       });
     }
   } catch (e) {
     logger.error(`An error occurred during login ${e}`);
     return Promise.reject({
-      statusCode: e?.statusCode || BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      statusCode: e.statusCode || BAD_REQUEST,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -139,13 +139,13 @@ export const sendVerificationEmail = async (userId) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: response?.data,
+      data: response.data,
     });
   } catch (e) {
     logger.error("An error occurred while sending verification email");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -173,13 +173,13 @@ export const validateEmail = async (params) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: response?.data,
+      data: response.data,
     });
   } catch (e) {
     logger.error("An error occurred while verifying OTP sent to email");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -219,7 +219,7 @@ export const requestResetPassword = async ({ params }) => {
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -256,7 +256,7 @@ export const resetPassword = async ({ params }) => {
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -293,7 +293,7 @@ export const changePassword = async ({ params }) => {
     logger.error("An error occurred when changing password");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
