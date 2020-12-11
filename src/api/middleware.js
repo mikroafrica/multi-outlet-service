@@ -1,5 +1,5 @@
 import { UN_AUTHORISED } from "./modules/status.js";
-import * as AuthService from "../../src/api/modules/auth-service.js";
+import * as AuthService from "./modules/auth-service";
 import logger from "../logger.js";
 
 export const secureRoute = (req, res, next) => {

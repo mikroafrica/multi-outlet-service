@@ -2,16 +2,15 @@
   "name": "mikro-multi-outlet-service",
   "version": "1.0.0",
   "description": "Multi-outlet-service provides outlet owners the ability to manage their outlets from a central location",
-  "main": "src/index.js",
-  "type": "module",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "flow check && mocha -r @babel/register tests tests/unit/* --timeout 30000 -r dotenv/config",
+    "test": "flow check && mocha -r @babel/register tests tests/unit/*/* -r dotenv/config",
     "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/*",
-    "build": "npm run build",
+    "build": "npm run build:lib && npm run build:flow",
+    "build:lib": "babel src/ -d lib/",
+    "build:flow": "flow-copy-source -v src/ lib/",
     "postinstall": "npm run build",
-    "start": "node src/index.js",
-    "heroku-prebuild": "bash preinstall.sh",
-    "heroku-postbuild": "bash postinstall.sh"
+    "start": "node lib/index.js"
   },
   "husky": {
     "hooks": {
@@ -60,6 +59,7 @@
     "joi": "^14.3.1",
     "mongoose": "^5.9.17",
     "mongoose-paginate": "^5.0.3",
+    "nock": "^13.0.5",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "restify": "^8.5.1",

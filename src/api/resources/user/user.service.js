@@ -63,7 +63,7 @@ export const signupMultiOutletOwner = async (params) => {
 
       return Promise.reject({
         statusCode: err.statusCode,
-        message: JSON.parse(err.message)?.message,
+        message: JSON.parse(err.message).message,
       });
     });
 };
@@ -118,23 +118,23 @@ export const loginMultiOutletOwner = async ({ params }) => {
       return Promise.resolve({ statusCode: OK, data: loginResponse.data });
     } catch (e) {
       logger.error(`An error occurred while fetching user details login ${e}`);
-      if (e?.statusCode === 403) {
+      if (e.statusCode === 403) {
         return Promise.reject({
-          statusCode: e?.statusCode,
+          statusCode: e.statusCode,
           message: "User account is not verified",
           data: { userId },
         });
       }
       return Promise.reject({
-        statusCode: e?.statusCode || BAD_REQUEST,
-        message: JSON.parse(e.message)?.message,
+        statusCode: e.statusCode || BAD_REQUEST,
+        message: JSON.parse(e.message).message,
       });
     }
   } catch (e) {
     logger.error(`An error occurred during login ${e}`);
     return Promise.reject({
-      statusCode: e?.statusCode || BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      statusCode: e.statusCode || BAD_REQUEST,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -154,13 +154,13 @@ export const sendVerificationEmail = async (userId) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: response?.data,
+      data: response.data,
     });
   } catch (e) {
     logger.error("An error occurred while sending verification email");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -191,13 +191,13 @@ export const validateEmail = async (params) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: response?.data,
+      data: response.data,
     });
   } catch (e) {
     logger.error("An error occurred while verifying OTP sent to email");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -240,7 +240,7 @@ export const requestResetPassword = async ({ params }) => {
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -277,7 +277,7 @@ export const resetPassword = async ({ params }) => {
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
+      message: JSON.parse(e.message).message,
     });
   }
 };
@@ -314,84 +314,14 @@ export const changePassword = async ({ params }) => {
     logger.error("An error occurred when changing password");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message)?.message,
-    });
-  }
-};
-
-export const updateUser = async ({ params, userId }) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "request body is required",
-    });
-  }
-
-  const schema = Joi.object().keys({
-    firstName: Joi.string(),
-    lastName: Joi.string(),
-    email: Joi.string().email(),
-    phoneNumber: Joi.string(),
-    businessName: Joi.string().required(),
-    address: Joi.string().required(),
-    gender: Joi.string().required(),
-    state: Joi.string().required(),
-    lga: Joi.string().required(),
-    profileImageId: Joi.string(),
-    dob: Joi.string(),
-  });
-
-  const validateSchema = Joi.validate(params, schema);
-  if (validateSchema.error) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  try {
-    const userDetails = await ConsumerService.getUserDetails(userId);
-    const userDetailsData = userDetails.data;
-    const isBvnVerified = userDetailsData.bvnVerified;
-
-    // PREVENT A USER FROM UPDATING THEIR NAME, PHONE NUMBER OR DOB IF BVN IS VERIFIED
-    if (isBvnVerified) {
-      delete params.firstName;
-      delete params.lastName;
-      delete params.dob;
-      delete params.phoneNumber;
-    }
-
-    logger.info(
-      `Request body to update user ${userId} - ${JSON.stringify(params)}`
-    );
-    try {
-      const updateUserResponse = await ConsumerService.updateUserProfile({
-        params,
-        userId,
-      });
-      const responseData = updateUserResponse.data;
-      return Promise.resolve({
-        statusCode: OK,
-        data: responseData,
-      });
-    } catch (e) {
-      logger.error(`An error occurred while updating user with error ${e}`);
-      return Promise.reject({
-        statusCode:
-          JSON.parse(e.message)?.message ||
-          "Could not update user profile. Please try again",
-      });
-    }
-  } catch (e) {
-    return Promise.reject({
-      statusCode: "Could not update user profile. Please try again",
+      message: JSON.parse(e.message).message,
     });
   }
 };
 
 const validateSignupParamsSchema = (params) => {
   const schema = Joi.object().keys({
+    personalPhoneNumber: Joi.string(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
     email: Joi.string().email(),
