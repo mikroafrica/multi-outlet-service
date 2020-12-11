@@ -17,57 +17,65 @@ describe("Outlet service Tests", function () {
     pin: "1234",
   };
 
-  // it("should successfully link an outlet to an owner up a multi-outlet user", async function () {
-  //   const mockAuthResponse = {
-  //     data: {
-  //       userId: "123",
-  //       token: "eyjkfbhfehjgve",
-  //     },
-  //   };
-  //
-  //   const mockUserDetailsResponse = {
-  //     data: {
-  //       id: "1",
-  //       firstName: "John",
-  //       lastName: "Doe",
-  //     },
-  //   };
-  //
-  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
-  //
-  //   // const outlet = new Outlet();
-  //   // const saveOutlet = sinon.stub(outlet, "save").resolves({
-  //   //   outletId: "outlet-id",
-  //   //   ownerId: "owner-id",
-  //   //   outletStatus: OutletStatus.ACTIVE,
-  //   //   isOutletSuspended: false,
-  //   // });
-  //
-  //   nock(process.env.AUTH_SERVICE_URL)
-  //     .post("/auth/login")
-  //     .reply(200, mockAuthResponse);
-  //
-  //   nock(process.env.CONSUMER_SERVICE_URL)
-  //     .get(`/user/${mockAuthResponse.data.userId}/details`)
-  //     .reply(200, mockUserDetailsResponse);
-  //
-  //   nock(process.env.CONSUMER_SERVICE_URL)
-  //     .post(`/otp`)
-  //     .reply(200, { data: { verificationId: "2h4242h" } });
-  //
-  //   const response = await OutletService.linkOwnerToOutlet({
-  //     params: linkOutletParams,
-  //     userId: "1234",
-  //   });
-  //   console.log(response);
-  //
-  //   findOneOutlet.restore();
-  //   sinon.assert.calledOnce(findOneOutlet);
-  //
-  //   // saveOutlet.restore();
-  //   // sinon.assert.calledOnce(saveOutlet);
-  //   // expect(response.statusCode).to.be.number;
-  // });
+  it("should successfully link an outlet to an owner up a multi-outlet user", async function () {
+    const mockAuthResponse = {
+      data: {
+        userId: "123",
+        token: "eyjkfbhfehjgve",
+      },
+    };
+
+    const mockUserDetailsResponse = {
+      data: {
+        id: "1",
+        firstName: "John",
+        lastName: "Doe",
+      },
+    };
+
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
+    const findOneVerification = sinon
+      .stub(Verification, "findOne")
+      .resolves(null);
+
+    const outlet = new Outlet();
+    sinon.stub(outlet, "save").resolves({
+      outletId: "outlet-id",
+      ownerId: "owner-id",
+      outletStatus: OutletStatus.ACTIVE,
+      isOutletSuspended: false,
+    });
+
+    sinon.stub(Verification.prototype, "save").resolves({
+      verificationId: "verification-id",
+      outletId: "outlet-id",
+      ownerId: "owner-id",
+      status: "CODE_SENT",
+    });
+
+    nock(process.env.AUTH_SERVICE_URL)
+      .post("/auth/login")
+      .reply(200, mockAuthResponse);
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${mockAuthResponse.data.userId}/details`)
+      .reply(200, mockUserDetailsResponse);
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .post(`/otp`)
+      .reply(200, { data: { verificationId: "2h4242h" } });
+
+    const response = await OutletService.linkOwnerToOutlet({
+      params: linkOutletParams,
+      userId: "1234",
+    });
+    console.log(response);
+
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+    findOneVerification.restore();
+    sinon.assert.calledOnce(findOneVerification);
+  });
 
   it("should successfully unlink an outlet", async function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
@@ -203,6 +211,12 @@ describe("Outlet service Tests", function () {
       outletId: "outletId",
     });
 
+    const outlet = new Outlet();
+    sinon.mock(outlet).expects("save").resolves({
+      outletId: "outletId",
+      ownerId: "ownerId",
+      outletStatus: OutletStatus.ACTIVE,
+    });
     const response = await OutletService.verifyOutletLinking({ params });
     console.log(response);
     findOneVerification.restore();
@@ -225,7 +239,9 @@ describe("Outlet service Tests", function () {
       .get(`/otp/${verificationId}/${otpCode}/validate`)
       .reply(400, {
         statusCode: 400,
+        message: "OTP has expired",
       });
+
     OutletService.verifyOutletLinking({ params })
       .then()
       .catch((err) => console.log(err));
