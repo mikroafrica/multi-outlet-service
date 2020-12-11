@@ -53,11 +53,13 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
   );
   try {
     const loginResponse = await AuthService.loginWithPhoneNumber(loginRequest);
+    const loginResponseData = loginResponse.data;
 
-    const outletUserId = loginResponse.data.userId;
+    const outletUserId = loginResponseData.data.userId;
     const userDetails = await ConsumerService.getUserDetails(outletUserId);
     const userDetailsData = userDetails.data;
-    const outletId = userDetailsData.id;
+
+    const outletId = userDetailsData.data.id;
 
     const existingOutlet = await Outlet.findOne({
       outletId,
@@ -73,9 +75,11 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     logger.info(
       `Sending verification OTP to ${JSON.stringify(params.phoneNumber)}`
     );
-    const otpResponseData = await sendVerificationOtp({
+    const otpResponse = await sendVerificationOtp({
       phoneNumber: params.phoneNumber,
     });
+    const otpResponseData = otpResponse.data;
+
     await saveVerification({
       verificationId: otpResponseData.id,
       outletId,
@@ -94,9 +98,7 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message:
-        JSON.parse(err?.message)?.message ||
-        "Could not link outlet. Please try again",
+      message: err.message || "Could not link outlet. Please try again",
     });
   }
 };
@@ -171,9 +173,7 @@ const sendVerificationOtp = async ({ phoneNumber }) => {
     logger.error("Could not send verification OTP");
     return Promise.reject({
       statusCode: NOT_FOUND,
-      message: JSON.stringify({
-        message: "Could not send verification OTP",
-      }),
+      message: "Could not send verification OTP",
     });
   }
 };
@@ -273,7 +273,7 @@ export const verifyOutletLinking = async ({ params }) => {
   } catch (err) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(err.message)?.message,
+      message: err.message,
     });
   }
 };
@@ -312,10 +312,11 @@ export const getOutlets = async ({ userId, page, limit }) => {
 
 const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
-  await async.forEach(outlets, async (outlet, key, cb) => {
+  await async.forEach(outlets, async (outlet) => {
     const response = await ConsumerService.getUserDetails(outlet.outletId);
+    const responseData = response.data;
     outletDetails.push({
-      ...response.data,
+      ...responseData.data,
       isOutletSuspended: outlet.isOutletSuspended,
     });
   });

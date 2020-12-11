@@ -1,11 +1,18 @@
 import { UN_AUTHORISED } from "./modules/status.js";
-import * as AuthService from "../../src/api/modules/auth-service.js";
+import * as AuthService from "../api/modules/auth-service.js";
 import logger from "../logger.js";
 
 export const secureRoute = (req, res, next) => {
   const path = req.route.path;
 
-  if (path.includes("auth") && !path.includes("update-profile")) {
+  if (
+    path.includes("signup") ||
+    path.includes("login") ||
+    path.includes("email-verification") ||
+    path.includes("email-validation") ||
+    path.includes("reset-password-request") ||
+    path.includes("reset-password")
+  ) {
     return next();
   }
 
@@ -23,7 +30,8 @@ export const secureRoute = (req, res, next) => {
   const params = { token };
   AuthService.validateToken(params)
     .then((authResponse) => {
-      req.user = authResponse.data;
+      const authResponseData = authResponse.data;
+      req.user = authResponseData.data;
       return next();
     })
     .catch((err) => {
@@ -32,7 +40,7 @@ export const secureRoute = (req, res, next) => {
       );
       return res.send(err.statusCode || UN_AUTHORISED, {
         status: false,
-        message: JSON.parse(err.message).message || "Your session has expired",
+        message: err.message || "Your session has expired",
       });
     });
 };
