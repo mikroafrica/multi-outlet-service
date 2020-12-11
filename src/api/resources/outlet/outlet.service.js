@@ -111,11 +111,13 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
         message: "Outlet not found. Please supply a valid outlet",
       });
     }
-    await Outlet.findOneAndUpdate(
+    const findOneAndUpdateOutlet = await Outlet.findOneAndUpdate(
       { outletId, ownerId: userId },
       { $set: { outletStatus: OutletStatus.INACTIVE } },
       { new: true }
-    ).exec();
+    );
+    findOneAndUpdateOutlet.exec();
+
     return Promise.resolve({
       statusCode: OK,
     });
@@ -128,7 +130,7 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
   }
 };
 
-export const suspendOutlet = async ({ outletId }) => {
+export const suspendOutlet = async ({ outletId, userId }) => {
   logger.info(`Outlet owner request to suspend outlet ${outletId}`);
   try {
     // SET THE USER TO INACTIVE ON THE AUTH SERVICE (TO PREVENT ACCESS TO THE APP)
@@ -137,12 +139,14 @@ export const suspendOutlet = async ({ outletId }) => {
       status: "INACTIVE",
     });
 
+    console.log("Got here");
     // SET USER SUSPENDED STATUS TO TRUE
-    await Outlet.findOneAndUpdate(
-      { outletId, outletStatus: OutletStatus.ACTIVE },
+    const findAndUpdateOutlet = await Outlet.findOneAndUpdate(
+      { outletId, ownerId: userId, outletStatus: OutletStatus.ACTIVE },
       { $set: { isOutletSuspended: true } },
       { new: true }
-    ).exec();
+    );
+    findAndUpdateOutlet.exec();
 
     return Promise.resolve({
       statusCode: OK,
@@ -158,7 +162,7 @@ export const suspendOutlet = async ({ outletId }) => {
   }
 };
 
-const sendVerificationOtp = async ({ phoneNumber }) => {
+export const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
     const params = { phoneNumber, type: "PHONE_NUMBER" };
 
