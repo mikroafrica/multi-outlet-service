@@ -201,13 +201,11 @@ describe("User service Tests", function () {
 
   it("should fail to send a verification email if userId is undefined", async function () {
     try {
-    } catch (err) {}
-    UserService.sendVerificationEmail()
-      .then()
-      .catch((err) => {
-        expect(err.statusCode).equals(400);
-        expect(err.message).to.exist;
-      });
+      await UserService.sendVerificationEmail();
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should fail to send a verification email if an error occurs at consumer service", async function () {
