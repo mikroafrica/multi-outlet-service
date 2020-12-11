@@ -39,7 +39,7 @@ export const fetchUserTransactions = async ({
       const transactionData = responseData.data;
       return Promise.resolve({
         statusCode: OK,
-        data: transactionData,
+        data: transactionData.data,
       });
     })
     .catch((e) => {
@@ -50,9 +50,7 @@ export const fetchUserTransactions = async ({
       );
       return Promise.reject({
         statusCode: BAD_REQUEST,
-        message:
-          JSON.parse(e.message).message ||
-          "Something went wrong. Please try again",
+        message: e.message || "Something went wrong. Please try again",
       });
     });
 };
@@ -86,7 +84,7 @@ export const getTransactionsCategorySummary = async ({
       const transactionData = responseData.data;
       return Promise.resolve({
         statusCode: OK,
-        data: transactionData,
+        data: transactionData.data,
       });
     })
     .catch((e) => {
@@ -97,9 +95,7 @@ export const getTransactionsCategorySummary = async ({
       );
       return Promise.reject({
         statusCode: BAD_REQUEST,
-        message:
-          JSON.parse(e.message).message ||
-          "Something went wrong. Please try again",
+        message: e.message || "Something went wrong. Please try again",
       });
     });
 };
