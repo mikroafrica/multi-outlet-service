@@ -5,7 +5,7 @@ import logger from "../logger.js";
 export const secureRoute = (req, res, next) => {
   const path = req.route.path;
 
-  if (path.includes("auth")) {
+  if (path.includes("auth") && !path.includes("update-profile")) {
     return next();
   }
 
@@ -32,7 +32,7 @@ export const secureRoute = (req, res, next) => {
       );
       return res.send(err.statusCode || UN_AUTHORISED, {
         status: false,
-        message: err.message || "Your session has expired",
+        message: JSON.parse(err.message).message || "Your session has expired",
       });
     });
 };

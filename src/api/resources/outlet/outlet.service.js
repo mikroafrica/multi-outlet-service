@@ -3,10 +3,11 @@ import async from "async";
 import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import { Outlet } from "./outlet.model.js";
-import { BAD_REQUEST, OK } from "../../modules/status.js";
+import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
+import { UserStatus } from "../user/user.type.js";
 
 export const linkOwnerToOutlet = async ({ params, userId }) => {
   if (!params) {
@@ -41,8 +42,15 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     });
   }
 
-  const loginRequest = buildLoginRequest({ phoneNumber, pin: params.pin });
-  logger.info(`Outlet login with request [${loginRequest}]`);
+  const loginRequest = {
+    username: phoneNumber,
+    password: params.pin,
+    role: "outlet",
+  };
+
+  logger.info(
+    `Outlet login with request [${JSON.stringify({ loginRequest, pin: "" })}]`
+  );
   try {
     const loginResponse = await AuthService.loginWithPhoneNumber(loginRequest);
 
@@ -59,7 +67,9 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
       });
     }
 
-    logger.info(`Sending verification OTP to ${params.phoneNumber}`);
+    logger.info(
+      `Sending verification OTP to ${JSON.stringify(params.phoneNumber)}`
+    );
     const otpResponseData = await sendVerificationOtp({
       phoneNumber: params.phoneNumber,
     });
@@ -88,12 +98,31 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
   }
 };
 
-const buildLoginRequest = ({ phoneNumber, pin }) => {
-  return {
-    username: phoneNumber,
-    password: pin,
-    role: "outlet",
-  };
+export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
+  try {
+    logger.info(`Outlet owner ${userId} request to unlink outlet ${outletId}`);
+    const existingOutlet = await Outlet.findOne({ outletId, ownerId: userId });
+    if (!existingOutlet) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Outlet not found. Please supply a valid outlet",
+      });
+    }
+    await Outlet.findOneAndUpdate(
+      { outletId, ownerId: userId },
+      { $set: { status: UserStatus.INACTIVE } },
+      { new: true }
+    ).exec();
+    return Promise.resolve({
+      statusCode: OK,
+    });
+  } catch (e) {
+    logger.error(`Failed to unlink outlet with the following error ${e}`);
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not delete outlet. Try again",
+    });
+  }
 };
 
 const sendVerificationOtp = async ({ phoneNumber }) => {
@@ -101,14 +130,14 @@ const sendVerificationOtp = async ({ phoneNumber }) => {
     const params = { phoneNumber, type: "PHONE_NUMBER" };
 
     logger.info(
-      `Sending Verification during link outlet with request [${params}]`
+      `Request to link outlet with request b [${JSON.stringify(params)}]`
     );
     const otpResponse = await ConsumerService.generateOtp(params);
     return otpResponse.data;
   } catch (err) {
     logger.error("Could not send verification OTP");
     return Promise.reject({
-      statusCode: BAD_REQUEST,
+      statusCode: NOT_FOUND,
       message: JSON.stringify({
         message: "Could not send verification OTP",
       }),
@@ -170,7 +199,9 @@ export const verifyOutletLinking = async ({ params }) => {
 
   try {
     logger.info(
-      `Verify outlet linking with request [${JSON.stringify(params)}]`
+      `Verify outlet linking with request [${JSON.stringify(
+        JSON.stringify(params)
+      )}]`
     );
     const otpValidationResponse = await ConsumerService.validateUserOtp(params);
     const verification = await Verification.findOne({
@@ -179,8 +210,8 @@ export const verifyOutletLinking = async ({ params }) => {
 
     if (!verification) {
       return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Outlet has been added previously",
+        statusCode: NOT_FOUND,
+        message: "Outlet verification is not found",
       });
     }
 
@@ -218,7 +249,10 @@ const saveNewOutletMapping = ({ ownerId, outletId }) => {
 
 export const getOutlets = async ({ userId, page, limit }) => {
   try {
-    const outlets = await Outlet.paginate({ ownerId: userId }, { page, limit });
+    const outlets = await Outlet.paginate(
+      { ownerId: userId, status: UserStatus.ACTIVE },
+      { page, limit }
+    );
 
     const outletDetails = await fetchOutletDetails(outlets.docs);
 
