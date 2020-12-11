@@ -39,7 +39,6 @@ describe("User service Tests", function () {
   };
 
   const changePasswordParams = {
-    userId: "some-uuid-pass-word",
     currentPassword: "oldpassword",
     newPassword: "newpassword",
   };
@@ -58,9 +57,9 @@ describe("User service Tests", function () {
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(200, {});
 
     const response = await UserService.signupMultiOutletOwner(signupParams);
-    console.log(response);
 
-    // expect(response.statusCode).to.be.number;
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should fail to create a user if consumer service returns an error", async function () {
@@ -72,11 +71,12 @@ describe("User service Tests", function () {
       .post("/user/create/OUTLET_OWNER")
       .reply(400, mockResponse);
 
-    UserService.signupMultiOutletOwner(signupParams)
-      .then((res) => console.log(res))
-      .catch((err) => {
-        console.log(err);
-      });
+    try {
+      await UserService.signupMultiOutletOwner(signupParams);
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).exist;
+    }
   });
 
   it("should fail to create a user if auth service returns an error", async function () {
@@ -99,11 +99,12 @@ describe("User service Tests", function () {
       message: "An error occurred while trying to save user",
     });
 
-    UserService.signupMultiOutletOwner(signupParams)
-      .then((res) => console.log(res))
-      .catch((err) => {
-        console.log(err);
-      });
+    try {
+      await UserService.signupMultiOutletOwner(signupParams);
+    } catch (err) {
+      expect(err.statusCode).equals(409);
+      expect(err.message).exist;
+    }
   });
 
   it("should successfully login a user", async function () {
@@ -133,7 +134,9 @@ describe("User service Tests", function () {
     const response = await UserService.loginMultiOutletOwner({
       params: loginParams,
     });
-    console.log(response);
+
+    expect(response.statusCode).equals(200);
+    expect(response.data).exist;
   });
 
   it("should fail to login a user when user details are wrong", async function () {
@@ -146,9 +149,12 @@ describe("User service Tests", function () {
       .post("/auth/login")
       .reply(401, failedLoginMockResponse);
 
-    UserService.loginMultiOutletOwner({ params: loginParams })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.loginMultiOutletOwner({ params: loginParams });
+    } catch (err) {
+      expect(err.statusCode).equals(401);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should fail to login a user when user has not activated their account", async function () {
@@ -169,9 +175,12 @@ describe("User service Tests", function () {
         message: "User account is not active yet",
       });
 
-    UserService.loginMultiOutletOwner({ params: loginParams })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.loginMultiOutletOwner({ params: loginParams });
+    } catch (err) {
+      expect(err.statusCode).equals(403);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should successfully send a verification email", async function () {
@@ -186,13 +195,19 @@ describe("User service Tests", function () {
       .reply(200, sendVerificationMockResponse);
 
     const response = await UserService.sendVerificationEmail("007");
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should fail to send a verification email if userId is undefined", async function () {
+    try {
+    } catch (err) {}
     UserService.sendVerificationEmail()
       .then()
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        expect(err.statusCode).equals(400);
+        expect(err.message).to.exist;
+      });
   });
 
   it("should fail to send a verification email if an error occurs at consumer service", async function () {
@@ -205,9 +220,12 @@ describe("User service Tests", function () {
       .post(`/user/email-verification`)
       .reply(400, mockErrorResponse);
 
-    UserService.sendVerificationEmail("007")
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.sendVerificationEmail("007");
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should successfully validate an email", async function () {
@@ -220,7 +238,7 @@ describe("User service Tests", function () {
       .reply(200, mockResponse);
 
     const response = await UserService.validateEmail(validateEmailParams);
-    console.log(response);
+    expect(response.statusCode).equals(200);
   });
 
   it("should fail to validate email if consumer service throws an error", async function () {
@@ -232,9 +250,12 @@ describe("User service Tests", function () {
       .post(`/user/email-validation`)
       .reply(400, mockErrorResponse);
 
-    UserService.validateEmail(validateEmailParams)
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.validateEmail(validateEmailParams);
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should successfully request a password reset", async function () {
@@ -249,7 +270,7 @@ describe("User service Tests", function () {
     const response = await UserService.requestResetPassword({
       params: { email: "johndoe@mikro.africa" },
     });
-    console.log(response);
+    expect(response.statusCode).equals(200);
   });
 
   it("should fail to request a password reset if an error occurs in auth service", async function () {
@@ -260,10 +281,12 @@ describe("User service Tests", function () {
     nock(process.env.AUTH_SERVICE_URL)
       .post(`/password/reset-request`)
       .reply(400, mockResponse);
-
-    UserService.requestResetPassword({ email: "johndoe@mikro.africa" })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.requestResetPassword({ email: "johndoe@mikro.africa" });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should successfully reset a user's password", async function () {
@@ -278,7 +301,8 @@ describe("User service Tests", function () {
     const response = await UserService.resetPassword({
       params: resetPasswordParams,
     });
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should fail reset password if an error occurs in auth service", async function () {
@@ -290,16 +314,23 @@ describe("User service Tests", function () {
       .put(`/password/reset-password-web`)
       .reply(400, mockErrorResponse);
 
-    UserService.resetPassword({
-      params: resetPasswordParams,
-    })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.resetPassword({
+        params: resetPasswordParams,
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
   });
 
   it("should successfully change a user's password", async function () {
     const mockResponse = {
-      data: { userId: changePasswordParams.userId },
+      data: {
+        data: {
+          userId: changePasswordParams.userId,
+        },
+      },
     };
 
     nock(process.env.AUTH_SERVICE_URL)
@@ -308,8 +339,11 @@ describe("User service Tests", function () {
 
     const response = await UserService.changePassword({
       params: changePasswordParams,
+      userId: "some-uuid-pass-word",
     });
-    console.log(response);
+
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should fail to change a user's password if an error occurs in auth service", async function () {
@@ -321,10 +355,14 @@ describe("User service Tests", function () {
       .put(`/password/change`)
       .reply(400, mockErrorResponse);
 
-    UserService.changePassword({
-      params: changePasswordParams,
-    })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await UserService.changePassword({
+        params: changePasswordParams,
+        userId: "123",
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
   });
 });
