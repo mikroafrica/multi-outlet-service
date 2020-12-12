@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const schema = {
   verificationId: String,
-  outletId: String,
+  outletUserId: String,
   ownerId: String,
   status: String,
 };

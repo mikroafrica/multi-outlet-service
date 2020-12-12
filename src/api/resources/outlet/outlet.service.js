@@ -56,13 +56,9 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     const loginResponseData = loginResponse.data;
 
     const outletUserId = loginResponseData.data.userId;
-    const userDetails = await ConsumerService.getUserDetails(outletUserId);
-    const userDetailsData = userDetails.data;
-
-    const outletId = userDetailsData.data.id;
 
     const existingOutlet = await Outlet.findOne({
-      outletId,
+      outletUserId,
       outletStatus: OutletStatus.ACTIVE,
     });
     if (existingOutlet) {
@@ -82,7 +78,7 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
 
     await saveVerification({
       verificationId: otpResponseData.id,
-      outletId,
+      outletUserId,
       ownerId: userId,
       status: otpResponseData.verificationStatus,
     });
@@ -103,10 +99,15 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
   }
 };
 
-export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
+export const unlinkOutletFromOwner = async ({ userId, outletUserId }) => {
   try {
-    logger.info(`Outlet owner ${userId} request to unlink outlet ${outletId}`);
-    const existingOutlet = await Outlet.findOne({ outletId, ownerId: userId });
+    logger.info(
+      `Outlet owner ${userId} request to unlink outlet ${outletUserId}`
+    );
+    const existingOutlet = await Outlet.findOne({
+      outletUserId,
+      ownerId: userId,
+    });
     if (!existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -114,7 +115,7 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
       });
     }
     await Outlet.findOneAndUpdate(
-      { outletId, ownerId: userId },
+      { outletUserId, ownerId: userId },
       { $set: { outletStatus: OutletStatus.INACTIVE } },
       { new: true }
     ).exec();
@@ -122,7 +123,9 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
       statusCode: OK,
     });
   } catch (e) {
-    logger.error(`Failed to unlink outlet with the following error ${e}`);
+    logger.error(
+      `Failed to unlink outlet with the following error ${JSON.stringify(e)}`
+    );
     return Promise.reject({
       statusCode: BAD_REQUEST,
       message: "Could not delete outlet. Try again",
@@ -130,18 +133,18 @@ export const unlinkOutletFromOwner = async ({ userId, outletId }) => {
   }
 };
 
-export const suspendOutlet = async ({ outletId }) => {
-  logger.info(`Outlet owner request to suspend outlet ${outletId}`);
+export const suspendOutlet = async ({ outletUserId }) => {
+  logger.info(`Outlet owner request to suspend outlet ${outletUserId}`);
   try {
     // SET THE USER TO INACTIVE ON THE AUTH SERVICE (TO PREVENT ACCESS TO THE APP)
     await AuthService.updateUserStatus({
-      userId: outletId,
+      userId: outletUserId,
       status: "INACTIVE",
     });
 
     // SET USER SUSPENDED STATUS TO TRUE
     await Outlet.findOneAndUpdate(
-      { outletId, outletStatus: OutletStatus.ACTIVE },
+      { outletUserId, outletStatus: OutletStatus.ACTIVE },
       { $set: { isOutletSuspended: true } },
       { new: true }
     ).exec();
@@ -151,7 +154,7 @@ export const suspendOutlet = async ({ outletId }) => {
     });
   } catch (e) {
     logger.error(
-      `Failed to suspend outlet ${outletId} with error ${JSON.stringify(e)}`
+      `Failed to suspend outlet ${outletUserId} with error ${JSON.stringify(e)}`
     );
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -180,19 +183,19 @@ const sendVerificationOtp = async ({ phoneNumber }) => {
 
 const saveVerification = async ({
   verificationId,
-  outletId,
+  outletUserId,
   ownerId,
   status,
 }) => {
   const existingVerification = await Verification.findOne({
-    outletId,
+    outletUserId,
     ownerId,
   });
 
   // UPDATE AN EXISTING VERIFICATION IF IT ALREADY EXISTS
   if (existingVerification) {
     await Verification.findOneAndUpdate(
-      { outletId, ownerId },
+      { outletUserId, ownerId },
       { $set: { verificationId } },
       { new: true }
     ).exec();
@@ -201,7 +204,7 @@ const saveVerification = async ({
 
   const verification = new Verification({
     verificationId,
-    outletId,
+    outletUserId,
     ownerId,
     status,
   });
@@ -249,10 +252,10 @@ export const verifyOutletLinking = async ({ params }) => {
     }
 
     const ownerId = verification.ownerId;
-    const outletId = verification.outletId;
+    const outletUserId = verification.outletUserId;
 
     const existingOutlet = await Outlet.findOne({
-      outletId,
+      outletUserId,
       outletStatus: OutletStatus.ACTIVE,
     });
     if (existingOutlet) {
@@ -262,10 +265,10 @@ export const verifyOutletLinking = async ({ params }) => {
       });
     }
 
-    const outlet = await saveNewOutletMapping({ ownerId, outletId });
+    const outlet = await saveNewOutletMapping({ ownerId, outletUserId });
 
     // DELETE THE VERIFICATION ONCE VERIFICATION IS SUCCESSFUL
-    await Verification.findOneAndDelete({ ownerId, outletId });
+    await Verification.findOneAndDelete({ ownerId, outletUserId });
     return Promise.resolve({
       statusCode: OK,
       data: outlet,
@@ -278,8 +281,8 @@ export const verifyOutletLinking = async ({ params }) => {
   }
 };
 
-const saveNewOutletMapping = ({ ownerId, outletId }) => {
-  const outlet = new Outlet({ ownerId, outletId });
+const saveNewOutletMapping = ({ ownerId, outletUserId }) => {
+  const outlet = new Outlet({ ownerId, outletUserId });
   return outlet.save();
 };
 
@@ -313,7 +316,7 @@ export const getOutlets = async ({ userId, page, limit }) => {
 const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
   await async.forEach(outlets, async (outlet) => {
-    const response = await ConsumerService.getUserDetails(outlet.outletId);
+    const response = await ConsumerService.getUserDetails(outlet.outletUserId);
     const responseData = response.data;
     outletDetails.push({
       ...responseData.data,
