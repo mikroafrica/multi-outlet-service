@@ -408,30 +408,6 @@ describe("User service Tests", function () {
     expect(response.data).to.exist;
   });
 
-  it("should fail to update a user if user details cannot be found", async function () {
-    const userId = "123";
-    const params = {
-      firstName: "John",
-      lastName: "Doe",
-      businessName: "Good Stores",
-      address: "12 Salami Street",
-    };
-
-    nock(process.env.CONSUMER_SERVICE_URL)
-      .get(`/user/${userId}/details`)
-      .reply(400, { statusCode: 400, message: "Could not find user details" });
-
-    try {
-      await UserService.updateUser({
-        params,
-        userId,
-      });
-    } catch (err) {
-      expect(err.statusCode).equals(400);
-      expect(err.message).to.exist;
-    }
-  });
-
   it("should fail to update a user if consumer service fails to update a user", async function () {
     const userId = "123";
     const params = {

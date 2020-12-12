@@ -63,13 +63,14 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/otp`)
-      .reply(200, { data: { verificationId: "2h4242h" } });
+      .reply(200, { statusCode: 200, data: { verificationId: "2h4242h" } });
 
     const response = await OutletService.linkOwnerToOutlet({
       params: linkOutletParams,
       userId: "1234",
     });
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -96,7 +97,7 @@ describe("Outlet service Tests", function () {
       outletUserId: "4579",
       userId: "1234",
     });
-    console.log(response);
+    expect(response.statusCode).equals(200);
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -108,12 +109,15 @@ describe("Outlet service Tests", function () {
   it("should fail to unlink an outlet if outlet is not found", async function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
 
-    OutletService.unlinkOutletFromOwner({
-      outletUserId: "4579",
-      userId: "1234",
-    })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await OutletService.unlinkOutletFromOwner({
+        outletUserId: "4579",
+        userId: "1234",
+      });
+    } catch (e) {
+      expect(e.statusCode).equals(400);
+      expect(e.message).to.exist;
+    }
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -148,6 +152,7 @@ describe("Outlet service Tests", function () {
       outletUserId,
       userId: "user-id",
     });
+    expect(response.statusCode).equals(200);
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -167,14 +172,15 @@ describe("Outlet service Tests", function () {
         message: "User not be found",
       });
 
-    OutletService.suspendOutlet({
-      outletUserId,
-      userId: ownerId,
-    })
-      .then()
-      .catch((err) => {
-        console.log(err);
+    try {
+      await OutletService.suspendOutlet({
+        outletUserId,
+        userId: ownerId,
       });
+    } catch (e) {
+      expect(e.statusCode).equals(400);
+      expect(e.message).to.exist;
+    }
   });
 
   it("should successfully send verification OTP", async function () {
@@ -190,7 +196,8 @@ describe("Outlet service Tests", function () {
       });
 
     const response = await OutletService.sendVerificationOtp({ phoneNumber });
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully verify outlet linking", async function () {
@@ -225,7 +232,10 @@ describe("Outlet service Tests", function () {
       outletStatus: OutletStatus.ACTIVE,
     });
     const response = await OutletService.verifyOutletLinking({ params });
-    console.log(response);
+
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
+
     findOneVerification.restore();
     sinon.assert.calledOnce(findOneVerification);
 
@@ -249,8 +259,11 @@ describe("Outlet service Tests", function () {
         message: "OTP has expired",
       });
 
-    OutletService.verifyOutletLinking({ params })
-      .then()
-      .catch((err) => console.log(err));
+    try {
+      await OutletService.verifyOutletLinking({ params });
+    } catch (e) {
+      expect(e.statusCode).equals(400);
+      expect(e.message).to.exist;
+    }
   });
 });

@@ -163,7 +163,6 @@ export const suspendOutlet = async ({ outletUserId, userId }) => {
       { new: true }
     );
     findAndUpdateOutlet.exec();
-    console.log("Got here too");
 
     return Promise.resolve({
       statusCode: OK,
