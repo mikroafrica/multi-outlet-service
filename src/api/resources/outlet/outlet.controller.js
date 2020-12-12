@@ -33,9 +33,9 @@ export const verifyLinkedOutlet = (req, res) => {
 
 export const unlinkOutlet = (req, res) => {
   const userId = req.user.userId;
-  const outletId = req.params.id;
+  const outletUserId = req.params.id;
 
-  unlinkOutletFromOwner({ userId, outletId })
+  unlinkOutletFromOwner({ userId, outletUserId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })
@@ -45,10 +45,9 @@ export const unlinkOutlet = (req, res) => {
 };
 
 export const suspendOutletUser = (req, res) => {
-  const userId = req.user.userId;
-  const outletId = req.params.id;
+  const outletUserId = req.params.id;
 
-  suspendOutlet({ outletId, userId })
+  suspendOutlet({ outletUserId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })

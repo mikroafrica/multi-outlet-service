@@ -40,7 +40,7 @@ describe("Outlet service Tests", function () {
 
     const outlet = new Outlet();
     sinon.stub(outlet, "save").resolves({
-      outletId: "outlet-id",
+      outletOwnerId: "outlet-id",
       ownerId: "owner-id",
       outletStatus: OutletStatus.ACTIVE,
       isOutletSuspended: false,
@@ -48,7 +48,7 @@ describe("Outlet service Tests", function () {
 
     sinon.stub(Verification.prototype, "save").resolves({
       verificationId: "verification-id",
-      outletId: "outlet-id",
+      outletOwnerId: "outlet-id",
       ownerId: "owner-id",
       status: "CODE_SENT",
     });
@@ -79,7 +79,7 @@ describe("Outlet service Tests", function () {
 
   it("should successfully unlink an outlet", async function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
-      outletId: "outlet-id",
+      outletOwnerId: "outlet-id",
       ownerId: "owner-id",
       outletStatus: OutletStatus.ACTIVE,
       isOutletSuspended: false,
@@ -93,7 +93,7 @@ describe("Outlet service Tests", function () {
     });
 
     const response = await OutletService.unlinkOutletFromOwner({
-      outletId: "4579",
+      outletOwnerId: "4579",
       userId: "1234",
     });
     console.log(response);
@@ -109,7 +109,7 @@ describe("Outlet service Tests", function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
 
     OutletService.unlinkOutletFromOwner({
-      outletId: "4579",
+      outletOwnerId: "4579",
       userId: "1234",
     })
       .then()
@@ -120,10 +120,10 @@ describe("Outlet service Tests", function () {
   });
 
   it("should successfully suspend an outlet", async function () {
-    const outletId = 4579;
+    const outletOwnerId = 4579;
 
     nock(process.env.AUTH_SERVICE_URL)
-      .put(`/auth/${outletId}/INACTIVE/status`)
+      .put(`/auth/${outletOwnerId}/INACTIVE/status`)
       .reply(200, {
         statusCode: 200,
       });
@@ -132,7 +132,7 @@ describe("Outlet service Tests", function () {
       .stub(Outlet, "findOneAndUpdate")
       .resolves({
         exec: () => ({
-          outletId,
+          outletOwnerId,
           ownerId: "owner-id",
           outletStatus: OutletStatus.ACTIVE,
           isOutletSuspended: true,
@@ -140,7 +140,7 @@ describe("Outlet service Tests", function () {
       });
 
     const response = await OutletService.suspendOutlet({
-      outletId,
+      outletOwnerId,
       userId: "user-id",
     });
     console.log(response);
@@ -150,18 +150,18 @@ describe("Outlet service Tests", function () {
   });
 
   it("should fail to suspend an outlet if an error occurs while updating user status", async function () {
-    const outletId = "4579";
+    const outletOwnerId = "4579";
     const ownerId = "owner-id";
 
     nock(process.env.AUTH_SERVICE_URL)
-      .put(`/auth/${outletId}/INACTIVE/status`)
+      .put(`/auth/${outletOwnerId}/INACTIVE/status`)
       .reply(400, {
         statusCode: 400,
         message: "User not be found",
       });
 
     OutletService.suspendOutlet({
-      outletId,
+      outletOwnerId,
       userId: ownerId,
     })
       .then()
@@ -203,17 +203,17 @@ describe("Outlet service Tests", function () {
 
     const findOneVerification = sinon.stub(Verification, "findOne").resolves({
       ownerId: "someid",
-      outletId: "outletId",
+      outletOwnerId: "outlet-owner-id",
     });
 
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
       ownerId: "someid",
-      outletId: "outletId",
+      outletOwnerId: "outlet-owner-id",
     });
 
     const outlet = new Outlet();
     sinon.mock(outlet).expects("save").resolves({
-      outletId: "outletId",
+      outletOwnerId: "outlet-owner-id",
       ownerId: "ownerId",
       outletStatus: OutletStatus.ACTIVE,
     });

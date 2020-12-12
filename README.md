@@ -417,7 +417,7 @@ _Response Body_
         "isOutletSuspended": false,
         "_id": "5fd365227a30216c8e8efff4",
         "ownerId": "5fd35d158677251eabdf8ef5",
-        "outletId": "5fcda81e7e33f72dd1a1fe5f",
+        "outletUserId": "5fcda81e7e33f72dd1a1fe5f",
         "createdAt": "2020-12-11T12:25:06.694Z",
         "updatedAt": "2020-12-11T12:25:06.694Z",
         "__v": 0
@@ -544,7 +544,7 @@ _Response Body_
 
 
 ### Unlink Outlet 
-`PUT /outlet/{outletId}/unlink`
+`PUT /outlet/{outletUserId}/unlink`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -557,7 +557,7 @@ _Response Body_
 ```
 
 ### Suspend Outlet 
-`PUT /outlet/{outletId}/suspend`
+`PUT /outlet/{outletUserId}/suspend`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 

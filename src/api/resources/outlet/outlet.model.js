@@ -3,7 +3,7 @@ import mongoosePaginate from "mongoose-paginate";
 import { OutletStatus } from "./outlet.status.js";
 
 const schema = {
-  outletId: String,
+  outletUserId: String,
   ownerId: String,
   outletStatus: {
     type: String,
