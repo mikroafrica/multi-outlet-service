@@ -4,7 +4,7 @@
   "description": "Multi-outlet-service provides outlet owners the ability to manage their outlets from a central location",
   "main": "lib/index.js",
   "scripts": {
-    "test": "flow check && mocha -r @babel/register tests tests/unit/* -r dotenv/config",
+    "test": "flow check && mocha -r @babel/register tests tests/unit/*",
     "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/* -r dotenv/config ",
     "build": "npm run build:lib && npm run build:flow",
     "build:lib": "babel src/ -d lib/",
