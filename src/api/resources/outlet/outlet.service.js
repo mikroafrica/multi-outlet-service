@@ -133,9 +133,21 @@ export const unlinkOutletFromOwner = async ({ userId, outletUserId }) => {
   }
 };
 
-export const suspendOutlet = async ({ outletUserId }) => {
+export const suspendOutlet = async ({ outletUserId, userId }) => {
   logger.info(`Outlet owner request to suspend outlet ${outletUserId}`);
   try {
+    const existingOutlet = await Outlet.findOne({
+      outletUserId,
+      ownerId: userId,
+      outletStatus: OutletStatus.ACTIVE,
+    });
+    if (!existingOutlet) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Could not find outlet to suspend",
+      });
+    }
+
     // SET THE USER TO INACTIVE ON THE AUTH SERVICE (TO PREVENT ACCESS TO THE APP)
     await AuthService.updateUserStatus({
       userId: outletUserId,
@@ -144,7 +156,7 @@ export const suspendOutlet = async ({ outletUserId }) => {
 
     // SET USER SUSPENDED STATUS TO TRUE
     await Outlet.findOneAndUpdate(
-      { outletUserId, outletStatus: OutletStatus.ACTIVE },
+      { outletUserId, ownerId: userId, outletStatus: OutletStatus.ACTIVE },
       { $set: { isOutletSuspended: true } },
       { new: true }
     ).exec();
