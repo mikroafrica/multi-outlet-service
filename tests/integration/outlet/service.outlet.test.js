@@ -40,7 +40,7 @@ describe("Outlet service Tests", function () {
 
     const outlet = new Outlet();
     sinon.stub(outlet, "save").resolves({
-      outletOwnerId: "outlet-id",
+      outletUserId: "outlet-id",
       ownerId: "owner-id",
       outletStatus: OutletStatus.ACTIVE,
       isOutletSuspended: false,
@@ -48,7 +48,7 @@ describe("Outlet service Tests", function () {
 
     sinon.stub(Verification.prototype, "save").resolves({
       verificationId: "verification-id",
-      outletOwnerId: "outlet-id",
+      outletUserId: "outlet-id",
       ownerId: "owner-id",
       status: "CODE_SENT",
     });
@@ -79,7 +79,7 @@ describe("Outlet service Tests", function () {
 
   it("should successfully unlink an outlet", async function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
-      outletOwnerId: "outlet-id",
+      outletUserId: "outlet-id",
       ownerId: "owner-id",
       outletStatus: OutletStatus.ACTIVE,
       isOutletSuspended: false,
@@ -93,7 +93,7 @@ describe("Outlet service Tests", function () {
     });
 
     const response = await OutletService.unlinkOutletFromOwner({
-      outletOwnerId: "4579",
+      outletUserId: "4579",
       userId: "1234",
     });
     console.log(response);
@@ -109,7 +109,7 @@ describe("Outlet service Tests", function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
 
     OutletService.unlinkOutletFromOwner({
-      outletOwnerId: "4579",
+      outletUserId: "4579",
       userId: "1234",
     })
       .then()
@@ -120,10 +120,15 @@ describe("Outlet service Tests", function () {
   });
 
   it("should successfully suspend an outlet", async function () {
-    const outletOwnerId = 4579;
+    const outletUserId = 4579;
+
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
+      ownerId: "someid",
+      outletUserId: "outlet-owner-id",
+    });
 
     nock(process.env.AUTH_SERVICE_URL)
-      .put(`/auth/${outletOwnerId}/INACTIVE/status`)
+      .put(`/auth/${outletUserId}/INACTIVE/status`)
       .reply(200, {
         statusCode: 200,
       });
@@ -132,7 +137,7 @@ describe("Outlet service Tests", function () {
       .stub(Outlet, "findOneAndUpdate")
       .resolves({
         exec: () => ({
-          outletOwnerId,
+          outletUserId,
           ownerId: "owner-id",
           outletStatus: OutletStatus.ACTIVE,
           isOutletSuspended: true,
@@ -140,28 +145,30 @@ describe("Outlet service Tests", function () {
       });
 
     const response = await OutletService.suspendOutlet({
-      outletOwnerId,
+      outletUserId,
       userId: "user-id",
     });
-    console.log(response);
+
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
 
     findOneAndUpdateOutlet.restore();
     sinon.assert.calledOnce(findOneAndUpdateOutlet);
   });
 
   it("should fail to suspend an outlet if an error occurs while updating user status", async function () {
-    const outletOwnerId = "4579";
+    const outletUserId = "4579";
     const ownerId = "owner-id";
 
     nock(process.env.AUTH_SERVICE_URL)
-      .put(`/auth/${outletOwnerId}/INACTIVE/status`)
+      .put(`/auth/${outletUserId}/INACTIVE/status`)
       .reply(400, {
         statusCode: 400,
         message: "User not be found",
       });
 
     OutletService.suspendOutlet({
-      outletOwnerId,
+      outletUserId,
       userId: ownerId,
     })
       .then()
@@ -203,17 +210,17 @@ describe("Outlet service Tests", function () {
 
     const findOneVerification = sinon.stub(Verification, "findOne").resolves({
       ownerId: "someid",
-      outletOwnerId: "outlet-owner-id",
+      outletUserId: "outlet-owner-id",
     });
 
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
       ownerId: "someid",
-      outletOwnerId: "outlet-owner-id",
+      outletUserId: "outlet-owner-id",
     });
 
     const outlet = new Outlet();
     sinon.mock(outlet).expects("save").resolves({
-      outletOwnerId: "outlet-owner-id",
+      outletUserId: "outlet-owner-id",
       ownerId: "ownerId",
       outletStatus: OutletStatus.ACTIVE,
     });

@@ -46,8 +46,9 @@ export const unlinkOutlet = (req, res) => {
 
 export const suspendOutletUser = (req, res) => {
   const outletUserId = req.params.id;
+  const userId = req.user.userId;
 
-  suspendOutlet({ outletUserId })
+  suspendOutlet({ outletUserId, userId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })

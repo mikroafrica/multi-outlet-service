@@ -427,7 +427,6 @@ describe("User service Tests", function () {
         userId,
       });
     } catch (err) {
-      console.log(err);
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
     }
@@ -465,7 +464,6 @@ describe("User service Tests", function () {
         userId,
       });
     } catch (err) {
-      console.log(err);
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
     }
