@@ -363,4 +363,111 @@ describe("User service Tests", function () {
       expect(err.message).to.exist;
     }
   });
+
+  it("should successfully update a user", async function () {
+    const userId = "123";
+    const params = {
+      firstName: "John",
+      lastName: "Doe",
+      businessName: "Good Stores",
+      address: "12 Salami Street",
+    };
+
+    const mockUserDetailsResponse = {
+      data: {
+        userId,
+        firstName: "Joe",
+        lastName: "Doe",
+        businessName: "Great Stores",
+      },
+    };
+
+    const mockUpdateProfileResponse = {
+      data: {
+        userId,
+        firstName: "John",
+        lastName: "Doe",
+        businessName: "Good Stores",
+      },
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/details`)
+      .reply(200, mockUserDetailsResponse);
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .put(`/user/${userId}/profile`)
+      .reply(200, mockUpdateProfileResponse);
+
+    const response = await UserService.updateUser({
+      params,
+      userId,
+    });
+
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
+  });
+
+  it("should fail to update a user if user details cannot be found", async function () {
+    const userId = "123";
+    const params = {
+      firstName: "John",
+      lastName: "Doe",
+      businessName: "Good Stores",
+      address: "12 Salami Street",
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/details`)
+      .reply(400, { statusCode: 400, message: "Could not find user details" });
+
+    try {
+      await UserService.updateUser({
+        params,
+        userId,
+      });
+    } catch (err) {
+      console.log(err);
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
+  });
+
+  it("should fail to update a user if consumer service fails to update a user", async function () {
+    const userId = "123";
+    const params = {
+      firstName: "John",
+      lastName: "Doe",
+      businessName: "Good Stores",
+      address: "12 Salami Street",
+    };
+
+    const mockUserDetailsResponse = {
+      data: {
+        userId,
+        firstName: "Joe",
+        lastName: "Doe",
+        businessName: "Great Stores",
+      },
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/details`)
+      .reply(200, mockUserDetailsResponse);
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .put(`/user/${userId}/profile`)
+      .reply(400, { statusCode: 400, message: "Failed to update a user" });
+
+    try {
+      await UserService.updateUser({
+        params,
+        userId,
+      });
+    } catch (err) {
+      console.log(err);
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
+  });
 });

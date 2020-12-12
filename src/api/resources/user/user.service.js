@@ -344,11 +344,11 @@ export const updateUser = async ({ params, userId }) => {
     firstName: Joi.string(),
     lastName: Joi.string(),
     phoneNumber: Joi.string(),
-    businessName: Joi.string().required(),
-    address: Joi.string().required(),
-    gender: Joi.string().required(),
-    state: Joi.string().required(),
-    lga: Joi.string().required(),
+    businessName: Joi.string(),
+    address: Joi.string(),
+    gender: Joi.string(),
+    state: Joi.string(),
+    lga: Joi.string(),
     profileImageId: Joi.string(),
     dob: Joi.string(),
   });
@@ -392,13 +392,14 @@ export const updateUser = async ({ params, userId }) => {
         `An error occurred while updating user with error ${JSON.stringify(e)}`
       );
       return Promise.reject({
-        statusCode:
-          e.message || "Could not update user profile. Please try again",
+        statusCode: e.statusCode,
+        message: e.message || "Could not update user profile. Please try again",
       });
     }
   } catch (e) {
     return Promise.reject({
-      statusCode: "Could not update user profile. Please try again",
+      statusCode: e.statusCode,
+      message: e.message || "Could not update user profile. Please try again",
     });
   }
 };
