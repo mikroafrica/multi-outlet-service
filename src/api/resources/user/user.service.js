@@ -122,7 +122,11 @@ export const loginMultiOutletOwner = async ({ params }) => {
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {
-      logger.error(`An error occurred while fetching user details login ${e}`);
+      logger.error(
+        `An error occurred while fetching user details login ${JSON.stringify(
+          e
+        )}`
+      );
       if (e.statusCode === 403) {
         return Promise.reject({
           statusCode: e.statusCode,
@@ -136,7 +140,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
       });
     }
   } catch (e) {
-    logger.error(`An error occurred during login ${e}`);
+    logger.error(`An error occurred during login ${JSON.stringify(e)}`);
     return Promise.reject({
       statusCode: e.statusCode || BAD_REQUEST,
       message: e.message,
@@ -339,7 +343,6 @@ export const updateUser = async ({ params, userId }) => {
   const schema = Joi.object().keys({
     firstName: Joi.string(),
     lastName: Joi.string(),
-    email: Joi.string().email(),
     phoneNumber: Joi.string(),
     businessName: Joi.string().required(),
     address: Joi.string().required(),
@@ -385,7 +388,9 @@ export const updateUser = async ({ params, userId }) => {
         data: responseData.data,
       });
     } catch (e) {
-      logger.error(`An error occurred while updating user with error ${e}`);
+      logger.error(
+        `An error occurred while updating user with error ${JSON.stringify(e)}`
+      );
       return Promise.reject({
         statusCode:
           e.message || "Could not update user profile. Please try again",

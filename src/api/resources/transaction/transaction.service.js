@@ -57,7 +57,6 @@ export const fetchUserTransactions = async ({
 
 export const getTransactionsCategorySummary = async ({
   userId,
-  storeId,
   dateFrom,
   dateTo,
 }) => {
@@ -70,7 +69,6 @@ export const getTransactionsCategorySummary = async ({
 
   const params = {
     userId,
-    storeId,
     dateFrom,
     dateTo,
   };

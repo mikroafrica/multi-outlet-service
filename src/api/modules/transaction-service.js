@@ -43,7 +43,6 @@ export const fetchTransactions = ({
 
 export const fetchTransactionsCategorySummary = ({
   userId,
-  storeId,
   dateFrom,
   dateTo,
 }) => {
@@ -54,7 +53,6 @@ export const fetchTransactionsCategorySummary = ({
     query: {
       dateFrom,
       dateTo,
-      storeId,
       userId,
     },
   };

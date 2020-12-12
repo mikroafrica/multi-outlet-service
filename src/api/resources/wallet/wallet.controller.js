@@ -6,7 +6,6 @@ import {
 
 export const getWallet = (req, res) => {
   const userId = req.user.userId;
-  console.log(req.user);
   walletById({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })

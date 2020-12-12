@@ -36,10 +36,9 @@ export const fetchTransactionsByUserId = (req, res) => {
 export const fetchTransactionsByCategory = (req, res) => {
   const userId = req.params.id;
 
-  const { storeId, dateFrom, dateTo } = req.query;
+  const { dateFrom, dateTo } = req.query;
   getTransactionsCategorySummary({
     userId,
-    storeId,
     dateFrom,
     dateTo,
   })
