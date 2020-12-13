@@ -48,3 +48,22 @@ export const validateVerificationOtp = (params) => {
 
   return post({ client, path, params });
 };
+
+export const generateOtp = (params) => {
+  const client = restifyRequest();
+  return post({ client, path: "/otp", params });
+};
+
+export const validateUserOtp = ({ verificationId, otpCode }) => {
+  const client = restifyRequest();
+  return get({
+    client,
+    path: `/otp/${verificationId}/${otpCode}/validate`,
+    params: {},
+  });
+};
+
+export const updateUserProfile = ({ params, userId }) => {
+  const client = restifyRequest();
+  return put({ client, path: `/user/${userId}/profile`, params });
+};

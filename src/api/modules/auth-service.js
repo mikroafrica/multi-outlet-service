@@ -28,6 +28,13 @@ export const login = (params) => {
   return post({ client, path, params });
 };
 
+export const loginWithPhoneNumber = (params) => {
+  const client = restifyRequest();
+  const path = "/auth/login";
+
+  return post({ client, path, params });
+};
+
 export const resetPasswordRequest = (params) => {
   params.source = "web";
   const client = restifyRequest();
@@ -48,4 +55,17 @@ export const changePassword = (params) => {
   const path = "/password/change";
 
   return put({ client, path, params });
+};
+
+export const validateToken = (params) => {
+  const client = restifyRequest();
+  const path = "/auth/validate";
+
+  return post({ client, path, params });
+};
+
+export const updateUserStatus = ({ userId, status }) => {
+  const client = restifyRequest();
+  const params = {};
+  return put({ client, path: `/auth/${userId}/${status}/status`, params });
 };

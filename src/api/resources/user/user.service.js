@@ -24,8 +24,15 @@ export const signupMultiOutletOwner = async (params) => {
     });
   }
 
+  logger.info(
+    `Signup request with request body ${JSON.stringify({
+      ...params,
+      password: "",
+    })}`
+  );
   return ConsumerService.signup(params)
-    .then(async (outletOwnerData) => {
+    .then(async (outletOwner) => {
+      const outletOwnerData = outletOwner.data;
       const userId = await outletOwnerData.data.id;
 
       try {
@@ -57,7 +64,7 @@ export const signupMultiOutletOwner = async (params) => {
 
       return Promise.reject({
         statusCode: err.statusCode,
-        message: JSON.parse(err.message).message,
+        message: err.message,
       });
     });
 };
@@ -91,20 +98,35 @@ export const loginMultiOutletOwner = async ({ params }) => {
     });
   }
 
+  const loginRequest = {
+    username: params.email,
+    password: params.password,
+    role: "admin",
+  };
+  logger.info(
+    `Login request with request body ${JSON.stringify({
+      ...loginRequest,
+      password: "",
+    })}`
+  );
   try {
-    const loginResponse = await AuthService.login({
-      username: params.email,
-      password: params.password,
-      role: "admin",
-    });
-    const userId = loginResponse.data.userId;
+    const loginResponse = await AuthService.login(loginRequest);
+    const loginResponseData = loginResponse.data;
+    const userId = loginResponseData.data.userId;
 
     try {
       const userDetails = await ConsumerService.getUserDetails(userId);
-      loginResponse.data = { ...loginResponse.data, ...userDetails.data };
-      return Promise.resolve({ statusCode: OK, data: loginResponse.data });
+      loginResponseData.data = {
+        ...loginResponseData.data,
+        ...userDetails.data.data,
+      };
+      return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {
-      logger.error(`An error occurred while fetching user details login ${e}`);
+      logger.error(
+        `An error occurred while fetching user details login ${JSON.stringify(
+          e
+        )}`
+      );
       if (e.statusCode === 403) {
         return Promise.reject({
           statusCode: e.statusCode,
@@ -114,14 +136,14 @@ export const loginMultiOutletOwner = async ({ params }) => {
       }
       return Promise.reject({
         statusCode: e.statusCode || BAD_REQUEST,
-        message: JSON.parse(e.message).message,
+        message: e.message,
       });
     }
   } catch (e) {
-    logger.error(`An error occurred during login ${e}`);
+    logger.error(`An error occurred during login ${JSON.stringify(e)}`);
     return Promise.reject({
       statusCode: e.statusCode || BAD_REQUEST,
-      message: JSON.parse(e.message).message,
+      message: e.message,
     });
   }
 };
@@ -133,19 +155,22 @@ export const sendVerificationEmail = async (userId) => {
       message: "User Id is required",
     });
   }
+
+  logger.info(`Request to send verification email to user with id ${userId}`);
   try {
     const response = await ConsumerService.requestVerificationEmail({ userId });
-    response.data.userId = userId;
+    const responseData = response.data;
+    responseData.data.userId = userId;
 
     return Promise.resolve({
       statusCode: OK,
-      data: response.data,
+      data: responseData.data,
     });
   } catch (e) {
     logger.error("An error occurred while sending verification email");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message).message,
+      message: e.message,
     });
   }
 };
@@ -168,18 +193,22 @@ export const validateEmail = async (params) => {
     });
   }
 
+  logger.info(
+    `Validate email address with request body ${JSON.stringify(params)}`
+  );
   try {
     const response = await ConsumerService.validateVerificationOtp(params);
+    const responseData = response.data;
 
     return Promise.resolve({
       statusCode: OK,
-      data: response.data,
+      data: responseData.data,
     });
   } catch (e) {
     logger.error("An error occurred while verifying OTP sent to email");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message).message,
+      message: e.message,
     });
   }
 };
@@ -205,21 +234,25 @@ export const requestResetPassword = async ({ params }) => {
     });
   }
 
+  logger.info(
+    `Requested a password reset with request body ${JSON.stringify(params)}`
+  );
   try {
     const resetPasswordRequestResponse = await AuthService.resetPasswordRequest(
       { username: params.email }
     );
+    const responseData = resetPasswordRequestResponse.data;
 
     return Promise.resolve({
       statusCode: OK,
-      data: resetPasswordRequestResponse.data,
+      data: responseData.data,
     });
   } catch (e) {
     logger.error("An error occurred when requesting for password reset");
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message).message,
+      message: e.message,
     });
   }
 };
@@ -247,21 +280,22 @@ export const resetPassword = async ({ params }) => {
 
   try {
     const resetPasswordResponse = await AuthService.resetPassword(params);
+    const responseData = resetPasswordResponse.data;
     return Promise.resolve({
       statusCode: OK,
-      data: resetPasswordResponse.data,
+      data: responseData.data,
     });
   } catch (e) {
     logger.error("An error occurred when resetting password");
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message).message,
+      message: e.mesage,
     });
   }
 };
 
-export const changePassword = async ({ params }) => {
+export const changePassword = async ({ params, userId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -269,6 +303,7 @@ export const changePassword = async ({ params }) => {
     });
   }
 
+  params.userId = userId;
   const validateSchema = validateChangePasswordSchema(params);
 
   if (validateSchema.error) {
@@ -277,30 +312,99 @@ export const changePassword = async ({ params }) => {
     );
     return Promise.reject({
       statusCode: BAD_REQUEST,
-
       message: validateSchema.error.details[0].message,
     });
   }
 
   try {
     const resetPasswordResponse = await AuthService.changePassword(params);
-
+    const responseData = resetPasswordResponse.data;
     return Promise.resolve({
       statusCode: OK,
-      data: resetPasswordResponse.data,
+      data: responseData.data,
     });
   } catch (e) {
     logger.error("An error occurred when changing password");
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: JSON.parse(e.message).message,
+      message: e.message,
+    });
+  }
+};
+
+export const updateUser = async ({ params, userId }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const schema = Joi.object().keys({
+    firstName: Joi.string(),
+    lastName: Joi.string(),
+    phoneNumber: Joi.string(),
+    businessName: Joi.string().required(),
+    address: Joi.string().required(),
+    gender: Joi.string().required(),
+    state: Joi.string().required(),
+    lga: Joi.string().required(),
+    profileImageId: Joi.string(),
+    dob: Joi.string(),
+  });
+
+  const validateSchema = Joi.validate(params, schema);
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    const userDetails = await ConsumerService.getUserDetails(userId);
+    const userDetailsData = userDetails.data;
+    const isBvnVerified = userDetailsData.bvnVerified;
+
+    // PREVENT A USER FROM UPDATING THEIR NAME, PHONE NUMBER OR DOB IF BVN IS VERIFIED
+    if (isBvnVerified) {
+      delete params.firstName;
+      delete params.lastName;
+      delete params.dob;
+      delete params.phoneNumber;
+    }
+
+    logger.info(
+      `Request body to update user ${userId} - ${JSON.stringify(params)}`
+    );
+    try {
+      const updateUserResponse = await ConsumerService.updateUserProfile({
+        params,
+        userId,
+      });
+      const responseData = updateUserResponse.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: responseData.data,
+      });
+    } catch (e) {
+      logger.error(
+        `An error occurred while updating user with error ${JSON.stringify(e)}`
+      );
+      return Promise.reject({
+        statusCode:
+          e.message || "Could not update user profile. Please try again",
+      });
+    }
+  } catch (e) {
+    return Promise.reject({
+      statusCode: "Could not update user profile. Please try again",
     });
   }
 };
 
 const validateSignupParamsSchema = (params) => {
   const schema = Joi.object().keys({
-    personalPhoneNumber: Joi.string(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
     email: Joi.string().email(),
