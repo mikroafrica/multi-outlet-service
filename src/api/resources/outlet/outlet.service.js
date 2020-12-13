@@ -59,7 +59,10 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
 
     const existingOutlet = await Outlet.findOne({
       outletUserId,
-      outletStatus: OutletStatus.ACTIVE,
+      $or: [
+        { status: OutletStatus.ACTIVE },
+        { status: OutletStatus.SUSPENDED },
+      ],
     });
     if (existingOutlet) {
       return Promise.reject({
@@ -115,8 +118,15 @@ export const unlinkOutletFromOwner = async ({ userId, outletUserId }) => {
       });
     }
     await Outlet.findOneAndUpdate(
-      { outletUserId, ownerId: userId },
-      { $set: { outletStatus: OutletStatus.INACTIVE } },
+      {
+        outletUserId,
+        ownerId: userId,
+        $or: [
+          { status: OutletStatus.ACTIVE },
+          { status: OutletStatus.SUSPENDED },
+        ],
+      },
+      { $set: { status: OutletStatus.INACTIVE } },
       { new: true }
     ).exec();
     return Promise.resolve({
@@ -139,7 +149,7 @@ export const suspendOutlet = async ({ outletUserId, userId }) => {
     const existingOutlet = await Outlet.findOne({
       outletUserId,
       ownerId: userId,
-      outletStatus: OutletStatus.ACTIVE,
+      status: OutletStatus.ACTIVE,
     });
     if (!existingOutlet) {
       return Promise.reject({
@@ -156,8 +166,12 @@ export const suspendOutlet = async ({ outletUserId, userId }) => {
 
     // SET USER SUSPENDED STATUS TO TRUE
     await Outlet.findOneAndUpdate(
-      { outletUserId, ownerId: userId, outletStatus: OutletStatus.ACTIVE },
-      { $set: { isOutletSuspended: true } },
+      {
+        outletUserId,
+        ownerId: userId,
+        status: OutletStatus.ACTIVE,
+      },
+      { $set: { status: OutletStatus.SUSPENDED } },
       { new: true }
     ).exec();
 
@@ -268,7 +282,7 @@ export const verifyOutletLinking = async ({ params }) => {
 
     const existingOutlet = await Outlet.findOne({
       outletUserId,
-      outletStatus: OutletStatus.ACTIVE,
+      status: OutletStatus.ACTIVE,
     });
     if (existingOutlet) {
       return Promise.resolve({
@@ -301,7 +315,13 @@ const saveNewOutletMapping = ({ ownerId, outletUserId }) => {
 export const getOutlets = async ({ userId, page, limit }) => {
   try {
     const outlets = await Outlet.paginate(
-      { ownerId: userId, outletStatus: OutletStatus.ACTIVE },
+      {
+        ownerId: userId,
+        $or: [
+          { status: OutletStatus.ACTIVE },
+          { status: OutletStatus.SUSPENDED },
+        ],
+      },
       { page, limit }
     );
 
@@ -332,7 +352,7 @@ const fetchOutletDetails = async (outlets) => {
     const responseData = response.data;
     outletDetails.push({
       ...responseData.data,
-      isOutletSuspended: outlet.isOutletSuspended,
+      status: outlet.status,
     });
   });
   return outletDetails;

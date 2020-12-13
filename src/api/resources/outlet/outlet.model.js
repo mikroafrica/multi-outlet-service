@@ -5,14 +5,10 @@ import { OutletStatus } from "./outlet.status.js";
 const schema = {
   outletUserId: String,
   ownerId: String,
-  outletStatus: {
+  status: {
     type: String,
     default: OutletStatus.ACTIVE,
     enum: [OutletStatus.ACTIVE, OutletStatus.INACTIVE, OutletStatus.BLOCKED],
-  },
-  isOutletSuspended: {
-    type: Boolean,
-    default: false,
   },
 };
 
