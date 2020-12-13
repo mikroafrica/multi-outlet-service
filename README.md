@@ -473,7 +473,7 @@ _Response Body_
                 "utilityImageIdVerified": false,
                 "identificationImageVerified": false,
                 "ninVerified": false,
-                "isOutletSuspended": true
+                status: "ACTIVE"
             },
             {
                 "id": "5fcda7eb7e33f72dd1a1fe5d",
@@ -504,7 +504,7 @@ _Response Body_
                 "utilityImageIdVerified": false,
                 "identificationImageVerified": false,
                 "ninVerified": false,
-                "isOutletSuspended": false
+                "status": "SUSPENDED"
             },
             {
                 "id": "5fcda81e7e33f72dd1a1fe5f",
@@ -535,7 +535,7 @@ _Response Body_
                 "utilityImageIdVerified": false,
                 "identificationImageVerified": false,
                 "ninVerified": false,
-                "isOutletSuspended": false
+                "status": "ACTIVE"
             }
         ]
     }
