@@ -97,3 +97,54 @@ export const getTransactionsCategorySummary = async ({
       });
     });
 };
+
+export const getTransactionSummary = async ({ userId, dateFrom, dateTo }) => {
+  const params = {
+    userId,
+    dateFrom,
+    dateTo,
+  };
+
+  logger.info(`Get transaction Summary request body ${JSON.stringify(params)}`);
+
+  return TransactionService.fetchTransactionSummary(params)
+    .then((responseData) => {
+      const transactionData = responseData.data;
+      let transactionSummary = {
+        count: 0,
+        success: 0,
+        pending: 0,
+        failed: 0,
+        successAmount: 0,
+        pendingAmount: 0,
+        failedAmount: 0,
+      };
+
+      if (transactionData.data.length > 0) {
+        const keys = Object.keys(transactionSummary);
+        for (let transactionSummaryKey of keys) {
+          transactionSummary[
+            transactionSummaryKey
+          ] = transactionData.data.reduce(
+            (total, curr) => curr[transactionSummaryKey] + total,
+            0
+          );
+        }
+      }
+      return Promise.resolve({
+        statusCode: OK,
+        data: transactionSummary,
+      });
+    })
+    .catch((e) => {
+      logger.error(
+        `Error occurred while fetching transaction summary for multi-outlet with error ${JSON.stringify(
+          e
+        )}`
+      );
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: e.message || "Something went wrong. Please try again",
+      });
+    });
+};

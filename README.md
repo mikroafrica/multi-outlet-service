@@ -598,7 +598,7 @@ _Response Body_
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
-`Query -> page, limit, dateFrom, dateTo`
+`Query -> dateFrom, dateTo`
 
 _Response Body_
 
@@ -623,7 +623,55 @@ _Response Body_
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
-`Query -> page, limit, dateFrom, dateTo, page, limit, transactionType`
+`Query -> page, limit, dateFrom, dateTo, transactionType`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "page": 1,
+        "limit": 3,
+        "total": 946,
+        "list": [
+            {
+                "id": "fd88fb65-be9b-43b9-87e0-73f7b99c6f63",
+                "amount": 248.62,
+                "balance": 2012137.53,
+                "transactionType": "CREDIT",
+                "reference": "WDL-05f9cdd8-65af-4c97-85bd-f97992deb158-CREDIT",
+                "timeCreated": 1607872095423
+            },
+            {
+                "id": "1eca604b-e93d-4a18-ac54-79bf4c001181",
+                "amount": 69,
+                "balance": 2011888.9,
+                "transactionType": "DEBIT",
+                "reference": "POT-7be6472b-ad5d-4a3c-af90-ae333eaa9ba3-DEBIT",
+                "timeCreated": 1607846406669
+            },
+            {
+                "id": "674332f9-281f-4d33-a403-cee00853f18f",
+                "amount": 196,
+                "balance": 2011957.9,
+                "transactionType": "DEBIT",
+                "reference": "BIL-9df8fa5f-e33e-4a8b-8df1-26c7f09bc93f-DEBIT",
+                "timeCreated": 1607825715844
+            }
+        ],
+        "additionalInformation": {}
+    }
+}
+```
+
+
+### Get outlet transactions by user id
+`GET /transaction/{userId}`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+`Query -> page, limit, dateFrom, dateTo, type, status, customerBillerId`
 
 _Response Body_
 
@@ -633,9 +681,133 @@ _Response Body_
     "data": {
         "page": 1,
         "limit": 20,
-        "total": 0,
-        "list": [],
-        "additionalInformation": {}
+        "total": 946,
+        "list": [
+             {
+                 "id": "9eb2856f-86ed-4698-9d99-f03a3e24df9c",
+                 "amount": 25,
+                 "userId": null,
+                 "transactionReference": "WDL-adbb5034-eeca-4bd6-b00c-ebf74cef6c76",
+                 "transactionStatus": "payment failed",
+                 "transactionType": "withdrawal",
+                 "user": "1010101 (POS)",
+                 "product": "POS Withdrawal",
+                 "timeCreated": 1607857173009
+             },
+             {
+                 "id": "59bba7fd-f07e-42cf-b700-c72f4ccecc82",
+                 "amount": 250,
+                 "userId": null,
+                 "transactionReference": "WDL-05f9cdd8-65af-4c97-85bd-f97992deb158",
+                 "transactionStatus": "successful",
+                 "transactionType": "withdrawal",
+                 "user": "1010101 (POS)",
+                 "product": "POS Withdrawal",
+                 "timeCreated": 1607856840220
+             },
+             {
+                 "id": "56b355de-23bb-4d43-8742-6caa3e5735cf",
+                 "amount": 69,
+                 "userId": null,
+                 "transactionReference": "POT-7be6472b-ad5d-4a3c-af90-ae333eaa9ba3",
+                 "transactionStatus": "successful",
+                 "transactionType": "p2p",
+                 "user": "business profit",
+                 "product": null,
+                 "timeCreated": 1607846402442
+             }
+        ]
+    }
+}
+```
+
+
+### Get transactions category summary by user id
+`GET /transaction/{userId}/category-summary`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+`Query -> dateFrom: 1601506800000, dateTo: 1609369200000`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": [
+        {
+            "successfulAmount": 463494,
+            "pendingAmount": 0,
+            "failedAmount": 0,
+            "count": 32,
+            "type": "Cash",
+            "success": 32,
+            "pending": 0,
+            "failed": 0,
+            "openingDrawerBalance": null,
+            "currentDrawerBalance": null
+        },
+        {
+            "successfulAmount": 10300,
+            "pendingAmount": 0,
+            "failedAmount": 0,
+            "count": 6,
+            "type": "P2P",
+            "success": 6,
+            "pending": 0,
+            "failed": 0,
+            "openingDrawerBalance": null,
+            "currentDrawerBalance": null
+        },
+        {
+            "successfulAmount": 100,
+            "pendingAmount": 0,
+            "failedAmount": 0,
+            "count": 1,
+            "type": "Transfer",
+            "success": 1,
+            "pending": 0,
+            "failed": 0,
+            "openingDrawerBalance": null,
+            "currentDrawerBalance": null
+        },
+        {
+            "successfulAmount": 5500,
+            "pendingAmount": 0,
+            "failedAmount": 0,
+            "count": 4,
+            "type": "Withdrawal",
+            "success": 4,
+            "pending": 0,
+            "failed": 0,
+            "openingDrawerBalance": null,
+            "currentDrawerBalance": null
+        }
+    ]
+}
+```
+
+
+### Get multi-outlet transaction summary
+`GET /transaction/summary`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+`Query -> dateFrom: 1601506800000, dateTo: 1609369200000`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "count": 120,
+        "success": 110,
+        "pending": 8,
+        "failed": 2,
+        "successAmount": 127585,
+        "pendingAmount": 210,
+        "failedAmount": 134
     }
 }
 ```
