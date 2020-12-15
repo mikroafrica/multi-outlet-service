@@ -7,6 +7,7 @@ import auth from "./api/resources/user/index.js";
 import wallet from "./api/resources/wallet/index.js";
 import transaction from "./api/resources/transaction/index.js";
 import outlet from "./api/resources/outlet/index.js";
+import transfer from "./api/resources/transfer";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -39,5 +40,6 @@ auth({ server: server, subBase: "/auth" });
 outlet({ server: server, subBase: "/outlet" });
 wallet({ server: server, subBase: "/wallet" });
 transaction({ server: server, subBase: "/transaction" });
+transfer({ server: server, subBase: "/transfer" });
 
 export default server;
