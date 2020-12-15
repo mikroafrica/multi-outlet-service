@@ -4,7 +4,8 @@ import {
   getOutlets,
   unlinkOutletFromOwner,
   suspendOutlet,
-} from "./outlet.service.js";
+  unSuspendOutlet,
+} from "./outlet.service";
 
 export const linkOutlet = (req, res) => {
   const params = req.body;
@@ -49,6 +50,19 @@ export const suspendOutletUser = (req, res) => {
   const userId = req.user.userId;
 
   suspendOutlet({ outletUserId, userId })
+    .then(({ statusCode }) => {
+      res.send(statusCode, { status: true });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const unSuspendOutletUser = (req, res) => {
+  const outletUserId = req.params.id;
+  const userId = req.user.userId;
+
+  unSuspendOutlet({ outletUserId, userId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })

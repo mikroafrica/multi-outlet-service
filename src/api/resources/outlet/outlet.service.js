@@ -189,6 +189,55 @@ export const suspendOutlet = async ({ outletUserId, userId }) => {
   }
 };
 
+export const unSuspendOutlet = async ({ outletUserId, userId }) => {
+  logger.info(
+    `Outlet owner ${outletUserId} request to unsuspend outlet ${outletUserId}`
+  );
+  try {
+    const existingOutlet = await Outlet.findOne({
+      outletUserId,
+      ownerId: userId,
+      status: OutletStatus.SUSPENDED,
+    });
+    if (!existingOutlet) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Could not find outlet to unsuspend",
+      });
+    }
+
+    // SET THE USER TO ACTIVE ON THE AUTH SERVICE (TO RE-ALLOW ACCESS TO THE APP)
+    await AuthService.updateUserStatus({
+      userId: outletUserId,
+      status: "ACTIVE",
+    });
+
+    await Outlet.findOneAndUpdate(
+      {
+        outletUserId,
+        ownerId: userId,
+        status: OutletStatus.ACTIVE,
+      },
+      { $set: { status: OutletStatus.ACTIVE } },
+      { new: true }
+    ).exec();
+
+    return Promise.resolve({
+      statusCode: OK,
+    });
+  } catch (e) {
+    logger.error(
+      `Failed to unsuspend outlet ${outletUserId} with error ${JSON.stringify(
+        e
+      )}`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not unsuspend outlet. Try again",
+    });
+  }
+};
+
 const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
     const params = { phoneNumber, type: "PHONE_NUMBER" };
