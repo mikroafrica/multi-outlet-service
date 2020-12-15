@@ -1,7 +1,7 @@
 import {
   fetchUserTransactions,
   getTransactionsCategorySummary,
-  getTransactionSummary,
+  getTransactionsSummary,
 } from "./transaction.service.js";
 
 export const fetchTransactionsByUserId = (req, res) => {
@@ -34,33 +34,20 @@ export const fetchTransactionsByUserId = (req, res) => {
     );
 };
 
-export const fetchTransactionsByCategory = (req, res) => {
-  const userId = req.params.id;
-
-  const { dateFrom, dateTo } = req.query;
-  getTransactionsCategorySummary({
-    userId,
-    dateFrom,
-    dateTo,
-  })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
 export const fetchTransactionSummary = (req, res) => {
   const userId = req.user.userId;
 
   const dateFrom = req.query.dateFrom || 1601506800000;
   const dateTo = req.query.dateTo || Date.now();
+  const page = req.query.page || 1;
+  const limit = req.query.limit || 10;
 
-  getTransactionSummary({
+  getTransactionsSummary({
     userId,
     dateFrom,
     dateTo,
+    page,
+    limit,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })

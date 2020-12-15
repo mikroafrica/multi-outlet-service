@@ -722,12 +722,12 @@ _Response Body_
 ```
 
 
-### Get transactions category summary by user id
-`GET /transaction/{userId}/category-summary`
+### Get multi-outlet transaction summary
+`GET /transaction/summary`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
-`Query -> dateFrom: 1601506800000, dateTo: 1609369200000`
+`Query -> page, limit, dateFrom: 1601506800000, dateTo: 1609369200000`
 
 _Response Body_
 
@@ -736,78 +736,113 @@ _Response Body_
     "status": true,
     "data": [
         {
-            "successfulAmount": 463494,
-            "pendingAmount": 0,
-            "failedAmount": 0,
-            "count": 32,
-            "type": "Cash",
-            "success": 32,
-            "pending": 0,
-            "failed": 0,
-            "openingDrawerBalance": null,
-            "currentDrawerBalance": null
+            "transactionCount": 40,
+            "transactionVolume": 474244,
+            "id": "5e9a348ecf896e4e613b7fe7",
+            "firstName": "meshileya",
+            "lastName": "seun",
+            "dateOfBirth": "Tue Dec 15 00:00:00 West Africa Standard Time 2020",
+            "profileImageId": "5e9a348a1b087d0017a4d604",
+            "gender": "MALE",
+            "businessName": "Wadva474",
+            "businessType": "MERCHANT",
+            "username": null,
+            "email": "wadva@mikro.africa",
+            "phoneNumber": "+234 816 466 3359",
+            "phoneCarrier": "mtn",
+            "userType": "MERCHANT",
+            "tierLevel": "TIER_ZERO",
+            "fcmToken": "f0QjPXHHS0KXIJUw8c3ZKK:APA91bGEOu_9qGPydkM1p8SF4BGHMnTYeLjagE7dxjRkFEPom6II0UhlfOFMhcJRWjUEHYcahnw3dZNey1A-NZrdy6hAHyBwuPeS9EcIoYGlcmJrnCGKM3yJii_y7wMJiCy6-Mzs_U6A",
+            "utilityImageId": "5fd32ef5b9c2630017f39200",
+            "identificationImageId": "5fd35590b9c2630017f39267",
+            "placeOfBusinessImageId": "5fcf8ae6680f8e0017415a9e",
+            "store": [
+                {
+                    "id": "5e9a348fcf896e4e613b7fe9",
+                    "address": "Lagos ikotun",
+                    "state": "Benue",
+                    "lga": "Gboko",
+                    "country": "ngn",
+                    "bank": "Providus Bank",
+                    "bankCode": "101",
+                    "accountName": "mesh seun",
+                    "accountNumber": "4000038493",
+                    "terminalId": "1010101",
+                    "wallet": [
+                        {
+                            "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                            "currency": "NGN",
+                            "type": "MAIN"
+                        }
+                    ],
+                    "terminalMapped": true
+                }
+            ],
+            "region": "north",
+            "zone": "north central",
+            "goal": "ACTIVE",
+            "emailVerified": true,
+            "bvnVerified": false,
+            "placeOfBusinessImageVerified": false,
+            "utilityImageIdVerified": false,
+            "identificationImageVerified": false,
+            "ninVerified": false,
+            "status": "ACTIVE"
         },
         {
-            "successfulAmount": 10300,
-            "pendingAmount": 0,
-            "failedAmount": 0,
-            "count": 6,
-            "type": "P2P",
-            "success": 6,
-            "pending": 0,
-            "failed": 0,
-            "openingDrawerBalance": null,
-            "currentDrawerBalance": null
-        },
-        {
-            "successfulAmount": 100,
-            "pendingAmount": 0,
-            "failedAmount": 0,
-            "count": 1,
-            "type": "Transfer",
-            "success": 1,
-            "pending": 0,
-            "failed": 0,
-            "openingDrawerBalance": null,
-            "currentDrawerBalance": null
-        },
-        {
-            "successfulAmount": 5500,
-            "pendingAmount": 0,
-            "failedAmount": 0,
-            "count": 4,
-            "type": "Withdrawal",
-            "success": 4,
-            "pending": 0,
-            "failed": 0,
-            "openingDrawerBalance": null,
-            "currentDrawerBalance": null
+            "transactionCount": 107,
+            "transactionVolume": 287445,
+            "id": "5e989ea99bc21b6b100836f3",
+            "firstName": "easy up",
+            "lastName": "raeliij",
+            "dateOfBirth": "Fri Dec 11 00:00:00 West Africa Standard Time 2020",
+            "profileImageId": "5e989ea07c63cd00175cb919",
+            "gender": "MALE",
+            "businessName": "Loop your ",
+            "businessType": "AGENT",
+            "username": null,
+            "email": "meshileyaseun@gmail.com",
+            "phoneNumber": "+234 813 706 5162",
+            "phoneCarrier": "mtn",
+            "userType": "AGENT",
+            "tierLevel": "TIER_ZERO",
+            "fcmToken": "doqlj8pcSn-3FSd8wvH4uM:APA91bHskAeAwYboQmVXhvR41NgOUbNjP2BYzKuQ6HXbP04BeS3yVgVgZcJaI9CqDAmjVh6l3oAGFfifUl_6Jaa-tm7Ye7cFXQOoVDTkUpNCE8OGST7NVLx2lciui9O-ENFUEFkbQVUM",
+            "utilityImageId": "5f802369a6d5860017712cee",
+            "identificationImageId": "5f4aca5aee0eb40017317ab1",
+            "placeOfBusinessImageId": "5fceaf2a8d62550017348650",
+            "store": [
+                {
+                    "id": "5e989ea99bc21b6b100836f5",
+                    "address": "test business address",
+                    "state": "Zamfara",
+                    "lga": "Bukkuyum",
+                    "country": "ngn",
+                    "bank": "Providus Bank",
+                    "bankCode": "101",
+                    "accountName": "israel tester",
+                    "accountNumber": "4000047378",
+                    "terminalId": "1010101",
+                    "wallet": [
+                        {
+                            "id": "39590c8a-3fec-48b4-a1d2-d042cbe1d3d4",
+                            "currency": "NGN",
+                            "type": "MAIN"
+                        }
+                    ],
+                    "terminalMapped": true
+                }
+            ],
+            "region": "north",
+            "zone": "north west",
+            "goal": "ACTIVE",
+            "emailVerified": true,
+            "bvnVerified": false,
+            "placeOfBusinessImageVerified": false,
+            "utilityImageIdVerified": false,
+            "identificationImageVerified": false,
+            "ninVerified": false,
+            "status": "ACTIVE"
         }
     ]
-}
-```
-
-
-### Get multi-outlet transaction summary
-`GET /transaction/summary`
-
-`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
-
-`Query -> dateFrom: 1601506800000, dateTo: 1609369200000`
-
-_Response Body_
-
-```javascript
-{
-    "status": true,
-    "data": {
-        "count": 120,
-        "success": 110,
-        "pending": 8,
-        "failed": 2,
-        "successAmount": 127585,
-        "pendingAmount": 210,
-        "failedAmount": 134
-    }
 }
 ```

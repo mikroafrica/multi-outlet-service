@@ -6,7 +6,6 @@ import {
 
 const transaction = ({ server, subBase }) => {
   server.get(`${subBase}/:id`, fetchTransactionsByUserId);
-  server.get(`${subBase}/:id/category-summary`, fetchTransactionsByCategory);
   server.get(`${subBase}/summary`, fetchTransactionSummary);
 };
 
