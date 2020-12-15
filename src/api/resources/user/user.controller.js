@@ -6,6 +6,7 @@ import {
   requestResetPassword,
   resetPassword,
   updateUser,
+  getUser,
 } from "./user.service.js";
 import { loginMultiOutletOwner } from "./user.service.js";
 
@@ -98,6 +99,18 @@ export const updateUserProfile = (req, res) => {
   const userId = req.user.userId;
 
   updateUser({ params, userId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const fetchMultiOutletUserDetails = (req, res) => {
+  const userId = req.user.userId;
+
+  getUser({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

@@ -216,7 +216,7 @@ export const unSuspendOutlet = async ({ outletUserId, userId }) => {
       {
         outletUserId,
         ownerId: userId,
-        status: OutletStatus.ACTIVE,
+        status: OutletStatus.SUSPENDED,
       },
       { $set: { status: OutletStatus.ACTIVE } },
       { new: true }

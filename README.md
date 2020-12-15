@@ -283,6 +283,7 @@ _Response Body_
 }
 ```
 
+
 ### Update profile
 `PUT /auth/update-profile`
 
@@ -304,6 +305,71 @@ _Request Body_
     "dob": "01-07-1991"
 }
 ```
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "id": "5fd35d158677251eabdf8ef5",
+        "firstName": "alex",
+        "lastName": "snow",
+        "dateOfBirth": "01-07-1991",
+        "profileImageId": null,
+        "gender": "MALE",
+        "businessName": "Good business",
+        "businessType": "OUTLET_OWNER",
+        "username": null,
+        "email": "coehn.jaheim@extraale.com",
+        "phoneNumber": "+234 803 123 0924",
+        "phoneCarrier": "mtn",
+        "userType": "OUTLET_OWNER",
+        "tierLevel": null,
+        "fcmToken": null,
+        "utilityImageId": null,
+        "identificationImageId": null,
+        "placeOfBusinessImageId": null,
+        "store": [
+            {
+                "id": "5fd35d158677251eabdf8ef7",
+                "address": "12 adewole street",
+                "state": "abuja",
+                "lga": "garki",
+                "country": "ngn",
+                "bank": "Providus Bank",
+                "bankCode": "101",
+                "accountName": "alex snow",
+                "accountNumber": "4000050197",
+                "terminalId": null,
+                "wallet": [
+                    {
+                        "id": "ed8f14ba-93c8-46f5-8433-65e92d2476c4",
+                        "currency": "NGN",
+                        "type": "MAIN"
+                    }
+                ],
+                "terminalMapped": false
+            }
+        ],
+        "region": null,
+        "zone": null,
+        "goal": "ACTIVE",
+        "emailVerified": true,
+        "bvnVerified": false,
+        "placeOfBusinessImageVerified": false,
+        "utilityImageIdVerified": false,
+        "identificationImageVerified": false,
+        "ninVerified": false
+    }
+}
+```
+
+
+### View MultiOutlet owner details
+`GET /auth/details`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
 _Response Body_
 

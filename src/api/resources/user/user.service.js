@@ -364,7 +364,7 @@ export const updateUser = async ({ params, userId }) => {
   try {
     const userDetails = await ConsumerService.getUserDetails(userId);
     const userDetailsData = userDetails.data;
-    const isBvnVerified = userDetailsData.bvnVerified;
+    const isBvnVerified = userDetailsData.data.bvnVerified;
 
     // PREVENT A USER FROM UPDATING THEIR NAME, PHONE NUMBER OR DOB IF BVN IS VERIFIED
     if (isBvnVerified) {
@@ -398,7 +398,26 @@ export const updateUser = async ({ params, userId }) => {
     }
   } catch (e) {
     return Promise.reject({
-      statusCode: "Could not update user profile. Please try again",
+      statusCode: BAD_REQUEST,
+      message: "Could not update user profile. Please try again",
+    });
+  }
+};
+
+export const getUser = async ({ userId }) => {
+  try {
+    const userDetails = await ConsumerService.getUserDetails(userId);
+
+    const userDetailsData = userDetails.data;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: userDetailsData.data,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch user details. Please try again",
     });
   }
 };
