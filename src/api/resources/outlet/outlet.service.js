@@ -394,7 +394,7 @@ export const getOutlets = async ({ userId, page, limit }) => {
   }
 };
 
-const fetchOutletDetails = async (outlets) => {
+export const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
   await async.forEach(outlets, async (outlet) => {
     const response = await ConsumerService.getUserDetails(outlet.outletUserId);
