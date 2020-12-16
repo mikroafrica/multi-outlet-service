@@ -5,8 +5,9 @@ import {
 } from "./wallet.service.js";
 
 export const getWallet = (req, res) => {
-  const userId = req.user.userId;
-  walletById({ userId })
+  const ownerId = req.user.userId;
+
+  walletById({ ownerId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
