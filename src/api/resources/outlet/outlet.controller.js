@@ -8,9 +8,9 @@ import {
 
 export const linkOutlet = (req, res) => {
   const params = req.body;
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
-  linkOwnerToOutlet({ params, userId })
+  linkOwnerToOutlet({ params, ownerId })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
@@ -32,10 +32,10 @@ export const verifyLinkedOutlet = (req, res) => {
 };
 
 export const unlinkOutlet = (req, res) => {
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
   const outletUserId = req.params.id;
 
-  unlinkOutletFromOwner({ userId, outletUserId })
+  unlinkOutletFromOwner({ ownerId, outletUserId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })
@@ -46,9 +46,9 @@ export const unlinkOutlet = (req, res) => {
 
 export const suspendOutletUser = (req, res) => {
   const outletUserId = req.params.id;
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
-  suspendOutlet({ outletUserId, userId })
+  suspendOutlet({ outletUserId, ownerId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })
@@ -58,12 +58,12 @@ export const suspendOutletUser = (req, res) => {
 };
 
 export const fetchOutlets = (req, res) => {
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  getOutlets({ userId, page, limit })
+  getOutlets({ ownerId, page, limit })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

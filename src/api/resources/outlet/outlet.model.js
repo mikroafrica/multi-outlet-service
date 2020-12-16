@@ -3,8 +3,9 @@ import mongoosePaginate from "mongoose-paginate";
 import { OutletStatus } from "./outlet.status.js";
 
 const schema = {
-  outletUserId: String,
+  userId: String,
   ownerId: String,
+  walletId: String,
   status: {
     type: String,
     default: OutletStatus.ACTIVE,

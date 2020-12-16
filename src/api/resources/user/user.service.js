@@ -7,6 +7,7 @@ import { UserType } from "./user.type.js";
 import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events/index.js";
 import userAccountEmitter from "../../events/user-account-event.js";
+import { Owner } from "../../../../lib/api/resources/owner/owner.model";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -116,9 +117,33 @@ export const loginMultiOutletOwner = async ({ params }) => {
 
     try {
       const userDetails = await ConsumerService.getUserDetails(userId);
+      const userDetailsData = userDetails.data.data;
+
+      // CHECK TO SEE THAT WALLET-ID HAS BEEN MAPPED TO USER ON THE OUTLET SERVICE
+      const owner = await Owner.findOne({
+        userId,
+      });
+
+      if (!owner) {
+        if (
+          userDetailsData.store.length > 0 &&
+          userDetailsData.store[0].wallet.length > 0
+        ) {
+          const walletId = userDetailsData.store[0].wallet[0].id;
+
+          const createdOwner = new Owner({ walletId, userId });
+          await createdOwner.save();
+        } else {
+          return Promise.reject({
+            statusCode: BAD_REQUEST,
+            message: "Login failed. Try again",
+          });
+        }
+      }
+
       loginResponseData.data = {
         ...loginResponseData.data,
-        ...userDetails.data.data,
+        ...userDetailsData,
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {

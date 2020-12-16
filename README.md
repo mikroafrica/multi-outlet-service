@@ -283,6 +283,7 @@ _Response Body_
 }
 ```
 
+
 ### Update profile
 `PUT /auth/update-profile`
 
@@ -414,10 +415,9 @@ _Response Body_
     "status": true,
     "data": {
         "outletStatus": "ACTIVE",
-        "isOutletSuspended": false,
         "_id": "5fd365227a30216c8e8efff4",
         "ownerId": "5fd35d158677251eabdf8ef5",
-        "outletUserId": "5fcda81e7e33f72dd1a1fe5f",
+        "userId": "5fcda81e7e33f72dd1a1fe5f",
         "createdAt": "2020-12-11T12:25:06.694Z",
         "updatedAt": "2020-12-11T12:25:06.694Z",
         "__v": 0
@@ -544,7 +544,7 @@ _Response Body_
 
 
 ### Unlink Outlet 
-`PUT /outlet/{outletUserId}/unlink`
+`PUT /outlet/{outletId}/unlink`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -556,8 +556,9 @@ _Response Body_
 }
 ```
 
+
 ### Suspend Outlet 
-`PUT /outlet/{outletUserId}/suspend`
+`PUT /outlet/{outletId}/suspend`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -659,15 +660,14 @@ _Response Body_
                 "reference": "BIL-9df8fa5f-e33e-4a8b-8df1-26c7f09bc93f-DEBIT",
                 "timeCreated": 1607825715844
             }
-        ],
-        "additionalInformation": {}
+        ]
     }
 }
 ```
 
 
-### Get outlet transactions by user id
-`GET /transaction/{userId}`
+### Get outlet transactions by outlet id
+`GET /transaction/{outletId}`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -722,7 +722,7 @@ _Response Body_
 ```
 
 
-### Get multi-outlet transaction summary
+### Get transaction summary
 `GET /transaction/summary`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`

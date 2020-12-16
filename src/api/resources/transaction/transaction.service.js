@@ -6,8 +6,8 @@ import { OutletStatus } from "../outlet/outlet.status";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 
-export const fetchUserTransactions = async ({
-  userId,
+export const fetchOutletTransactions = async ({
+  outletId,
   type,
   status,
   page,
@@ -16,15 +16,15 @@ export const fetchUserTransactions = async ({
   dateTo,
   customerBillerId,
 }) => {
-  if (!userId) {
+  if (!outletId) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "User Id is required",
+      message: "Outlet Id is required",
     });
   }
 
   const params = {
-    userId,
+    userId: outletId,
     dateFrom,
     dateTo,
     page,
@@ -48,7 +48,7 @@ export const fetchUserTransactions = async ({
     })
     .catch((e) => {
       logger.error(
-        `Error occurred while fetching transaction by user id ${userId} with error ${JSON.stringify(
+        `Error occurred while fetching transaction by user id ${outletId} with error ${JSON.stringify(
           e
         )}`
       );
@@ -60,25 +60,25 @@ export const fetchUserTransactions = async ({
 };
 
 export const getTransactionsSummary = async ({
-  userId,
+  ownerId,
   dateFrom,
   page,
   limit,
   dateTo,
 }) => {
   const params = {
-    userId,
+    userId: ownerId,
     page,
     limit,
     dateFrom,
     dateTo,
   };
 
-  logger.info(`Get transaction Summary request body ${JSON.stringify(params)}`);
+  logger.info(`Transaction Summary request body ${JSON.stringify(params)}`);
 
   return Outlet.paginate(
     {
-      ownerId: userId,
+      ownerId,
       $or: [
         { status: OutletStatus.ACTIVE },
         { status: OutletStatus.SUSPENDED },
