@@ -1,11 +1,11 @@
 import {
-  fetchUserTransactions,
+  fetchOutletTransactions,
   getTransactionsCategorySummary,
   getTransactionsSummary,
 } from "./transaction.service.js";
 
-export const fetchTransactionsByUserId = (req, res) => {
-  const userId = req.params.id;
+export const fetchTransactionsByOutletId = (req, res) => {
+  const outletId = req.params.id;
 
   const {
     type,
@@ -16,8 +16,8 @@ export const fetchTransactionsByUserId = (req, res) => {
     dateTo,
     customerBillerId,
   } = req.query;
-  fetchUserTransactions({
-    userId,
+  fetchOutletTransactions({
+    outletId,
     type,
     status,
     page,
@@ -35,7 +35,7 @@ export const fetchTransactionsByUserId = (req, res) => {
 };
 
 export const fetchTransactionSummary = (req, res) => {
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
   const dateFrom = req.query.dateFrom || 1601506800000;
   const dateTo = req.query.dateTo || Date.now();
@@ -43,7 +43,7 @@ export const fetchTransactionSummary = (req, res) => {
   const limit = req.query.limit || 10;
 
   getTransactionsSummary({
-    userId,
+    ownerId,
     dateFrom,
     dateTo,
     page,
