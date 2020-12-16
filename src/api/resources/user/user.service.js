@@ -320,7 +320,7 @@ export const resetPassword = async ({ params }) => {
   }
 };
 
-export const changePassword = async ({ params, userId }) => {
+export const changePassword = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -328,7 +328,7 @@ export const changePassword = async ({ params, userId }) => {
     });
   }
 
-  params.userId = userId;
+  params.userId = ownerId;
   const validateSchema = validateChangePasswordSchema(params);
 
   if (validateSchema.error) {
@@ -357,7 +357,7 @@ export const changePassword = async ({ params, userId }) => {
   }
 };
 
-export const updateUser = async ({ params, userId }) => {
+export const updateUser = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -387,7 +387,7 @@ export const updateUser = async ({ params, userId }) => {
   }
 
   try {
-    const userDetails = await ConsumerService.getUserDetails(userId);
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
     const userDetailsData = userDetails.data;
     const isBvnVerified = userDetailsData.bvnVerified;
 
@@ -400,12 +400,12 @@ export const updateUser = async ({ params, userId }) => {
     }
 
     logger.info(
-      `Request body to update user ${userId} - ${JSON.stringify(params)}`
+      `Request body to update user ${ownerId} - ${JSON.stringify(params)}`
     );
     try {
       const updateUserResponse = await ConsumerService.updateUserProfile({
         params,
-        userId,
+        userId: ownerId,
       });
       const responseData = updateUserResponse.data;
       return Promise.resolve({
