@@ -189,14 +189,14 @@ export const suspendOutlet = async ({ outletUserId, ownerId }) => {
   }
 };
 
-export const unSuspendOutlet = async ({ outletUserId, userId }) => {
+export const unSuspendOutlet = async ({ outletUserId, ownerId }) => {
   logger.info(
-    `Outlet owner ${outletUserId} request to unsuspend outlet ${outletUserId}`
+    `Outlet owner ${ownerId} request to unsuspend outlet ${outletUserId}`
   );
   try {
     const existingOutlet = await Outlet.findOne({
-      outletUserId,
-      ownerId: userId,
+      userId: outletUserId,
+      ownerId,
       status: OutletStatus.SUSPENDED,
     });
     if (!existingOutlet) {
@@ -206,7 +206,7 @@ export const unSuspendOutlet = async ({ outletUserId, userId }) => {
       });
     }
 
-    // SET THE USER TO ACTIVE ON THE AUTH SERVICE (TO RE-ALLOW ACCESS TO THE APP)
+    // SET THE OUTLET TO ACTIVE ON THE AUTH SERVICE (TO RE-ALLOW ACCESS TO THE APP)
     await AuthService.updateUserStatus({
       userId: outletUserId,
       status: "ACTIVE",
@@ -214,8 +214,8 @@ export const unSuspendOutlet = async ({ outletUserId, userId }) => {
 
     await Outlet.findOneAndUpdate(
       {
-        outletUserId,
-        ownerId: userId,
+        userId: outletUserId,
+        ownerId,
         status: OutletStatus.SUSPENDED,
       },
       { $set: { status: OutletStatus.ACTIVE } },

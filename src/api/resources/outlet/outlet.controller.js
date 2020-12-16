@@ -60,9 +60,9 @@ export const suspendOutletUser = (req, res) => {
 
 export const unSuspendOutletUser = (req, res) => {
   const outletUserId = req.params.id;
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
-  unSuspendOutlet({ outletUserId, userId })
+  unSuspendOutlet({ outletUserId, ownerId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })

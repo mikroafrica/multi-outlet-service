@@ -1,9 +1,7 @@
 import * as WalletService from "../../modules/wallet-service.js";
 import logger from "../../../logger.js";
 import { BAD_REQUEST, OK } from "../../modules/status.js";
-import * as ConsumerService from "../../modules/consumer-service";
 import { Owner } from "../owner/owner.model";
-import { OutletStatus } from "../outlet/outlet.status";
 
 export const walletById = async ({ ownerId }) => {
   logger.info(`Fetch wallet of outlet owner [${ownerId}]`);
