@@ -8,7 +8,6 @@ import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
 import { OutletStatus } from "./outlet.status.js";
-import outlet from "./index";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
