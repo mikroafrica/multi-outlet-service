@@ -814,8 +814,8 @@ _Response Body_
     "status": true,
     "data": [
         {
-            "transactionCount": 40,
-            "transactionVolume": 474244,
+            "transactionVolume": 40,
+            "transactionValue": 474244,
             "id": "5e9a348ecf896e4e613b7fe7",
             "firstName": "meshileya",
             "lastName": "seun",

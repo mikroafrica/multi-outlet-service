@@ -128,16 +128,16 @@ const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
 
       const outletTransactionData = outletTransactions.data.data;
       let transactionSummary = {
-        transactionCount: 0,
+        transactionValue: 0,
         transactionVolume: 0,
       };
 
       if (outletTransactionData.length > 0) {
-        transactionSummary.transactionCount = outletTransactionData.reduce(
+        transactionSummary.transactionVolume = outletTransactionData.reduce(
           (total, curr) => curr.success + total,
           0
         );
-        transactionSummary.transactionVolume = outletTransactionData.reduce(
+        transactionSummary.transactionValue = outletTransactionData.reduce(
           (total, curr) => curr.successAmount + total,
           0
         );
