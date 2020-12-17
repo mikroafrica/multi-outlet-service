@@ -5,7 +5,7 @@ import { BAD_REQUEST, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
 import { UserType } from "./user.type.js";
 import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
-import { CLEAR_ACCOUNT_EVENT } from "../../events/index.js";
+import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "../../../../lib/api/resources/owner/owner.model";
 
@@ -429,9 +429,9 @@ export const updateUser = async ({ params, ownerId }) => {
   }
 };
 
-export const getUser = async ({ userId }) => {
+export const getUser = async ({ ownerId }) => {
   try {
-    const userDetails = await ConsumerService.getUserDetails(userId);
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
 
     const userDetailsData = userDetails.data;
 

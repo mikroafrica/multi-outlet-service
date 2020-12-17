@@ -7,7 +7,11 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
-import { OutletStatus } from "./outlet.status.js";
+import {
+  AuthServiceAction,
+  OutletStatus,
+  OutletStatusAction,
+} from "./outlet.status.js";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -59,10 +63,7 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
 
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
-      $or: [
-        { status: OutletStatus.ACTIVE },
-        { status: OutletStatus.SUSPENDED },
-      ],
+      status: { $ne: OutletStatus.INACTIVE },
     });
     if (existingOutlet) {
       return Promise.reject({
@@ -121,10 +122,7 @@ export const unlinkOutletFromOwner = async ({ ownerId, outletUserId }) => {
       {
         userId: outletUserId,
         ownerId,
-        $or: [
-          { status: OutletStatus.ACTIVE },
-          { status: OutletStatus.SUSPENDED },
-        ],
+        status: { $ne: OutletStatus.INACTIVE },
       },
       { $set: { status: OutletStatus.INACTIVE } },
       { new: true }
@@ -143,35 +141,45 @@ export const unlinkOutletFromOwner = async ({ ownerId, outletUserId }) => {
   }
 };
 
-export const suspendOutlet = async ({ outletUserId, ownerId }) => {
-  logger.info(`Outlet owner request to suspend outlet ${outletUserId}`);
+export const switchOutletSuspendedStatus = async ({
+  outletUserId,
+  ownerId,
+  status,
+}) => {
+  logger.info(`Outlet owner request to switch outlet status ${outletUserId}`);
   try {
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
       ownerId,
-      status: OutletStatus.ACTIVE,
+      status: { $ne: OutletStatus.INACTIVE },
     });
     if (!existingOutlet) {
       return Promise.reject({
         statusCode: NOT_FOUND,
-        message: "Could not find outlet to suspend",
+        message: "Could not find outlet",
       });
     }
 
-    // SET THE USER TO INACTIVE ON THE AUTH SERVICE (TO PREVENT ACCESS TO THE APP)
+    const authServiceStatus = AuthServiceAction[status];
+    if (!authServiceStatus)
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Invalid status supplied. Please supply a valid status",
+      });
+
+    //UPDATE THE STATUS OF THE OUTLET AT THE AUTH SERVICE
     await AuthService.updateUserStatus({
       userId: outletUserId,
-      status: "INACTIVE",
+      status: authServiceStatus,
     });
 
-    // SET USER SUSPENDED STATUS TO TRUE
     await Outlet.findOneAndUpdate(
       {
         userId: outletUserId,
         ownerId,
-        status: OutletStatus.ACTIVE,
+        status: { $ne: OutletStatus.INACTIVE },
       },
-      { $set: { status: OutletStatus.SUSPENDED } },
+      { $set: { status: OutletStatusAction[status] } },
       { new: true }
     ).exec();
 
@@ -184,56 +192,7 @@ export const suspendOutlet = async ({ outletUserId, ownerId }) => {
     );
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not suspend outlet. Try again",
-    });
-  }
-};
-
-export const unSuspendOutlet = async ({ outletUserId, ownerId }) => {
-  logger.info(
-    `Outlet owner ${ownerId} request to unsuspend outlet ${outletUserId}`
-  );
-  try {
-    const existingOutlet = await Outlet.findOne({
-      userId: outletUserId,
-      ownerId,
-      status: OutletStatus.SUSPENDED,
-    });
-    if (!existingOutlet) {
-      return Promise.reject({
-        statusCode: NOT_FOUND,
-        message: "Could not find outlet to unsuspend",
-      });
-    }
-
-    // SET THE OUTLET TO ACTIVE ON THE AUTH SERVICE (TO RE-ALLOW ACCESS TO THE APP)
-    await AuthService.updateUserStatus({
-      userId: outletUserId,
-      status: "ACTIVE",
-    });
-
-    await Outlet.findOneAndUpdate(
-      {
-        userId: outletUserId,
-        ownerId,
-        status: OutletStatus.SUSPENDED,
-      },
-      { $set: { status: OutletStatus.ACTIVE } },
-      { new: true }
-    ).exec();
-
-    return Promise.resolve({
-      statusCode: OK,
-    });
-  } catch (e) {
-    logger.error(
-      `Failed to unsuspend outlet ${outletUserId} with error ${JSON.stringify(
-        e
-      )}`
-    );
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Could not unsuspend outlet. Try again",
+      message: "Could not switch outlet status. Try again",
     });
   }
 };
@@ -388,10 +347,7 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
     const outlets = await Outlet.paginate(
       {
         ownerId,
-        $or: [
-          { status: OutletStatus.ACTIVE },
-          { status: OutletStatus.SUSPENDED },
-        ],
+        status: { $ne: OutletStatus.INACTIVE },
       },
       { page, limit }
     );
