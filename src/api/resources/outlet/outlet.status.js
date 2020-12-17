@@ -5,11 +5,6 @@ export const OutletStatus = {
 };
 
 export const AuthServiceAction = {
-  suspend: "INACTIVE",
-  unsuspend: "ACTIVE",
-};
-
-export const OutletStatusAction = {
-  suspend: OutletStatus.SUSPENDED,
-  unsuspend: OutletStatus.ACTIVE,
+  SUSPENDED: "INACTIVE",
+  ACTIVE: "ACTIVE",
 };

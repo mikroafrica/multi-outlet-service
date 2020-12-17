@@ -148,6 +148,14 @@ export const switchOutletSuspendedStatus = async ({
 }) => {
   logger.info(`Outlet owner request to switch outlet status ${outletUserId}`);
   try {
+    const outletStatus = OutletStatus[status];
+    if (!outletStatus) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Invalid status supplied. Please supply a valid status",
+      });
+    }
+
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
       ownerId,
@@ -160,17 +168,10 @@ export const switchOutletSuspendedStatus = async ({
       });
     }
 
-    const authServiceStatus = AuthServiceAction[status];
-    if (!authServiceStatus)
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Invalid status supplied. Please supply a valid status",
-      });
-
     //UPDATE THE STATUS OF THE OUTLET AT THE AUTH SERVICE
     await AuthService.updateUserStatus({
       userId: outletUserId,
-      status: authServiceStatus,
+      status: AuthServiceAction[status],
     });
 
     await Outlet.findOneAndUpdate(
@@ -179,7 +180,7 @@ export const switchOutletSuspendedStatus = async ({
         ownerId,
         status: { $ne: OutletStatus.INACTIVE },
       },
-      { $set: { status: OutletStatusAction[status] } },
+      { $set: { status } },
       { new: true }
     ).exec();
 

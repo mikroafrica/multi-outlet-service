@@ -623,7 +623,7 @@ _Response Body_
 
 
 ### Suspend Outlet 
-`PUT /outlet/{outletId}/suspend`
+`PUT /outlet/{outletId}/SUSPENDED`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -637,7 +637,7 @@ _Response Body_
 
 
 ### Unsuspend Outlet 
-`PUT /outlet/{outletId}/unsuspend`
+`PUT /outlet/{outletId}/ACTIVE`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
