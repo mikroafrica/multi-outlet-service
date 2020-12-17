@@ -63,7 +63,6 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
 
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
-      status: { $ne: OutletStatus.INACTIVE },
     });
     if (existingOutlet) {
       return Promise.reject({
@@ -118,15 +117,10 @@ export const unlinkOutletFromOwner = async ({ ownerId, outletUserId }) => {
         message: "Outlet not found. Please supply a valid outlet",
       });
     }
-    await Outlet.findOneAndUpdate(
-      {
-        userId: outletUserId,
-        ownerId,
-        status: { $ne: OutletStatus.INACTIVE },
-      },
-      { $set: { status: OutletStatus.INACTIVE } },
-      { new: true }
-    ).exec();
+    await Outlet.findOneAndDelete({
+      userId: outletUserId,
+      ownerId,
+    });
     return Promise.resolve({
       statusCode: OK,
     });
@@ -159,7 +153,6 @@ export const switchOutletSuspendedStatus = async ({
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
       ownerId,
-      status: { $ne: OutletStatus.INACTIVE },
     });
     if (!existingOutlet) {
       return Promise.reject({
@@ -178,7 +171,6 @@ export const switchOutletSuspendedStatus = async ({
       {
         userId: outletUserId,
         ownerId,
-        status: { $ne: OutletStatus.INACTIVE },
       },
       { $set: { status } },
       { new: true }
@@ -348,7 +340,6 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
     const outlets = await Outlet.paginate(
       {
         ownerId,
-        status: { $ne: OutletStatus.INACTIVE },
       },
       { page, limit }
     );

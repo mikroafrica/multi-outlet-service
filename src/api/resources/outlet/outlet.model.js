@@ -9,7 +9,7 @@ const schema = {
   status: {
     type: String,
     default: OutletStatus.ACTIVE,
-    enum: [OutletStatus.ACTIVE, OutletStatus.INACTIVE, OutletStatus.SUSPENDED],
+    enum: [OutletStatus.ACTIVE, OutletStatus.SUSPENDED],
   },
 };
 
