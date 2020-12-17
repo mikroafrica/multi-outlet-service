@@ -1,5 +1,5 @@
 import restify from "restify-clients";
-import { get } from "./request.js";
+import { get, post } from "./request.js";
 
 const restifyRequest = () => {
   const client = restify.createJSONClient({
@@ -50,4 +50,23 @@ export const fetchWalletTransactions = ({
     },
   };
   return get({ client, path });
+};
+
+export const createWalletTransaction = ({
+  amount,
+  destinationWalletId,
+  sourceWalletId,
+  reference,
+}) => {
+  const client = restifyRequest();
+  const params = {
+    amount,
+    destinationWalletId,
+    sourceWalletId,
+    reference,
+  };
+
+  const path = "/transactions";
+
+  return post({ client, path, params });
 };
