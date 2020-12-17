@@ -924,3 +924,61 @@ _Response Body_
     ]
 }
 ```
+
+
+### Transfer to outlet's wallet
+`POST /transfer/${outletId}/outlet`
+
+_Request Body_
+
+```javascript
+{
+    "amount": 100
+}
+```
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+        "balance": 16832.5,
+        "totalCredit": 32100.5,
+        "totalDebit": 15268,
+        "numberOfTransaction": 71,
+        "currency": "NGN",
+        "timeCreated": 1587589856175
+    }
+}
+```
+
+
+### Transfer to owner's wallet
+`POST /transfer/${outletId}/owner`
+
+_Request Body_
+
+```javascript
+{
+    "amount": 100
+}
+```
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "id": "eb8c541c-f589-43b4-91f7-5090bf08a395",
+        "balance": 51170,
+        "totalCredit": 61180,
+        "totalDebit": 10010,
+        "numberOfTransaction": 9,
+        "currency": "NGN",
+        "timeCreated": 1608057460322
+    }
+}
+```

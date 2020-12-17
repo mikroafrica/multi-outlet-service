@@ -1,14 +1,12 @@
-import {
-  transferToOutletOwnerWallet,
-  transferToOutletWallet,
-} from "./transfer.service";
+import { walletTransfer, transferToOutletWallet } from "./transfer.service";
 
-export const transferToOutletOwner = (req, res) => {
+export const transferAcrossWallets = (req, res) => {
   const ownerId = req.user.userId;
   const outletId = req.params.id;
+  const destination = req.params.destination;
   const params = req.body;
 
-  transferToOutletOwnerWallet({ ownerId, outletId, params })
+  walletTransfer({ ownerId, outletId, params, destination })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
