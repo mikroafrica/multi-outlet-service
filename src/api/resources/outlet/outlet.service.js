@@ -7,11 +7,7 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
-import {
-  AuthServiceAction,
-  OutletStatus,
-  OutletStatusAction,
-} from "./outlet.status.js";
+import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -63,7 +59,6 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
 
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
-      status: { $ne: OutletStatus.INACTIVE },
     });
     if (existingOutlet) {
       return Promise.reject({
@@ -118,15 +113,10 @@ export const unlinkOutletFromOwner = async ({ ownerId, outletUserId }) => {
         message: "Outlet not found. Please supply a valid outlet",
       });
     }
-    await Outlet.findOneAndUpdate(
-      {
-        userId: outletUserId,
-        ownerId,
-        status: { $ne: OutletStatus.INACTIVE },
-      },
-      { $set: { status: OutletStatus.INACTIVE } },
-      { new: true }
-    ).exec();
+    await Outlet.findOneAndDelete({
+      userId: outletUserId,
+      ownerId,
+    });
     return Promise.resolve({
       statusCode: OK,
     });
@@ -148,10 +138,17 @@ export const switchOutletSuspendedStatus = async ({
 }) => {
   logger.info(`Outlet owner request to switch outlet status ${outletUserId}`);
   try {
+    const outletStatus = OutletStatus[status];
+    if (!outletStatus) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Invalid status supplied. Please supply a valid status",
+      });
+    }
+
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
       ownerId,
-      status: { $ne: OutletStatus.INACTIVE },
     });
     if (!existingOutlet) {
       return Promise.reject({
@@ -160,31 +157,24 @@ export const switchOutletSuspendedStatus = async ({
       });
     }
 
-    const authServiceStatus = AuthServiceAction[status];
-    if (!authServiceStatus)
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Invalid status supplied. Please supply a valid status",
-      });
-
     //UPDATE THE STATUS OF THE OUTLET AT THE AUTH SERVICE
     await AuthService.updateUserStatus({
       userId: outletUserId,
-      status: authServiceStatus,
+      status: AuthServiceAction[status],
     });
 
-    await Outlet.findOneAndUpdate(
+    const updatedOutlet = await Outlet.findOneAndUpdate(
       {
         userId: outletUserId,
         ownerId,
-        status: { $ne: OutletStatus.INACTIVE },
       },
-      { $set: { status: OutletStatusAction[status] } },
+      { $set: { status } },
       { new: true }
     ).exec();
 
     return Promise.resolve({
       statusCode: OK,
+      data: updatedOutlet,
     });
   } catch (e) {
     logger.error(
@@ -347,7 +337,6 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
     const outlets = await Outlet.paginate(
       {
         ownerId,
-        status: { $ne: OutletStatus.INACTIVE },
       },
       { page, limit }
     );

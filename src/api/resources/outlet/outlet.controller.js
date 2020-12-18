@@ -50,34 +50,8 @@ export const switchOutletStatus = (req, res) => {
   const status = req.params.status;
 
   switchOutletSuspendedStatus({ outletUserId, ownerId, status })
-    .then(({ statusCode }) => {
-      res.send(statusCode, { status: true });
-    })
-    .catch(({ statusCode, message }) => {
-      res.send(statusCode, { status: false, message });
-    });
-};
-
-export const suspendOutletUser = (req, res) => {
-  const outletUserId = req.params.id;
-  const ownerId = req.user.userId;
-
-  suspendOutlet({ outletUserId, ownerId })
-    .then(({ statusCode }) => {
-      res.send(statusCode, { status: true });
-    })
-    .catch(({ statusCode, message }) => {
-      res.send(statusCode, { status: false, message });
-    });
-};
-
-export const unSuspendOutletUser = (req, res) => {
-  const outletUserId = req.params.id;
-  const ownerId = req.user.userId;
-
-  unSuspendOutlet({ outletUserId, ownerId })
-    .then(({ statusCode }) => {
-      res.send(statusCode, { status: true });
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
     })
     .catch(({ statusCode, message }) => {
       res.send(statusCode, { status: false, message });

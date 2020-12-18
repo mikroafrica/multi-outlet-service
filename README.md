@@ -642,8 +642,12 @@ _Response Body_
 ```
 
 
-### Suspend Outlet 
-`PUT /outlet/{outletId}/suspend`
+### Switch Outlet. status: {SUSPENDED, ACTIVE}
+`PUT /outlet/{outletId}/:status`
+
+`Description. Pass SUSPENDED TO suspend the outlet and ACTIVE to reactive a suspneded outlet`
+
+`Sample Request /outlet/{outletId}/SUSPENDED`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -654,19 +658,6 @@ _Response Body_
     "status": true
 }
 ```
-
-
-### Unsuspend Outlet 
-`PUT /outlet/{outletId}/unsuspend`
-
-`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
-
-_Response Body_
-
-```javascript
-{
-    "status": true
-}
 
 
 ### Get multi-outlet owner wallet 
@@ -834,8 +825,8 @@ _Response Body_
     "status": true,
     "data": [
         {
-            "transactionCount": 40,
-            "transactionVolume": 474244,
+            "transactionVolume": 40,
+            "transactionValue": 474244,
             "id": "5e9a348ecf896e4e613b7fe7",
             "firstName": "meshileya",
             "lastName": "seun",
