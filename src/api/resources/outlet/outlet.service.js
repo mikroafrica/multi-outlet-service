@@ -7,11 +7,7 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
-import {
-  AuthServiceAction,
-  OutletStatus,
-  OutletStatusAction,
-} from "./outlet.status.js";
+import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -167,7 +163,7 @@ export const switchOutletSuspendedStatus = async ({
       status: AuthServiceAction[status],
     });
 
-    await Outlet.findOneAndUpdate(
+    const updatedOutlet = await Outlet.findOneAndUpdate(
       {
         userId: outletUserId,
         ownerId,
@@ -178,6 +174,7 @@ export const switchOutletSuspendedStatus = async ({
 
     return Promise.resolve({
       statusCode: OK,
+      data: updatedOutlet,
     });
   } catch (e) {
     logger.error(

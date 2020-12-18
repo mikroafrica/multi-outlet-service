@@ -622,8 +622,12 @@ _Response Body_
 ```
 
 
-### Suspend Outlet 
-`PUT /outlet/{outletId}/SUSPENDED`
+### Switch Outlet. status: {SUSPENDED, ACTIVE}
+`PUT /outlet/{outletId}/:status`
+
+`Description. Pass SUSPENDED TO suspend the outlet and ACTIVE to reactive a suspneded outlet`
+
+`Sample Request /outlet/{outletId}/SUSPENDED`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -634,19 +638,6 @@ _Response Body_
     "status": true
 }
 ```
-
-
-### Unsuspend Outlet 
-`PUT /outlet/{outletId}/ACTIVE`
-
-`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
-
-_Response Body_
-
-```javascript
-{
-    "status": true
-}
 
 
 ### Get multi-outlet owner wallet 

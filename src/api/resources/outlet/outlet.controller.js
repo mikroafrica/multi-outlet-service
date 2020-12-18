@@ -50,8 +50,8 @@ export const switchOutletStatus = (req, res) => {
   const status = req.params.status;
 
   switchOutletSuspendedStatus({ outletUserId, ownerId, status })
-    .then(({ statusCode }) => {
-      res.send(statusCode, { status: true });
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
     })
     .catch(({ statusCode, message }) => {
       res.send(statusCode, { status: false, message });
