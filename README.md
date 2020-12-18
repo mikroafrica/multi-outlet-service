@@ -366,6 +366,71 @@ _Response Body_
 ```
 
 
+### View MultiOutlet owner details
+`GET /auth/details`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "id": "5fd35d158677251eabdf8ef5",
+        "firstName": "alex",
+        "lastName": "snow",
+        "dateOfBirth": "01-07-1991",
+        "profileImageId": null,
+        "gender": "MALE",
+        "businessName": "Good business",
+        "businessType": "OUTLET_OWNER",
+        "username": null,
+        "email": "coehn.jaheim@extraale.com",
+        "phoneNumber": "+234 803 123 0924",
+        "phoneCarrier": "mtn",
+        "userType": "OUTLET_OWNER",
+        "tierLevel": null,
+        "fcmToken": null,
+        "utilityImageId": null,
+        "identificationImageId": null,
+        "placeOfBusinessImageId": null,
+        "store": [
+            {
+                "id": "5fd35d158677251eabdf8ef7",
+                "address": "12 adewole street",
+                "state": "abuja",
+                "lga": "garki",
+                "country": "ngn",
+                "bank": "Providus Bank",
+                "bankCode": "101",
+                "accountName": "alex snow",
+                "accountNumber": "4000050197",
+                "terminalId": null,
+                "wallet": [
+                    {
+                        "id": "ed8f14ba-93c8-46f5-8433-65e92d2476c4",
+                        "currency": "NGN",
+                        "type": "MAIN"
+                    }
+                ],
+                "terminalMapped": false
+            }
+        ],
+        "region": null,
+        "zone": null,
+        "goal": "ACTIVE",
+        "emailVerified": true,
+        "bvnVerified": false,
+        "placeOfBusinessImageVerified": false,
+        "utilityImageIdVerified": false,
+        "identificationImageVerified": false,
+        "ninVerified": false
+    }
+}
+```
+
+
 ### Link Outlet
 `POST /outlet/link`
 
@@ -557,8 +622,12 @@ _Response Body_
 ```
 
 
-### Suspend Outlet 
-`PUT /outlet/{outletId}/suspend`
+### Switch Outlet. status: {SUSPENDED, ACTIVE}
+`PUT /outlet/{outletId}/:status`
+
+`Description. Pass SUSPENDED TO suspend the outlet and ACTIVE to reactive a suspneded outlet`
+
+`Sample Request /outlet/{outletId}/SUSPENDED`
 
 `Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
 
@@ -736,8 +805,8 @@ _Response Body_
     "status": true,
     "data": [
         {
-            "transactionCount": 40,
-            "transactionVolume": 474244,
+            "transactionVolume": 40,
+            "transactionValue": 474244,
             "id": "5e9a348ecf896e4e613b7fe7",
             "firstName": "meshileya",
             "lastName": "seun",

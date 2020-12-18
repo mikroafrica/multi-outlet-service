@@ -3,8 +3,8 @@ import {
   verifyOutletLinking,
   getOutlets,
   unlinkOutletFromOwner,
-  suspendOutlet,
-} from "./outlet.service.js";
+  switchOutletSuspendedStatus,
+} from "./outlet.service";
 
 export const linkOutlet = (req, res) => {
   const params = req.body;
@@ -44,13 +44,14 @@ export const unlinkOutlet = (req, res) => {
     });
 };
 
-export const suspendOutletUser = (req, res) => {
+export const switchOutletStatus = (req, res) => {
   const outletUserId = req.params.id;
   const ownerId = req.user.userId;
+  const status = req.params.status;
 
-  suspendOutlet({ outletUserId, ownerId })
-    .then(({ statusCode }) => {
-      res.send(statusCode, { status: true });
+  switchOutletSuspendedStatus({ outletUserId, ownerId, status })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
     })
     .catch(({ statusCode, message }) => {
       res.send(statusCode, { status: false, message });

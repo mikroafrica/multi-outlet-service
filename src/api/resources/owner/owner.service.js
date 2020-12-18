@@ -5,7 +5,7 @@ import { BAD_REQUEST, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
 import { UserType } from "./user.type.js";
 import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
-import { CLEAR_ACCOUNT_EVENT } from "../../events/index.js";
+import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "../../../../lib/api/resources/owner/owner.model";
 
@@ -389,7 +389,7 @@ export const updateUser = async ({ params, ownerId }) => {
   try {
     const userDetails = await ConsumerService.getUserDetails(ownerId);
     const userDetailsData = userDetails.data;
-    const isBvnVerified = userDetailsData.bvnVerified;
+    const isBvnVerified = userDetailsData.data.bvnVerified;
 
     // PREVENT A USER FROM UPDATING THEIR NAME, PHONE NUMBER OR DOB IF BVN IS VERIFIED
     if (isBvnVerified) {
@@ -423,7 +423,26 @@ export const updateUser = async ({ params, ownerId }) => {
     }
   } catch (e) {
     return Promise.reject({
-      statusCode: "Could not update user profile. Please try again",
+      statusCode: BAD_REQUEST,
+      message: "Could not update user profile. Please try again",
+    });
+  }
+};
+
+export const getUser = async ({ ownerId }) => {
+  try {
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
+
+    const userDetailsData = userDetails.data;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: userDetailsData.data,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch user details. Please try again",
     });
   }
 };

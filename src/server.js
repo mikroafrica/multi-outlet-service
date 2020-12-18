@@ -3,7 +3,7 @@ import { secureRoute } from "./api/middleware";
 import dotenv from "dotenv";
 import corsMiddleware from "restify-cors-middleware";
 import { connect } from "./db";
-import auth from "./api/resources/user/index";
+import auth from "./api/resources/owner";
 import wallet from "./api/resources/wallet/index";
 import transaction from "./api/resources/transaction/index";
 import outlet from "./api/resources/outlet/index";
