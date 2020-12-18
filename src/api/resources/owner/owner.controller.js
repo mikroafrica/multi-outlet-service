@@ -9,6 +9,7 @@ import {
   getUser,
 } from "./owner.service.js";
 import { loginMultiOutletOwner } from "./owner.service.js";
+import { outletAccountDetails } from "./owner.service";
 
 export const signup = (req, res) => {
   const params = req.body;
@@ -111,6 +112,18 @@ export const fetchOwnerDetails = (req, res) => {
   const ownerId = req.user.userId;
 
   getUser({ ownerId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getOutletAccountDetails = (req, res) => {
+  const ownerId = req.user.userId;
+
+  outletAccountDetails({ ownerId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

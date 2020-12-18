@@ -35,7 +35,7 @@ export const signupMultiOutletOwner = async (params) => {
     .then(async (outletOwner) => {
       const outletOwnerData = outletOwner.data;
       const userId = await outletOwnerData.data.id;
-
+      console.log(userId);
       try {
         await AuthService.signup(authServiceSignUpParams(params, userId));
         return Promise.resolve({
@@ -445,6 +445,25 @@ export const getUser = async ({ ownerId }) => {
       message: "Could not fetch user details. Please try again",
     });
   }
+};
+
+export const outletAccountDetails = async ({ ownerId }) => {
+  const userDetails = await ConsumerService.getUserDetails(ownerId);
+
+  const userDetailsData = userDetails.data.data;
+
+  const store = userDetailsData.store[0];
+  const ownerAccountDetails = {
+    bank: store.bank,
+    bankCode: store.bankCode,
+    accountName: store.accountName,
+    accountNumber: store.accountNumber,
+  };
+
+  return Promise.resolve({
+    statusCode: OK,
+    data: ownerAccountDetails,
+  });
 };
 
 const validateSignupParamsSchema = (params) => {
