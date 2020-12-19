@@ -431,6 +431,26 @@ _Response Body_
 ```
 
 
+### View MultiOutlet owner monnify account details
+`GET /auth/account`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "bank": "Providus Bank",
+        "bankCode": "101",
+        "accountName": "alex snow",
+        "accountNumber": "4000050197"
+    }
+}
+```
+
+
 ### Link Outlet
 `POST /outlet/link`
 
