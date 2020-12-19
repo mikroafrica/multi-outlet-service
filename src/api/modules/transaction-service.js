@@ -1,5 +1,5 @@
 import restify from "restify-clients";
-import { get } from "./request.js";
+import { get, post } from "./request.js";
 
 const restifyRequest = () => {
   const client = restify.createJSONClient({
@@ -71,4 +71,11 @@ export const fetchTransactionSummary = ({ userId, dateFrom, dateTo }) => {
     },
   };
   return get({ client, path });
+};
+
+export const creteTransaction = async (params) => {
+  console.log(params);
+  const client = restifyRequest();
+  const path = `/transactions/create`;
+  return post({ client, path, params });
 };

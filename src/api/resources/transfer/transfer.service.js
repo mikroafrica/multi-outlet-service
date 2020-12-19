@@ -1,9 +1,11 @@
-import * as WalletService from "../../modules/wallet-service";
+import * as TransactionService from "../../modules/transaction-service";
+import * as ConsumerService from "../../modules/consumer-service";
 import { BAD_REQUEST, OK } from "../../modules/status";
 import Joi from "joi";
 import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
 import { Outlet } from "../outlet/outlet.model";
+import { v4 as uuidv4 } from "uuid";
 
 export const walletTransfer = async ({
   ownerId,
@@ -32,9 +34,6 @@ export const walletTransfer = async ({
   }
 
   try {
-    const owner = await Owner.findOne({ userId: ownerId });
-    const outlet = await Outlet.findOne({ userId: outletId });
-
     destination = destination.toLowerCase();
     if (destination !== "owner" && destination !== "outlet") {
       return Promise.reject({
@@ -44,25 +43,34 @@ export const walletTransfer = async ({
     }
 
     if (destination === "owner") {
-      params.destinationWalletId = owner.walletId;
-      params.sourceWalletId = outlet.walletId;
+      const outlet = await Outlet.findOne({ userId: outletId });
+      params.userWalletId = outlet.walletId;
+      params.recipientId = ownerId;
+
+      const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+      const ownerDetailsData = ownerDetails.data.data;
+      params.sourceName = ownerDetailsData.businessName;
     } else if (destination === "outlet") {
-      params.destinationWalletId = outlet.walletId;
-      params.sourceWalletId = owner.walletId;
+      const owner = await Owner.findOne({ userId: ownerId });
+      params.userWalletId = owner.walletId;
+      params.recipientId = outletId;
+
+      const outletDetails = await ConsumerService.getUserDetails(outletId);
+      const outletDetailsData = outletDetails.data.data;
+      params.sourceName = outletDetailsData.businessName;
     }
 
     params = {
       ...params,
-      reference: `TRF from ${params.sourceWalletId} to ${
-        params.destinationWalletId
-      } - ${Date.now()}`,
+      transactionType: "P2P",
+      uniqueIdentifier: uuidv4(),
     };
 
     logger.info(
       `Transfer to outlet owner wallet request body ${JSON.stringify(params)}`
     );
 
-    const response = await WalletService.createWalletTransaction(params);
+    const response = await TransactionService.creteTransaction(params);
     const responseData = response.data;
 
     return Promise.resolve({
