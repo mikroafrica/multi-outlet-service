@@ -7,7 +7,8 @@ import {
   resetMultiOutletOwnerPassword,
   resetPasswordRequest,
   updateUserProfile,
-} from "./user.controller.js";
+  fetchOwnerDetails,
+} from "./owner.controller.js";
 
 const auth = ({ server, subBase }) => {
   server.post(`${subBase}/signup`, signup);
@@ -18,6 +19,7 @@ const auth = ({ server, subBase }) => {
   server.put(`${subBase}/reset-password`, resetMultiOutletOwnerPassword);
   server.put(`${subBase}/change-password`, changePasswordRequest);
   server.put(`${subBase}/update-profile`, updateUserProfile);
+  server.get(`${subBase}/details`, fetchOwnerDetails);
 };
 
 export default auth;

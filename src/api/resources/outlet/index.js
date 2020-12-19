@@ -4,13 +4,15 @@ import {
   verifyLinkedOutlet,
   fetchOutlets,
   suspendOutletUser,
-} from "./outlet.controller.js";
+  unSuspendOutletUser,
+  switchOutletStatus,
+} from "./outlet.controller";
 
 const outlet = ({ server, subBase }) => {
   server.post(`${subBase}/link`, linkOutlet);
-  server.put(`${subBase}/:id/unlink`, unlinkOutlet);
-  server.put(`${subBase}/:id/suspend`, suspendOutletUser);
   server.post(`${subBase}/verify`, verifyLinkedOutlet);
+  server.put(`${subBase}/:id/unlink`, unlinkOutlet);
+  server.put(`${subBase}/:id/:status`, switchOutletStatus);
   server.get(`${subBase}`, fetchOutlets);
 };
 
