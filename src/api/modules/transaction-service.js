@@ -74,7 +74,6 @@ export const fetchTransactionSummary = ({ userId, dateFrom, dateTo }) => {
 };
 
 export const creteTransaction = async (params) => {
-  console.log(params);
   const client = restifyRequest();
   const path = `/transactions/create`;
   return post({ client, path, params });
