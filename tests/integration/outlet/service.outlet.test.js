@@ -78,6 +78,26 @@ describe("Outlet service Tests", function () {
     sinon.assert.calledOnce(findOneVerification);
   });
 
+  it("should fail to link an outlet if linking details are incorrect", async function () {
+    const mockAuthResponse = {
+      message: "Username of password incorrect",
+    };
+
+    nock(process.env.AUTH_SERVICE_URL)
+      .post("/auth/login")
+      .reply(401, mockAuthResponse);
+
+    try {
+      await OutletService.linkOwnerToOutlet({
+        params: linkOutletParams,
+        userId: "1234",
+      });
+    } catch (err) {
+      expect(response.statusCode).equals(400);
+      expect(response.data).to.exist;
+    }
+  });
+
   // it("should successfully unlink an outlet", async function () {
   //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
   //     outletUserId: "outlet-id",
