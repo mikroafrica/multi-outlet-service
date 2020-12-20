@@ -494,7 +494,6 @@ describe("Owner service Tests", function () {
         ownerId: userId,
       });
     } catch (err) {
-      console.log(err);
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
     }
@@ -532,7 +531,6 @@ describe("Owner service Tests", function () {
         ownerId: userId,
       });
     } catch (err) {
-      console.log(err);
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
     }
@@ -574,7 +572,6 @@ describe("Owner service Tests", function () {
         ownerId: userId,
       });
     } catch (err) {
-      console.log(err);
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
     }

@@ -23,7 +23,8 @@ describe("Auth service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await AuthService.signup({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully make a call to login", async function () {
@@ -40,7 +41,8 @@ describe("Auth service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await AuthService.login({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully make a call to request password reset", async function () {
@@ -54,7 +56,8 @@ describe("Auth service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await AuthService.resetPasswordRequest({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully make a call to reset password", async function () {
@@ -67,7 +70,8 @@ describe("Auth service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await AuthService.resetPassword({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully change owner's password", async function () {
@@ -83,6 +87,7 @@ describe("Auth service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await AuthService.changePassword({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 });
