@@ -4,7 +4,7 @@ import * as TransactionService from "../../modules/transaction-service.js";
 import logger from "../../../logger.js";
 import { OutletStatus } from "../outlet/outlet.status";
 import { Outlet } from "../outlet/outlet.model";
-import { fetchOutletDetails } from "../outlet/outlet.service";
+import * as OutletService from "../outlet/outlet.service";
 
 export const fetchOutletTransactions = async ({
   outletId,
@@ -87,7 +87,9 @@ export const getTransactionsSummary = async ({
     { page, limit }
   )
     .then(async (outlets) => {
-      const outletDetails = await fetchOutletDetails(outlets.docs);
+      const outletDetails = await OutletService.fetchOutletDetails(
+        outlets.docs
+      );
       const transactionSummaryForOutlets = await fetchOutletsTransactionSummary(
         outletDetails,
         dateFrom,
@@ -114,6 +116,7 @@ export const getTransactionsSummary = async ({
 const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
   const outletsTransactionSummary = [];
   await async.forEach(outlets, async (outlet) => {
+    console.log(outlet);
     try {
       const outletUserId = outlet.id;
 

@@ -10,6 +10,8 @@ import {
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
+import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
+import { Verification } from "../../../src/api/resources/outlet/verification.model";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -80,13 +82,15 @@ describe("Transaction service Tests", function () {
       .get(`/transactions/${outletId}?dateFrom=${dateFrom}&dateTo=${dateTo}`)
       .reply(BAD_REQUEST, mockResponse);
 
-    const response = await TransactionService.fetchOutletTransactions({
-      outletId,
-      dateFrom,
-      dateTo,
-    });
-
-    expect(response.statusCode).equals(OK);
-    expect(response.data).to.exist;
+    try {
+      await TransactionService.fetchOutletTransactions({
+        outletId,
+        dateFrom,
+        dateTo,
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(BAD_REQUEST);
+      expect(err.message).to.exist;
+    }
   });
 });
