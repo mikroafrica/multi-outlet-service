@@ -7,6 +7,7 @@ import * as OwnerService from "../../../src/api/resources/owner/owner.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
 import {
   BAD_REQUEST,
+  CONFLICT,
   FORBIDDEN,
   OK,
   UN_AUTHORISED,
@@ -110,7 +111,7 @@ describe("Owner service Tests", function () {
     try {
       await OwnerService.signupMultiOutletOwner(signupParams);
     } catch (err) {
-      expect(err.statusCode).equals(409);
+      expect(err.statusCode).equals(CONFLICT);
       expect(err.message).exist;
     }
   });
