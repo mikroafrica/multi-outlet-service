@@ -93,136 +93,195 @@ describe("Outlet service Tests", function () {
         userId: "1234",
       });
     } catch (err) {
-      expect(response.statusCode).equals(400);
-      expect(response.data).to.exist;
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
     }
   });
 
-  // it("should successfully unlink an outlet", async function () {
-  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
-  //     outletUserId: "outlet-id",
-  //     ownerId: "owner-id",
-  //     outletStatus: OutletStatus.ACTIVE,
-  //     isOutletSuspended: false,
-  //   });
-  //
-  //   const findOneAndUpdateOutlet = sinon.stub(Outlet, "findOneAndUpdate");
-  //   findOneAndUpdateOutlet.resolves({
-  //     exec: () => {
-  //       return {};
-  //     },
-  //   });
-  //
-  //   const response = await OutletService.unlinkOutletFromOwner({
-  //     outletUserId: "4579",
-  //     userId: "1234",
-  //   });
-  //   expect(response.statusCode).equals(200);
-  //
-  //   findOneOutlet.restore();
-  //   sinon.assert.calledOnce(findOneOutlet);
-  //
-  //   findOneAndUpdateOutlet.restore();
-  //   sinon.assert.calledOnce(findOneAndUpdateOutlet);
-  // });
-  //
-  // it("should fail to unlink an outlet if outlet is not found", async function () {
-  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
-  //
-  //   try {
-  //     await OutletService.unlinkOutletFromOwner({
-  //       outletUserId: "4579",
-  //       userId: "1234",
-  //     });
-  //   } catch (e) {
-  //     expect(e.statusCode).equals(400);
-  //     expect(e.message).to.exist;
-  //   }
-  //
-  //   findOneOutlet.restore();
-  //   sinon.assert.calledOnce(findOneOutlet);
-  // });
-  //
-  // it("should successfully suspend an outlet", async function () {
-  //   const outletUserId = 4579;
-  //
-  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
-  //     ownerId: "someid",
-  //     outletUserId: "outlet-owner-id",
-  //   });
-  //
-  //   nock(process.env.AUTH_SERVICE_URL)
-  //     .put(`/auth/${outletUserId}/INACTIVE/status`)
-  //     .reply(200, {
-  //       statusCode: 200,
-  //     });
-  //
-  //   const findOneAndUpdateOutlet = sinon
-  //     .stub(Outlet, "findOneAndUpdate")
-  //     .resolves({
-  //       exec: () => ({
-  //         outletUserId,
-  //         ownerId: "owner-id",
-  //         outletStatus: OutletStatus.ACTIVE,
-  //         isOutletSuspended: true,
-  //       }),
-  //     });
-  //
-  //   const response = await OutletService.suspendOutlet({
-  //     outletUserId,
-  //     userId: "user-id",
-  //   });
-  //   expect(response.statusCode).equals(200);
-  //
-  //   findOneOutlet.restore();
-  //   sinon.assert.calledOnce(findOneOutlet);
-  //
-  //   findOneAndUpdateOutlet.restore();
-  //   sinon.assert.calledOnce(findOneAndUpdateOutlet);
-  // });
-  //
-  // it("should fail to suspend an outlet if an error occurs while updating user status", async function () {
-  //   const outletUserId = "4579";
-  //   const ownerId = "owner-id";
-  //
-  //   nock(process.env.AUTH_SERVICE_URL)
-  //     .put(`/auth/${outletUserId}/INACTIVE/status`)
-  //     .reply(400, {
-  //       statusCode: 400,
-  //       message: "User not be found",
-  //     });
-  //
-  //   try {
-  //     await OutletService.suspendOutlet({
-  //       outletUserId,
-  //       userId: ownerId,
-  //     });
-  //   } catch (e) {
-  //     expect(e.statusCode).equals(400);
-  //     expect(e.message).to.exist;
-  //   }
-  // });
-  //
-  // it("should successfully send verification OTP", async function () {
-  //   const phoneNumber = 23480785858595;
-  //
-  //   nock(process.env.CONSUMER_SERVICE_URL)
-  //     .post(`/otp`)
-  //     .reply(200, {
-  //       statusCode: 200,
-  //       data: {
-  //         verificationId: "jbvrj34ng",
-  //       },
-  //     });
-  //
-  //   const response = await OutletService.sendVerificationOtp({ phoneNumber });
-  //   expect(response.statusCode).equals(200);
-  //   expect(response.data).to.exist;
-  // });
-  //
+  it("should successfully unlink an outlet", async function () {
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
+      userId: "outlet-id",
+      ownerId: "owner-id",
+      walletId: "some-gene-rated-uuid",
+      status: OutletStatus.ACTIVE,
+    });
+
+    const findOneAndDeleteOutlet = sinon.stub(Outlet, "findOneAndDelete");
+    findOneAndDeleteOutlet.resolves({});
+
+    const response = await OutletService.unlinkOutletFromOwner({
+      outletUserId: 4579,
+      ownerId: "1234",
+    });
+    expect(response.statusCode).equals(200);
+
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+
+    findOneAndDeleteOutlet.restore();
+    sinon.assert.calledOnce(findOneAndDeleteOutlet);
+  });
+
+  it("should fail to unlink an outlet if outlet is not found", async function () {
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
+
+    try {
+      await OutletService.unlinkOutletFromOwner({
+        outletUserId: "4579",
+        ownerId: "1234",
+      });
+    } catch (e) {
+      expect(e.statusCode).equals(404);
+      expect(e.message).to.exist;
+    }
+
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+  });
+
+  it("should successfully switch an outlet status", async function () {
+    const outletId = "4579";
+    const status = OutletStatus.SUSPENDED;
+
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
+      ownerId: "some-id",
+      userId: "outlet-owner-id",
+    });
+
+    nock(process.env.AUTH_SERVICE_URL)
+      .put(`/auth/${outletId}/INACTIVE/status`)
+      .reply(200, {
+        statusCode: 200,
+      });
+
+    const findOneAndUpdateOutlet = sinon
+      .stub(Outlet, "findOneAndUpdate")
+      .resolves({
+        exec: () => ({
+          userId: outletId,
+          ownerId: "owner-id",
+          walletId: "some-uuid",
+          status: OutletStatus.ACTIVE,
+        }),
+      });
+
+    const response = await OutletService.switchOutletSuspendedStatus({
+      outletUserId: outletId,
+      userId: "user-id-001",
+      status,
+    });
+    expect(response.statusCode).equals(200);
+
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+
+    findOneAndUpdateOutlet.restore();
+    sinon.assert.calledOnce(findOneAndUpdateOutlet);
+  });
+
+  it("should fail to switch outlet status when status is invalid", async function () {
+    const outletUserId = 4579;
+
+    try {
+      await OutletService.switchOutletSuspendedStatus({
+        outletUserId,
+        userId: "user-id-001",
+        status: "RANDOM_STATUS",
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.equals(
+        "Invalid status supplied. Please supply a valid status"
+      );
+    }
+  });
+
+  it("should fail to switch outlet status when outlet cannot be found", async function () {
+    const outletUserId = 4579;
+
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
+
+    try {
+      await OutletService.switchOutletSuspendedStatus({
+        outletUserId,
+        userId: "user-id-001",
+        status: OutletStatus.ACTIVE,
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(404);
+      expect(err.message).to.equals("Could not find outlet");
+    }
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+  });
+
+  it("should fail to switch outlet status if error occurs on auth service", async function () {
+    const outletUserId = 4579;
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
+      ownerId: "some-id",
+      outletUserId: "outlet-owner-id",
+    });
+
+    nock(process.env.AUTH_SERVICE_URL)
+      .put(`/auth/${outletUserId}/INACTIVE/status`)
+      .reply(400, {
+        statusCode: 400,
+        message: "User not be found",
+      });
+
+    try {
+      await OutletService.switchOutletSuspendedStatus({
+        outletUserId,
+        userId: "user-id-001",
+        status: OutletStatus.SUSPENDED,
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.equals(
+        "Could not switch outlet status. Try again"
+      );
+    }
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+  });
+
+  it("should successfully send verification OTP", async function () {
+    const phoneNumber = 23480785858595;
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .post(`/otp`)
+      .reply(200, {
+        statusCode: 200,
+        data: {
+          verificationId: "jbvrj34ng",
+        },
+      });
+
+    const response = await OutletService.sendVerificationOtp({ phoneNumber });
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
+  });
+
+  it("should fail to send verification OTP if an error occurs on consumer service", async function () {
+    const phoneNumber = 23480785858595;
+
+    nock(process.env.CONSUMER_SERVICE_URL).post(`/otp`).reply(400, {
+      statusCode: 400,
+      message: "Could not send OTP to user",
+    });
+
+    try {
+      await OutletService.sendVerificationOtp({ phoneNumber });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.equals("Could not send verification OTP");
+    }
+  });
+
   // it("should successfully verify outlet linking", async function () {
   //   const verificationId = "h47fbh4h44h49f";
   //   const otpCode = "903875";
+  //   const outletUserId = "outlet-owner-id";
   //
   //   const params = {
   //     otpCode,
@@ -235,19 +294,33 @@ describe("Outlet service Tests", function () {
   //       statusCode: 200,
   //     });
   //
+  //   nock(process.env.CONSUMER_SERVICE_URL)
+  //     .get(`/user/${outletUserId}/details`)
+  //     .reply(200, {
+  //       statusCode: 200,
+  //       data: {
+  //         userId: outletUserId,
+  //         store: [
+  //           {
+  //             wallet: [{ id: "htsg-83b3", currency: "NGN" }],
+  //           },
+  //         ],
+  //       },
+  //     });
+  //
   //   const findOneVerification = sinon.stub(Verification, "findOne").resolves({
   //     ownerId: "someid",
-  //     outletUserId: "outlet-owner-id",
+  //     outletUserId,
   //   });
   //
-  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({
-  //     ownerId: "someid",
-  //     outletUserId: "outlet-owner-id",
-  //   });
+  //   const findOneAndDeleteVerification = sinon.stub(Verification, "findOneAndDelete");
+  //   findOneAndDeleteVerification.resolves({});
+  //
+  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
   //
   //   const outlet = new Outlet();
   //   sinon.mock(outlet).expects("save").resolves({
-  //     outletUserId: "outlet-owner-id",
+  //     userId: "outlet-owner-id",
   //     ownerId: "ownerId",
   //     outletStatus: OutletStatus.ACTIVE,
   //   });
@@ -258,32 +331,85 @@ describe("Outlet service Tests", function () {
   //
   //   findOneVerification.restore();
   //   sinon.assert.calledOnce(findOneVerification);
-  //
   //   findOneOutlet.restore();
   //   sinon.assert.calledOnce(findOneOutlet);
+  //   findOneAndDeleteVerification.restore();
+  //   sinon.assert.calledOnce(findOneAndDeleteVerification);
   // });
-  //
-  // it("should fail to verify outlet linking when otp validation fails", async function () {
-  //   const verificationId = "h47fbh4h44h49f";
-  //   const otpCode = "903875";
-  //
-  //   const params = {
-  //     otpCode,
-  //     verificationId,
-  //   };
-  //
-  //   nock(process.env.CONSUMER_SERVICE_URL)
-  //     .get(`/otp/${verificationId}/${otpCode}/validate`)
-  //     .reply(400, {
-  //       statusCode: 400,
-  //       message: "OTP has expired",
-  //     });
-  //
-  //   try {
-  //     await OutletService.verifyOutletLinking({ params });
-  //   } catch (e) {
-  //     expect(e.statusCode).equals(400);
-  //     expect(e.message).to.exist;
-  //   }
-  // });
+
+  it("should fail to verify outlet linking when otp validation fails", async function () {
+    const verificationId = "h47fbh4h44h49f";
+    const otpCode = "903875";
+
+    const params = {
+      otpCode,
+      verificationId,
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/otp/${verificationId}/${otpCode}/validate`)
+      .reply(400, {
+        statusCode: 400,
+        message: "OTP has expired",
+      });
+
+    try {
+      await OutletService.verifyOutletLinking({ params });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.equals("OTP has expired");
+    }
+  });
+
+  it("should fail to verify outlet when outlet doesn't have a wallet", async function () {
+    const verificationId = "h47fbh4h44h49f";
+    const otpCode = "903875";
+    const outletUserId = "outlet-owner-id";
+
+    const params = {
+      otpCode,
+      verificationId,
+    };
+
+    const findOneVerification = sinon.stub(Verification, "findOne").resolves({
+      ownerId: "someid",
+      outletUserId,
+    });
+
+    const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/otp/${verificationId}/${otpCode}/validate`)
+      .reply(200, {
+        statusCode: 200,
+      });
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${outletUserId}/details`)
+      .reply(200, {
+        statusCode: 200,
+        data: {
+          userId: outletUserId,
+          store: [
+            {
+              wallet: [],
+            },
+          ],
+        },
+      });
+
+    try {
+      await OutletService.verifyOutletLinking({ params });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.equals(
+        "Could not verify outlet linking. Please try again"
+      );
+    }
+
+    findOneVerification.restore();
+    sinon.assert.calledOnce(findOneVerification);
+    findOneOutlet.restore();
+    sinon.assert.calledOnce(findOneOutlet);
+  });
 });
