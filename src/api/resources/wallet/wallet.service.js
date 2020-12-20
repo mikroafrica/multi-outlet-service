@@ -27,7 +27,7 @@ export const walletById = async ({ ownerId }) => {
     })
     .catch((e) => {
       logger.error(
-        `Error occurred while fetching wallet by id ${walletId} with error ${JSON.stringify(
+        `Error occurred while fetching wallet of owner ${ownerId} with error ${JSON.stringify(
           e
         )}`
       );
