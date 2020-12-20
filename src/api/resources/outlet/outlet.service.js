@@ -373,3 +373,23 @@ export const fetchOutletDetails = async (outlets) => {
   });
   return outletDetails;
 };
+
+export const getOutletByOutletId = async ({ outletId }) => {
+  try {
+    const outletUserDetails = await ConsumerService.getUserDetails(outletId);
+    const outletUserDetailsData = outletUserDetails.data;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: outletUserDetailsData.data,
+    });
+  } catch (e) {
+    logger.error(
+      `Error occurred while fetching outlet details - ${JSON.stringify(e)}`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: e.message || "An error occurred when fetching outlet details",
+    });
+  }
+};

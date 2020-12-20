@@ -6,6 +6,7 @@ import {
   suspendOutletUser,
   unSuspendOutletUser,
   switchOutletStatus,
+  fetchOutletById,
 } from "./outlet.controller";
 
 const outlet = ({ server, subBase }) => {
@@ -14,6 +15,7 @@ const outlet = ({ server, subBase }) => {
   server.put(`${subBase}/:id/unlink`, unlinkOutlet);
   server.put(`${subBase}/:id/:status`, switchOutletStatus);
   server.get(`${subBase}`, fetchOutlets);
+  server.get(`${subBase}/:id`, fetchOutletById);
 };
 
 export default outlet;

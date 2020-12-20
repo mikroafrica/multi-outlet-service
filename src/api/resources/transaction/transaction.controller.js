@@ -2,6 +2,7 @@ import {
   fetchOutletTransactions,
   getTransactionsCategorySummary,
   getTransactionsSummary,
+  outletTransactionSummary,
 } from "./transaction.service.js";
 
 export const fetchTransactionsByOutletId = (req, res) => {
@@ -49,6 +50,20 @@ export const fetchTransactionSummary = (req, res) => {
     page,
     limit,
   })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const fetchOutletTransactionSummary = (req, res) => {
+  const outletId = req.params.id;
+  const dateFrom = req.query.dateFrom || 1601506800000;
+  const dateTo = req.query.dateTo || Date.now();
+
+  outletTransactionSummary({ outletId, dateFrom, dateTo })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
