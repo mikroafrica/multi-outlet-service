@@ -70,7 +70,7 @@ describe("Auth service module Tests", function () {
     console.log(response);
   });
 
-  it("should successfully change user's password", async function () {
+  it("should successfully change owner's password", async function () {
     const mockResponse = {
       status: true,
       data: {

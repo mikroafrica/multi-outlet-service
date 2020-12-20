@@ -26,7 +26,7 @@ describe("Consumer service module Tests", function () {
     console.log(response);
   });
 
-  it("should successfully delete user on consumer service", async function () {
+  it("should successfully delete owner on consumer service", async function () {
     const mockResponse = {
       status: true,
       data: {
@@ -43,7 +43,7 @@ describe("Consumer service module Tests", function () {
     console.log(response);
   });
 
-  it("should successfully get user details", async function () {
+  it("should successfully get owner details", async function () {
     const mockResponse = {
       status: true,
       data: {

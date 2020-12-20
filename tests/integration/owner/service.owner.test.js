@@ -1,13 +1,15 @@
 import { describe, it } from "mocha";
 import nock from "nock";
 import chai from "chai";
+import sinon from "sinon";
 import chaiAsPromised from "chai-as-promised";
-import * as UserService from "../../../src/api/resources/user/user.service";
+import * as OwnerService from "../../../src/api/resources/owner/owner.service";
+import { Owner } from "../../../src/api/resources/owner/owner.model";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe("User service Tests", function () {
+describe("Owner service Tests", function () {
   const signupParams = {
     firstName: "John",
     lastName: "Doe",
@@ -43,7 +45,7 @@ describe("User service Tests", function () {
     newPassword: "newpassword",
   };
 
-  it("should successfully sign up a multi-outlet user", async function () {
+  it("should successfully sign up a multi-outlet owner", async function () {
     const mockResponse = {
       data: {
         id: "123",
@@ -56,13 +58,13 @@ describe("User service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(200, {});
 
-    const response = await UserService.signupMultiOutletOwner(signupParams);
+    const response = await OwnerService.signupMultiOutletOwner(signupParams);
 
     expect(response.statusCode).equals(200);
     expect(response.data).to.exist;
   });
 
-  it("should fail to create a user if consumer service returns an error", async function () {
+  it("should fail to create an owner if consumer service returns an error", async function () {
     const mockResponse = {
       message: "User account exists",
     };
@@ -72,14 +74,14 @@ describe("User service Tests", function () {
       .reply(400, mockResponse);
 
     try {
-      await UserService.signupMultiOutletOwner(signupParams);
+      await OwnerService.signupMultiOutletOwner(signupParams);
     } catch (err) {
       expect(err.statusCode).equals(400);
       expect(err.message).exist;
     }
   });
 
-  it("should fail to create a user if auth service returns an error", async function () {
+  it("should fail to create an owner if auth service returns an error", async function () {
     const mockResponse = {
       data: {
         id: "123",
@@ -96,18 +98,18 @@ describe("User service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(400, {
       statusCode: 400,
-      message: "An error occurred while trying to save user",
+      message: "An error occurred while trying to save owner",
     });
 
     try {
-      await UserService.signupMultiOutletOwner(signupParams);
+      await OwnerService.signupMultiOutletOwner(signupParams);
     } catch (err) {
       expect(err.statusCode).equals(409);
       expect(err.message).exist;
     }
   });
 
-  it("should successfully login a user", async function () {
+  it("should successfully login an owner", async function () {
     const loginMockResponse = {
       data: {
         userId: "123",
@@ -120,6 +122,17 @@ describe("User service Tests", function () {
         firstName: "John",
         lastName: "Doe",
         email: "johndoe@mikro.africa",
+        store: [
+          {
+            wallet: [
+              {
+                id: "048p-353",
+                currency: "NGN",
+                balance: 129.2,
+              },
+            ],
+          },
+        ],
       },
     };
 
@@ -131,15 +144,22 @@ describe("User service Tests", function () {
       .get(`/user/${loginMockResponse.data.userId}/details`)
       .reply(200, userDetailsMockResponse);
 
-    const response = await UserService.loginMultiOutletOwner({
+    const findOneOwner = sinon
+      .stub(Owner, "findOne")
+      .resolves({ userId: "id", walletId: "74hr-nj3b4" });
+
+    const response = await OwnerService.loginMultiOutletOwner({
       params: loginParams,
     });
 
     expect(response.statusCode).equals(200);
     expect(response.data).exist;
+
+    findOneOwner.restore();
+    sinon.assert.calledOnce(findOneOwner);
   });
 
-  it("should fail to login a user when user details are wrong", async function () {
+  it("should fail to login an owner when owner details are wrong", async function () {
     const failedLoginMockResponse = {
       statusCode: 401,
       message: "Invalid credentials",
@@ -150,14 +170,58 @@ describe("User service Tests", function () {
       .reply(401, failedLoginMockResponse);
 
     try {
-      await UserService.loginMultiOutletOwner({ params: loginParams });
+      await OwnerService.loginMultiOutletOwner({ params: loginParams });
     } catch (err) {
       expect(err.statusCode).equals(401);
       expect(err.message).to.exist;
     }
   });
 
-  it("should fail to login a user when user has not activated their account", async function () {
+  it("should fail to login an owner when owner doesn't have a valid wallet", async function () {
+    const loginMockResponse = {
+      data: {
+        userId: "123",
+      },
+    };
+
+    const userDetailsMockResponse = {
+      data: {
+        userId: "007",
+        firstName: "John",
+        lastName: "Doe",
+        email: "johndoe@mikro.africa",
+        store: [
+          {
+            wallet: [],
+          },
+        ],
+      },
+    };
+
+    nock(process.env.AUTH_SERVICE_URL)
+      .post("/auth/login")
+      .reply(200, loginMockResponse);
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${loginMockResponse.data.userId}/details`)
+      .reply(200, userDetailsMockResponse);
+
+    const findOneOwner = sinon.stub(Owner, "findOne").resolves(null);
+
+    try {
+      await OwnerService.loginMultiOutletOwner({
+        params: loginParams,
+      });
+    } catch (err) {
+      expect(err.statusCode).equals(400);
+      expect(err.message).exist;
+    }
+
+    findOneOwner.restore();
+    sinon.assert.calledOnce(findOneOwner);
+  });
+
+  it("should fail to login an owner when owner has not activated their account", async function () {
     const loginMockResponse = {
       data: {
         userId: "007",
@@ -176,7 +240,7 @@ describe("User service Tests", function () {
       });
 
     try {
-      await UserService.loginMultiOutletOwner({ params: loginParams });
+      await OwnerService.loginMultiOutletOwner({ params: loginParams });
     } catch (err) {
       expect(err.statusCode).equals(403);
       expect(err.message).to.exist;
@@ -194,14 +258,14 @@ describe("User service Tests", function () {
       .post(`/user/email-verification`)
       .reply(200, sendVerificationMockResponse);
 
-    const response = await UserService.sendVerificationEmail("007");
+    const response = await OwnerService.sendVerificationEmail("007");
     expect(response.statusCode).equals(200);
     expect(response.data).to.exist;
   });
 
   it("should fail to send a verification email if userId is undefined", async function () {
     try {
-      await UserService.sendVerificationEmail();
+      await OwnerService.sendVerificationEmail();
     } catch (err) {
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
@@ -219,7 +283,7 @@ describe("User service Tests", function () {
       .reply(400, mockErrorResponse);
 
     try {
-      await UserService.sendVerificationEmail("007");
+      await OwnerService.sendVerificationEmail("007");
     } catch (err) {
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
@@ -235,7 +299,7 @@ describe("User service Tests", function () {
       .post(`/user/email-validation`)
       .reply(200, mockResponse);
 
-    const response = await UserService.validateEmail(validateEmailParams);
+    const response = await OwnerService.validateEmail(validateEmailParams);
     expect(response.statusCode).equals(200);
   });
 
@@ -249,7 +313,7 @@ describe("User service Tests", function () {
       .reply(400, mockErrorResponse);
 
     try {
-      await UserService.validateEmail(validateEmailParams);
+      await OwnerService.validateEmail(validateEmailParams);
     } catch (err) {
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
@@ -265,7 +329,7 @@ describe("User service Tests", function () {
       .post(`/password/reset-request`)
       .reply(200, mockResponse);
 
-    const response = await UserService.requestResetPassword({
+    const response = await OwnerService.requestResetPassword({
       params: { email: "johndoe@mikro.africa" },
     });
     expect(response.statusCode).equals(200);
@@ -280,14 +344,16 @@ describe("User service Tests", function () {
       .post(`/password/reset-request`)
       .reply(400, mockResponse);
     try {
-      await UserService.requestResetPassword({ email: "johndoe@mikro.africa" });
+      await OwnerService.requestResetPassword({
+        email: "johndoe@mikro.africa",
+      });
     } catch (err) {
       expect(err.statusCode).equals(400);
       expect(err.message).to.exist;
     }
   });
 
-  it("should successfully reset a user's password", async function () {
+  it("should successfully reset a owner's password", async function () {
     const mockResponse = {
       data: {},
     };
@@ -296,7 +362,7 @@ describe("User service Tests", function () {
       .put(`/password/reset-password-web`)
       .reply(200, mockResponse);
 
-    const response = await UserService.resetPassword({
+    const response = await OwnerService.resetPassword({
       params: resetPasswordParams,
     });
     expect(response.statusCode).equals(200);
@@ -313,7 +379,7 @@ describe("User service Tests", function () {
       .reply(400, mockErrorResponse);
 
     try {
-      await UserService.resetPassword({
+      await OwnerService.resetPassword({
         params: resetPasswordParams,
       });
     } catch (err) {
@@ -322,7 +388,7 @@ describe("User service Tests", function () {
     }
   });
 
-  it("should successfully change a user's password", async function () {
+  it("should successfully change a owner's password", async function () {
     const mockResponse = {
       data: {
         data: {
@@ -335,16 +401,16 @@ describe("User service Tests", function () {
       .put(`/password/change`)
       .reply(200, mockResponse);
 
-    const response = await UserService.changePassword({
+    const response = await OwnerService.changePassword({
       params: changePasswordParams,
-      userId: "some-uuid-pass-word",
+      ownerId: "some-uuid-pass-word",
     });
 
     expect(response.statusCode).equals(200);
     expect(response.data).to.exist;
   });
 
-  it("should fail to change a user's password if an error occurs in auth service", async function () {
+  it("should fail to change a owner's password if an error occurs in auth service", async function () {
     const mockErrorResponse = {
       message: "Password supplied is wrong",
     };
@@ -354,9 +420,9 @@ describe("User service Tests", function () {
       .reply(400, mockErrorResponse);
 
     try {
-      await UserService.changePassword({
+      await OwnerService.changePassword({
         params: changePasswordParams,
-        userId: "123",
+        ownerId: "123",
       });
     } catch (err) {
       expect(err.statusCode).equals(400);
@@ -364,7 +430,7 @@ describe("User service Tests", function () {
     }
   });
 
-  it("should successfully update a user", async function () {
+  it("should successfully update a owner", async function () {
     const userId = "123";
     const params = {
       firstName: "John",
@@ -388,6 +454,7 @@ describe("User service Tests", function () {
         firstName: "John",
         lastName: "Doe",
         businessName: "Good Stores",
+        gender: "MALE",
       },
     };
 
@@ -399,16 +466,16 @@ describe("User service Tests", function () {
       .put(`/user/${userId}/profile`)
       .reply(200, mockUpdateProfileResponse);
 
-    const response = await UserService.updateUser({
+    const response = await OwnerService.updateUser({
       params,
-      userId,
+      ownerId: userId,
     });
 
     expect(response.statusCode).equals(200);
     expect(response.data).to.exist;
   });
 
-  it("should fail to update a user if user details cannot be found", async function () {
+  it("should fail to update a owner if owner details cannot be found", async function () {
     const userId = "123";
     const params = {
       firstName: "John",
@@ -419,12 +486,12 @@ describe("User service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${userId}/details`)
-      .reply(400, { statusCode: 400, message: "Could not find user details" });
+      .reply(400, { statusCode: 400, message: "Could not find owner details" });
 
     try {
-      await UserService.updateUser({
+      await OwnerService.updateUser({
         params,
-        userId,
+        ownerId: userId,
       });
     } catch (err) {
       console.log(err);
@@ -433,7 +500,7 @@ describe("User service Tests", function () {
     }
   });
 
-  it("should fail to update a user if consumer service fails to update a user", async function () {
+  it("should fail to update a owner if consumer service fails to update a owner", async function () {
     const userId = "123";
     const params = {
       firstName: "John",
@@ -457,12 +524,54 @@ describe("User service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .put(`/user/${userId}/profile`)
-      .reply(400, { statusCode: 400, message: "Failed to update a user" });
+      .reply(400, { statusCode: 400, message: "Failed to update a owner" });
 
     try {
-      await UserService.updateUser({
+      await OwnerService.updateUser({
         params,
+        ownerId: userId,
+      });
+    } catch (err) {
+      console.log(err);
+      expect(err.statusCode).equals(400);
+      expect(err.message).to.exist;
+    }
+  });
+
+  it("should successfully get an owner details", async function () {
+    const userId = "123";
+
+    const mockUserDetailsResponse = {
+      data: {
         userId,
+        firstName: "Joe",
+        lastName: "Doe",
+        businessName: "Great Stores",
+      },
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/details`)
+      .reply(200, mockUserDetailsResponse);
+
+    const response = await OwnerService.getUser({
+      ownerId: userId,
+    });
+
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
+  });
+
+  it("should fail to get an owner details if an error occurs in consumer service", async function () {
+    const userId = "123";
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/details`)
+      .reply(400, { statusCode: 400, message: "Could not find owner details" });
+
+    try {
+      await OwnerService.getUser({
+        ownerId: userId,
       });
     } catch (err) {
       console.log(err);
