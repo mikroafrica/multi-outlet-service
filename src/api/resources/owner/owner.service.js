@@ -7,7 +7,7 @@ import { UserType } from "./user.type.js";
 import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
-import { Owner } from "../../../../lib/api/resources/owner/owner.model";
+import { Owner } from "./owner.model";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -323,7 +323,7 @@ export const resetPassword = async ({ params }) => {
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: e.mesage,
+      message: e.message,
     });
   }
 };
@@ -377,11 +377,11 @@ export const updateUser = async ({ params, ownerId }) => {
     firstName: Joi.string(),
     lastName: Joi.string(),
     phoneNumber: Joi.string(),
-    businessName: Joi.string().required(),
-    address: Joi.string().required(),
-    gender: Joi.string().required(),
-    state: Joi.string().required(),
-    lga: Joi.string().required(),
+    businessName: Joi.string(),
+    address: Joi.string(),
+    gender: Joi.string(),
+    state: Joi.string(),
+    lga: Joi.string(),
     profileImageId: Joi.string(),
     dob: Joi.string(),
   });
@@ -425,14 +425,15 @@ export const updateUser = async ({ params, ownerId }) => {
         `An error occurred while updating user with error ${JSON.stringify(e)}`
       );
       return Promise.reject({
-        statusCode:
-          e.message || "Could not update user profile. Please try again",
+        statusCode: e.statusCode,
+        message:
+          e.message || "Could not update owner profile. Please try again",
       });
     }
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not update user profile. Please try again",
+      message: "Could not update owner profile. Please try again",
     });
   }
 };
@@ -450,7 +451,7 @@ export const getUser = async ({ ownerId }) => {
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not fetch user details. Please try again",
+      message: "Could not fetch owner details. Please try again",
     });
   }
 };

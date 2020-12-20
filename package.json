@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "flow check && mocha -r @babel/register tests tests/unit/*",
-    "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/*",
+    "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/* -r dotenv/config",
     "build": "npm run build:lib && npm run build:flow",
     "build:lib": "babel src/ -d lib/",
     "build:flow": "flow-copy-source -v src/ lib/",
@@ -59,6 +59,7 @@
     "joi": "^14.3.1",
     "mongoose": "^5.9.17",
     "mongoose-paginate": "^5.0.3",
+    "nock": "^13.0.5",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "restify": "^8.5.1",
