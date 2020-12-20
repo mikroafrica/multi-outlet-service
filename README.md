@@ -159,6 +159,10 @@ _Response Body_
     "data": {
         "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmY2UzZWY4NDFiNDFmMDAxNzcxMjc2NyIsInJvbGUiOiJhZG1pbiIsInVzZXJuYW1lIjoiZWxpaHUudHlraW5nQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmY2UzZWY2ZTE5NTRkMGY1MzIwNTFmZCIsImlhdCI6MTYwNzM2MjMzMSwiZXhwIjoxNjA3NDM3MzMxfQ.TEFsCAcfUAtMZ0ZHOfvHmnSYyYyohwnVAaz7BdmfVFM",
         "userId": "5fce3ef6e1954d0f532051fd",
+        "accountName": "alex snow",
+        "accountNumber": "4000050197",
+        "bank": "Providus Bank",
+        "bankCode": "101",
         "id": "5fce3ef6e1954d0f532051fd",
         "firstName": "alex",
         "lastName": "snow",
