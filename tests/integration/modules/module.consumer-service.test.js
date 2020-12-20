@@ -23,7 +23,8 @@ describe("Consumer service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await ConsumerService.signup({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully delete owner on consumer service", async function () {
@@ -40,7 +41,8 @@ describe("Consumer service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await ConsumerService.deleteUserAccount(userId);
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully get owner details", async function () {
@@ -60,7 +62,8 @@ describe("Consumer service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await ConsumerService.getUserDetails(1);
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully request for a verification email", async function () {
@@ -76,7 +79,8 @@ describe("Consumer service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await ConsumerService.requestVerificationEmail({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully validate verification OTP", async function () {
@@ -89,7 +93,8 @@ describe("Consumer service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await ConsumerService.validateVerificationOtp({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully generate OTP", async function () {
@@ -105,7 +110,8 @@ describe("Consumer service module Tests", function () {
       .reply(200, mockResponse);
 
     const response = await ConsumerService.generateOtp({});
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 
   it("should successfully validate OTP", async function () {
@@ -123,6 +129,7 @@ describe("Consumer service module Tests", function () {
       verificationId,
       otpCode,
     });
-    console.log(response);
+    expect(response.statusCode).equals(200);
+    expect(response.data).to.exist;
   });
 });
