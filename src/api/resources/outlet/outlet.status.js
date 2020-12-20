@@ -1,5 +1,9 @@
 export const OutletStatus = {
   ACTIVE: "ACTIVE",
-  INACTIVE: "INACTIVE",
-  BLOCKED: "BLOCKED",
+  SUSPENDED: "SUSPENDED",
+};
+
+export const AuthServiceAction = {
+  SUSPENDED: "INACTIVE",
+  ACTIVE: "ACTIVE",
 };

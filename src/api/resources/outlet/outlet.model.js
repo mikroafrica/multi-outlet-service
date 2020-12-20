@@ -3,16 +3,13 @@ import mongoosePaginate from "mongoose-paginate";
 import { OutletStatus } from "./outlet.status.js";
 
 const schema = {
-  outletUserId: String,
+  userId: String,
   ownerId: String,
-  outletStatus: {
+  walletId: String,
+  status: {
     type: String,
     default: OutletStatus.ACTIVE,
-    enum: [OutletStatus.ACTIVE, OutletStatus.INACTIVE, OutletStatus.BLOCKED],
-  },
-  isOutletSuspended: {
-    type: Boolean,
-    default: false,
+    enum: [OutletStatus.ACTIVE, OutletStatus.SUSPENDED],
   },
 };
 

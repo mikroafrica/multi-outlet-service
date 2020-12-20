@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "flow check && mocha -r @babel/register tests tests/unit/*",
-    "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/* -r dotenv/config ",
+    "integration-test": "flow check && mocha -r @babel/register --exit --timeout 30000 tests/integration/* -r dotenv/config",
     "build": "npm run build:lib && npm run build:flow",
     "build:lib": "babel src/ -d lib/",
     "build:flow": "flow-copy-source -v src/ lib/",
@@ -66,6 +66,7 @@
     "restify-clients": "^2.5.2",
     "restify-cors-middleware": "^1.1.1",
     "tsscmp": "^1.0.6",
+    "uuid": "^8.3.2",
     "winston": "^3.2.1"
   }
 }

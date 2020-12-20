@@ -7,9 +7,9 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import logger from "../../../logger.js";
-import { OutletStatus } from "./outlet.status.js";
+import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 
-export const linkOwnerToOutlet = async ({ params, userId }) => {
+export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -58,8 +58,7 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     const outletUserId = loginResponseData.data.userId;
 
     const existingOutlet = await Outlet.findOne({
-      outletUserId,
-      outletStatus: OutletStatus.ACTIVE,
+      userId: outletUserId,
     });
     if (existingOutlet) {
       return Promise.reject({
@@ -79,7 +78,7 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
     await saveVerification({
       verificationId: otpResponseData.id,
       outletUserId,
-      ownerId: userId,
+      ownerId,
       status: otpResponseData.verificationStatus,
     });
 
@@ -99,14 +98,14 @@ export const linkOwnerToOutlet = async ({ params, userId }) => {
   }
 };
 
-export const unlinkOutletFromOwner = async ({ userId, outletUserId }) => {
+export const unlinkOutletFromOwner = async ({ ownerId, outletUserId }) => {
   try {
     logger.info(
-      `Outlet owner ${userId} request to unlink outlet ${outletUserId}`
+      `Outlet owner ${ownerId} request to unlink outlet ${outletUserId}`
     );
     const existingOutlet = await Outlet.findOne({
-      outletUserId,
-      ownerId: userId,
+      userId: outletUserId,
+      ownerId,
     });
     if (!existingOutlet) {
       return Promise.reject({
@@ -114,13 +113,10 @@ export const unlinkOutletFromOwner = async ({ userId, outletUserId }) => {
         message: "Outlet not found. Please supply a valid outlet",
       });
     }
-    const findOneAndUpdateOutlet = await Outlet.findOneAndUpdate(
-      { outletUserId, ownerId: userId },
-      { $set: { outletStatus: OutletStatus.INACTIVE } },
-      { new: true }
-    );
-    findOneAndUpdateOutlet.exec();
-
+    await Outlet.findOneAndDelete({
+      userId: outletUserId,
+      ownerId,
+    });
     return Promise.resolve({
       statusCode: OK,
     });
@@ -135,37 +131,50 @@ export const unlinkOutletFromOwner = async ({ userId, outletUserId }) => {
   }
 };
 
-export const suspendOutlet = async ({ outletUserId, userId }) => {
-  logger.info(`Outlet owner request to suspend outlet ${outletUserId}`);
+export const switchOutletSuspendedStatus = async ({
+  outletUserId,
+  ownerId,
+  status,
+}) => {
+  logger.info(`Outlet owner request to switch outlet status ${outletUserId}`);
   try {
+    const outletStatus = OutletStatus[status];
+    if (!outletStatus) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Invalid status supplied. Please supply a valid status",
+      });
+    }
+
     const existingOutlet = await Outlet.findOne({
-      outletUserId,
-      ownerId: userId,
-      outletStatus: OutletStatus.ACTIVE,
+      userId: outletUserId,
+      ownerId,
     });
     if (!existingOutlet) {
       return Promise.reject({
         statusCode: NOT_FOUND,
-        message: "Could not find outlet to suspend",
+        message: "Could not find outlet",
       });
     }
 
-    // SET THE USER TO INACTIVE ON THE AUTH SERVICE (TO PREVENT ACCESS TO THE APP)
+    //UPDATE THE STATUS OF THE OUTLET AT THE AUTH SERVICE
     await AuthService.updateUserStatus({
       userId: outletUserId,
-      status: "INACTIVE",
+      status: AuthServiceAction[status],
     });
 
-    // SET USER SUSPENDED STATUS TO TRUE
-    const findAndUpdateOutlet = await Outlet.findOneAndUpdate(
-      { outletUserId, ownerId: userId, outletStatus: OutletStatus.ACTIVE },
-      { $set: { isOutletSuspended: true } },
+    const updatedOutlet = await Outlet.findOneAndUpdate(
+      {
+        userId: outletUserId,
+        ownerId,
+      },
+      { $set: { status } },
       { new: true }
-    );
-    findAndUpdateOutlet.exec();
+    ).exec();
 
     return Promise.resolve({
       statusCode: OK,
+      data: updatedOutlet,
     });
   } catch (e) {
     logger.error(
@@ -173,17 +182,17 @@ export const suspendOutlet = async ({ outletUserId, userId }) => {
     );
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not suspend outlet. Try again",
+      message: "Could not switch outlet status. Try again",
     });
   }
 };
 
-export const sendVerificationOtp = async ({ phoneNumber }) => {
+const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
     const params = { phoneNumber, type: "PHONE_NUMBER" };
 
     logger.info(
-      `Request to link outlet with request b [${JSON.stringify(params)}]`
+      `Request to link outlet with request body [${JSON.stringify(params)}]`
     );
     const otpResponse = await ConsumerService.generateOtp(params);
     return otpResponse.data;
@@ -270,8 +279,8 @@ export const verifyOutletLinking = async ({ params }) => {
     const outletUserId = verification.outletUserId;
 
     const existingOutlet = await Outlet.findOne({
-      outletUserId,
-      outletStatus: OutletStatus.ACTIVE,
+      userId: outletUserId,
+      status: OutletStatus.ACTIVE,
     });
     if (existingOutlet) {
       return Promise.resolve({
@@ -280,7 +289,29 @@ export const verifyOutletLinking = async ({ params }) => {
       });
     }
 
-    const outlet = await saveNewOutletMapping({ ownerId, outletUserId });
+    const outletUserDetails = await ConsumerService.getUserDetails(
+      outletUserId
+    );
+    const outletUserDetailsData = outletUserDetails.data.data;
+
+    if (
+      outletUserDetailsData.store.length < 1 ||
+      outletUserDetailsData.store[0].wallet.length < 1
+    ) {
+      logger.error(
+        "Could not verify outlet linking because outlet does not have a wallet"
+      );
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Could not verify outlet linking. Please try again",
+      });
+    }
+
+    const outlet = await saveNewOutletMapping({
+      ownerId,
+      outletUserId,
+      walletId: outletUserDetailsData.store[0].wallet[0].id,
+    });
 
     // DELETE THE VERIFICATION ONCE VERIFICATION IS SUCCESSFUL
     await Verification.findOneAndDelete({ ownerId, outletUserId });
@@ -296,15 +327,17 @@ export const verifyOutletLinking = async ({ params }) => {
   }
 };
 
-const saveNewOutletMapping = ({ ownerId, outletUserId }) => {
-  const outlet = new Outlet({ ownerId, outletUserId });
+const saveNewOutletMapping = ({ ownerId, outletUserId, walletId }) => {
+  const outlet = new Outlet({ ownerId, userId: outletUserId, walletId });
   return outlet.save();
 };
 
-export const getOutlets = async ({ userId, page, limit }) => {
+export const getOutlets = async ({ ownerId, page, limit }) => {
   try {
     const outlets = await Outlet.paginate(
-      { ownerId: userId, outletStatus: OutletStatus.ACTIVE },
+      {
+        ownerId,
+      },
       { page, limit }
     );
 
@@ -328,14 +361,14 @@ export const getOutlets = async ({ userId, page, limit }) => {
   }
 };
 
-const fetchOutletDetails = async (outlets) => {
+export const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
   await async.forEach(outlets, async (outlet) => {
-    const response = await ConsumerService.getUserDetails(outlet.outletUserId);
+    const response = await ConsumerService.getUserDetails(outlet.userId);
     const responseData = response.data;
     outletDetails.push({
       ...responseData.data,
-      isOutletSuspended: outlet.isOutletSuspended,
+      status: outlet.status,
     });
   });
   return outletDetails;

@@ -1,12 +1,13 @@
 import restify from "restify";
-import { secureRoute } from "./api/middleware.js";
+import { secureRoute } from "./api/middleware";
 import dotenv from "dotenv";
 import corsMiddleware from "restify-cors-middleware";
-import { connect } from "./db.js";
-import auth from "./api/resources/user/index.js";
-import wallet from "./api/resources/wallet/index.js";
-import transaction from "./api/resources/transaction/index.js";
-import outlet from "./api/resources/outlet/index.js";
+import { connect } from "./db";
+import auth from "./api/resources/owner";
+import wallet from "./api/resources/wallet";
+import transaction from "./api/resources/transaction";
+import outlet from "./api/resources/outlet";
+import transfer from "./api/resources/transfer";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -15,7 +16,15 @@ const server = restify.createServer({
 const cors = corsMiddleware({
   preflightMaxAge: 5,
   origins: ["*"],
-  allowHeaders: ["X-App-Version"],
+  allowHeaders: [
+    "authorization",
+    "Accept",
+    "Accept-Version",
+    "Content-Type",
+    "Api-Version",
+    "Origin",
+    "X-Requested-With",
+  ],
   exposeHeaders: [],
 });
 server.pre(cors.preflight);
@@ -39,5 +48,6 @@ auth({ server: server, subBase: "/auth" });
 outlet({ server: server, subBase: "/outlet" });
 wallet({ server: server, subBase: "/wallet" });
 transaction({ server: server, subBase: "/transaction" });
+transfer({ server: server, subBase: "/transfer" });
 
 export default server;

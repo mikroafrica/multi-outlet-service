@@ -3,14 +3,14 @@ import {
   verifyOutletLinking,
   getOutlets,
   unlinkOutletFromOwner,
-  suspendOutlet,
-} from "./outlet.service.js";
+  switchOutletSuspendedStatus,
+} from "./outlet.service";
 
 export const linkOutlet = (req, res) => {
   const params = req.body;
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
-  linkOwnerToOutlet({ params, userId })
+  linkOwnerToOutlet({ params, ownerId })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
@@ -32,10 +32,10 @@ export const verifyLinkedOutlet = (req, res) => {
 };
 
 export const unlinkOutlet = (req, res) => {
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
   const outletUserId = req.params.id;
 
-  unlinkOutletFromOwner({ userId, outletUserId })
+  unlinkOutletFromOwner({ ownerId, outletUserId })
     .then(({ statusCode }) => {
       res.send(statusCode, { status: true });
     })
@@ -44,13 +44,14 @@ export const unlinkOutlet = (req, res) => {
     });
 };
 
-export const suspendOutletUser = (req, res) => {
+export const switchOutletStatus = (req, res) => {
   const outletUserId = req.params.id;
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
+  const status = req.params.status;
 
-  suspendOutlet({ outletUserId, userId })
-    .then(({ statusCode }) => {
-      res.send(statusCode, { status: true });
+  switchOutletSuspendedStatus({ outletUserId, ownerId, status })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
     })
     .catch(({ statusCode, message }) => {
       res.send(statusCode, { status: false, message });
@@ -58,12 +59,12 @@ export const suspendOutletUser = (req, res) => {
 };
 
 export const fetchOutlets = (req, res) => {
-  const userId = req.user.userId;
+  const ownerId = req.user.userId;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  getOutlets({ userId, page, limit })
+  getOutlets({ ownerId, page, limit })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

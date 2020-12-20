@@ -5,8 +5,9 @@ import { BAD_REQUEST, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
 import { UserType } from "./user.type.js";
 import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
-import { CLEAR_ACCOUNT_EVENT } from "../../events/index.js";
+import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
+import { Owner } from "./owner.model";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -116,9 +117,41 @@ export const loginMultiOutletOwner = async ({ params }) => {
 
     try {
       const userDetails = await ConsumerService.getUserDetails(userId);
+      const userDetailsData = userDetails.data.data;
+
+      // CHECK TO SEE THAT WALLET-ID HAS BEEN MAPPED TO USER ON THE OUTLET SERVICE
+      const owner = await Owner.findOne({
+        userId,
+      });
+
+      if (!owner) {
+        if (
+          userDetailsData.store.length > 0 &&
+          userDetailsData.store[0].wallet.length > 0
+        ) {
+          const walletId = userDetailsData.store[0].wallet[0].id;
+
+          const createdOwner = new Owner({ walletId, userId });
+          await createdOwner.save();
+        } else {
+          return Promise.reject({
+            statusCode: BAD_REQUEST,
+            message: "Login failed. Try again",
+          });
+        }
+      }
+      const store = userDetailsData.store[0];
+      const ownerAccountDetails = {
+        accountName: store.accountName,
+        accountNumber: store.accountNumber,
+        bank: store.bank,
+        bankCode: store.bankCode,
+      };
+
       loginResponseData.data = {
         ...loginResponseData.data,
-        ...userDetails.data.data,
+        ...ownerAccountDetails,
+        ...userDetailsData,
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {
@@ -295,7 +328,7 @@ export const resetPassword = async ({ params }) => {
   }
 };
 
-export const changePassword = async ({ params, userId }) => {
+export const changePassword = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -303,7 +336,7 @@ export const changePassword = async ({ params, userId }) => {
     });
   }
 
-  params.userId = userId;
+  params.userId = ownerId;
   const validateSchema = validateChangePasswordSchema(params);
 
   if (validateSchema.error) {
@@ -332,7 +365,7 @@ export const changePassword = async ({ params, userId }) => {
   }
 };
 
-export const updateUser = async ({ params, userId }) => {
+export const updateUser = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -362,9 +395,9 @@ export const updateUser = async ({ params, userId }) => {
   }
 
   try {
-    const userDetails = await ConsumerService.getUserDetails(userId);
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
     const userDetailsData = userDetails.data;
-    const isBvnVerified = userDetailsData.bvnVerified;
+    const isBvnVerified = userDetailsData.data.bvnVerified;
 
     // PREVENT A USER FROM UPDATING THEIR NAME, PHONE NUMBER OR DOB IF BVN IS VERIFIED
     if (isBvnVerified) {
@@ -375,12 +408,12 @@ export const updateUser = async ({ params, userId }) => {
     }
 
     logger.info(
-      `Request body to update user ${userId} - ${JSON.stringify(params)}`
+      `Request body to update user ${ownerId} - ${JSON.stringify(params)}`
     );
     try {
       const updateUserResponse = await ConsumerService.updateUserProfile({
         params,
-        userId,
+        userId: ownerId,
       });
       const responseData = updateUserResponse.data;
       return Promise.resolve({
@@ -393,13 +426,32 @@ export const updateUser = async ({ params, userId }) => {
       );
       return Promise.reject({
         statusCode: e.statusCode,
-        message: e.message || "Could not update user profile. Please try again",
+        message:
+          e.message || "Could not update owner profile. Please try again",
       });
     }
   } catch (e) {
     return Promise.reject({
-      statusCode: e.statusCode,
-      message: e.message || "Could not update user profile. Please try again",
+      statusCode: BAD_REQUEST,
+      message: "Could not update owner profile. Please try again",
+    });
+  }
+};
+
+export const getUser = async ({ ownerId }) => {
+  try {
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
+
+    const userDetailsData = userDetails.data;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: userDetailsData.data,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch owner details. Please try again",
     });
   }
 };
