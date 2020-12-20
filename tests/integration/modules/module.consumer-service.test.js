@@ -122,13 +122,13 @@ describe("Consumer service module Tests", function () {
     const otpCode = "783459";
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/otp/${verificationId}/${otpCode}/validate`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await ConsumerService.validateUserOtp({
       verificationId,
       otpCode,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 });

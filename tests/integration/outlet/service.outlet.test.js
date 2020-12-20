@@ -7,6 +7,12 @@ import sinon from "sinon";
 import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
 import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 import { Verification } from "../../../src/api/resources/outlet/verification.model";
+import {
+  BAD_REQUEST,
+  NOT_FOUND,
+  OK,
+  UN_AUTHORISED,
+} from "../../../src/api/modules/status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -55,21 +61,21 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(200, mockAuthResponse);
+      .reply(OK, mockAuthResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${mockAuthResponse.data.userId}/details`)
-      .reply(200, mockUserDetailsResponse);
+      .reply(OK, mockUserDetailsResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/otp`)
-      .reply(200, { statusCode: 200, data: { verificationId: "2h4242h" } });
+      .reply(OK, { statusCode: OK, data: { verificationId: "2h4242h" } });
 
     const response = await OutletService.linkOwnerToOutlet({
       params: linkOutletParams,
       userId: "1234",
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
 
     findOneOutlet.restore();
@@ -85,7 +91,7 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(401, mockAuthResponse);
+      .reply(UN_AUTHORISED, mockAuthResponse);
 
     try {
       await OutletService.linkOwnerToOutlet({
@@ -93,7 +99,7 @@ describe("Outlet service Tests", function () {
         userId: "1234",
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -113,7 +119,7 @@ describe("Outlet service Tests", function () {
       outletUserId: 4579,
       ownerId: "1234",
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -131,7 +137,7 @@ describe("Outlet service Tests", function () {
         ownerId: "1234",
       });
     } catch (e) {
-      expect(e.statusCode).equals(404);
+      expect(e.statusCode).equals(NOT_FOUND);
       expect(e.message).to.exist;
     }
 
@@ -150,8 +156,8 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put(`/auth/${outletId}/INACTIVE/status`)
-      .reply(200, {
-        statusCode: 200,
+      .reply(OK, {
+        statusCode: OK,
       });
 
     const findOneAndUpdateOutlet = sinon
@@ -170,7 +176,7 @@ describe("Outlet service Tests", function () {
       userId: "user-id-001",
       status,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -189,7 +195,7 @@ describe("Outlet service Tests", function () {
         status: "RANDOM_STATUS",
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.equals(
         "Invalid status supplied. Please supply a valid status"
       );
@@ -224,8 +230,8 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put(`/auth/${outletUserId}/INACTIVE/status`)
-      .reply(400, {
-        statusCode: 400,
+      .reply(BAD_REQUEST, {
+        statusCode: BAD_REQUEST,
         message: "User not be found",
       });
 
@@ -236,7 +242,7 @@ describe("Outlet service Tests", function () {
         status: OutletStatus.SUSPENDED,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.equals(
         "Could not switch outlet status. Try again"
       );
@@ -250,30 +256,30 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/otp`)
-      .reply(200, {
-        statusCode: 200,
+      .reply(OK, {
+        statusCode: OK,
         data: {
           verificationId: "jbvrj34ng",
         },
       });
 
     const response = await OutletService.sendVerificationOtp({ phoneNumber });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
   it("should fail to send verification OTP if an error occurs on consumer service", async function () {
     const phoneNumber = 23480785858595;
 
-    nock(process.env.CONSUMER_SERVICE_URL).post(`/otp`).reply(400, {
-      statusCode: 400,
+    nock(process.env.CONSUMER_SERVICE_URL).post(`/otp`).reply(BAD_REQUEST, {
+      statusCode: BAD_REQUEST,
       message: "Could not send OTP to user",
     });
 
     try {
       await OutletService.sendVerificationOtp({ phoneNumber });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.equals("Could not send verification OTP");
     }
   });
@@ -290,14 +296,14 @@ describe("Outlet service Tests", function () {
   //
   //   nock(process.env.CONSUMER_SERVICE_URL)
   //     .get(`/otp/${verificationId}/${otpCode}/validate`)
-  //     .reply(200, {
-  //       statusCode: 200,
+  //     .reply(OK, {
+  //       statusCode: OK,
   //     });
   //
   //   nock(process.env.CONSUMER_SERVICE_URL)
   //     .get(`/user/${outletUserId}/details`)
-  //     .reply(200, {
-  //       statusCode: 200,
+  //     .reply(OK, {
+  //       statusCode: OK,
   //       data: {
   //         userId: outletUserId,
   //         store: [
@@ -326,7 +332,7 @@ describe("Outlet service Tests", function () {
   //   });
   //   const response = await OutletService.verifyOutletLinking({ params });
   //
-  //   expect(response.statusCode).equals(200);
+  //   expect(response.statusCode).equals(OK);
   //   expect(response.data).to.exist;
   //
   //   findOneVerification.restore();
@@ -348,15 +354,15 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/otp/${verificationId}/${otpCode}/validate`)
-      .reply(400, {
-        statusCode: 400,
+      .reply(BAD_REQUEST, {
+        statusCode: BAD_REQUEST,
         message: "OTP has expired",
       });
 
     try {
       await OutletService.verifyOutletLinking({ params });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.equals("OTP has expired");
     }
   });
@@ -380,14 +386,14 @@ describe("Outlet service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/otp/${verificationId}/${otpCode}/validate`)
-      .reply(200, {
-        statusCode: 200,
+      .reply(OK, {
+        statusCode: OK,
       });
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${outletUserId}/details`)
-      .reply(200, {
-        statusCode: 200,
+      .reply(OK, {
+        statusCode: OK,
         data: {
           userId: outletUserId,
           store: [
@@ -401,7 +407,7 @@ describe("Outlet service Tests", function () {
     try {
       await OutletService.verifyOutletLinking({ params });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.equals(
         "Could not verify outlet linking. Please try again"
       );

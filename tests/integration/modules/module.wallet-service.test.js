@@ -3,6 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import { describe, it } from "mocha";
 import * as WalletService from "../../../src/api/modules/wallet-service";
 import nock from "nock";
+import { OK } from "../../../src/api/modules/status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -26,10 +27,10 @@ describe("Wallet service module Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/wallets/${walletId}`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await WalletService.getWalletById(walletId);
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -52,13 +53,13 @@ describe("Wallet service module Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/transactions/${walletId}/balance?dateFrom=${dateFrom}`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await WalletService.fetchWalletSummaryById({
       walletId,
       dateFrom,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -83,14 +84,14 @@ describe("Wallet service module Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/transactions/${walletId}?dateFrom=${dateFrom}&dateTo=${dateTo}`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await WalletService.fetchWalletTransactions({
       walletId,
       dateFrom,
       dateTo,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 });

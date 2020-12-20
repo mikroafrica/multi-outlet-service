@@ -3,6 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import { describe, it } from "mocha";
 import * as TransactionService from "../../../src/api/modules/transaction-service";
 import nock from "nock";
+import { OK } from "../../../src/api/modules/status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -48,14 +49,14 @@ describe("Transaction service module Tests", function () {
 
     nock(process.env.TRANSACTION_SERVICE_URL)
       .get(`/transactions/${userId}?dateFrom=${dateFrom}&dateTo=${dateTo}`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await TransactionService.fetchTransactions({
       userId,
       dateFrom,
       dateTo,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -86,14 +87,14 @@ describe("Transaction service module Tests", function () {
       .get(
         `/transactions/summary?dateFrom=${dateFrom}&dateTo=${dateTo}&userId=${userId}`
       )
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await TransactionService.fetchTransactionSummary({
       userId,
       dateFrom,
       dateTo,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -124,10 +125,10 @@ describe("Transaction service module Tests", function () {
 
     nock(process.env.TRANSACTION_SERVICE_URL)
       .post(`/transactions/create`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await TransactionService.creteTransaction(params);
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 });
