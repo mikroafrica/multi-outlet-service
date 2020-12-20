@@ -5,6 +5,12 @@ import sinon from "sinon";
 import chaiAsPromised from "chai-as-promised";
 import * as OwnerService from "../../../src/api/resources/owner/owner.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
+import {
+  BAD_REQUEST,
+  FORBIDDEN,
+  OK,
+  UN_AUTHORISED,
+} from "../../../src/api/modules/status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -54,13 +60,13 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post("/user/create/OUTLET_OWNER")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
-    nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(200, {});
+    nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(OK, {});
 
     const response = await OwnerService.signupMultiOutletOwner(signupParams);
 
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -71,12 +77,12 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post("/user/create/OUTLET_OWNER")
-      .reply(400, mockResponse);
+      .reply(BAD_REQUEST, mockResponse);
 
     try {
       await OwnerService.signupMultiOutletOwner(signupParams);
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).exist;
     }
   });
@@ -90,14 +96,14 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post("/user/create/OUTLET_OWNER")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .put(`/user/${mockResponse.data.id}/recreate-web`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
-    nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(400, {
-      statusCode: 400,
+    nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(BAD_REQUEST, {
+      statusCode: BAD_REQUEST,
       message: "An error occurred while trying to save owner",
     });
 
@@ -138,11 +144,11 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(200, loginMockResponse);
+      .reply(OK, loginMockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${loginMockResponse.data.userId}/details`)
-      .reply(200, userDetailsMockResponse);
+      .reply(OK, userDetailsMockResponse);
 
     const findOneOwner = sinon
       .stub(Owner, "findOne")
@@ -152,7 +158,7 @@ describe("Owner service Tests", function () {
       params: loginParams,
     });
 
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).exist;
 
     findOneOwner.restore();
@@ -161,18 +167,18 @@ describe("Owner service Tests", function () {
 
   it("should fail to login an owner when owner details are wrong", async function () {
     const failedLoginMockResponse = {
-      statusCode: 401,
+      statusCode: UN_AUTHORISED,
       message: "Invalid credentials",
     };
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(401, failedLoginMockResponse);
+      .reply(UN_AUTHORISED, failedLoginMockResponse);
 
     try {
       await OwnerService.loginMultiOutletOwner({ params: loginParams });
     } catch (err) {
-      expect(err.statusCode).equals(401);
+      expect(err.statusCode).equals(UN_AUTHORISED);
       expect(err.message).to.exist;
     }
   });
@@ -200,11 +206,11 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(200, loginMockResponse);
+      .reply(OK, loginMockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${loginMockResponse.data.userId}/details`)
-      .reply(200, userDetailsMockResponse);
+      .reply(OK, userDetailsMockResponse);
 
     const findOneOwner = sinon.stub(Owner, "findOne").resolves(null);
 
@@ -213,7 +219,7 @@ describe("Owner service Tests", function () {
         params: loginParams,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).exist;
     }
 
@@ -230,19 +236,19 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(200, loginMockResponse);
+      .reply(OK, loginMockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${loginMockResponse.data.userId}/details`)
-      .reply(403, {
-        statusCode: 403,
+      .reply(FORBIDDEN, {
+        statusCode: FORBIDDEN,
         message: "User account is not active yet",
       });
 
     try {
       await OwnerService.loginMultiOutletOwner({ params: loginParams });
     } catch (err) {
-      expect(err.statusCode).equals(403);
+      expect(err.statusCode).equals(FORBIDDEN);
       expect(err.message).to.exist;
     }
   });
@@ -256,10 +262,10 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/user/email-verification`)
-      .reply(200, sendVerificationMockResponse);
+      .reply(OK, sendVerificationMockResponse);
 
     const response = await OwnerService.sendVerificationEmail("007");
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -267,25 +273,25 @@ describe("Owner service Tests", function () {
     try {
       await OwnerService.sendVerificationEmail();
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
 
   it("should fail to send a verification email if an error occurs at consumer service", async function () {
     const mockErrorResponse = {
-      statusCode: 400,
+      statusCode: BAD_REQUEST,
       message: "Could not send Verification email",
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/user/email-verification`)
-      .reply(400, mockErrorResponse);
+      .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
       await OwnerService.sendVerificationEmail("007");
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -297,10 +303,10 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/user/email-validation`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await OwnerService.validateEmail(validateEmailParams);
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
   });
 
   it("should fail to validate email if consumer service throws an error", async function () {
@@ -310,12 +316,12 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .post(`/user/email-validation`)
-      .reply(400, mockErrorResponse);
+      .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
       await OwnerService.validateEmail(validateEmailParams);
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -327,12 +333,12 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post(`/password/reset-request`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await OwnerService.requestResetPassword({
       params: { email: "johndoe@mikro.africa" },
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
   });
 
   it("should fail to request a password reset if an error occurs in auth service", async function () {
@@ -342,13 +348,13 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post(`/password/reset-request`)
-      .reply(400, mockResponse);
+      .reply(BAD_REQUEST, mockResponse);
     try {
       await OwnerService.requestResetPassword({
         email: "johndoe@mikro.africa",
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -360,12 +366,12 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put(`/password/reset-password-web`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await OwnerService.resetPassword({
       params: resetPasswordParams,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -376,14 +382,14 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put(`/password/reset-password-web`)
-      .reply(400, mockErrorResponse);
+      .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
       await OwnerService.resetPassword({
         params: resetPasswordParams,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -399,14 +405,14 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put(`/password/change`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await OwnerService.changePassword({
       params: changePasswordParams,
       ownerId: "some-uuid-pass-word",
     });
 
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -417,7 +423,7 @@ describe("Owner service Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put(`/password/change`)
-      .reply(400, mockErrorResponse);
+      .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
       await OwnerService.changePassword({
@@ -425,7 +431,7 @@ describe("Owner service Tests", function () {
         ownerId: "123",
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -460,18 +466,18 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${userId}/details`)
-      .reply(200, mockUserDetailsResponse);
+      .reply(OK, mockUserDetailsResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .put(`/user/${userId}/profile`)
-      .reply(200, mockUpdateProfileResponse);
+      .reply(OK, mockUpdateProfileResponse);
 
     const response = await OwnerService.updateUser({
       params,
       ownerId: userId,
     });
 
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -486,7 +492,10 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${userId}/details`)
-      .reply(400, { statusCode: 400, message: "Could not find owner details" });
+      .reply(BAD_REQUEST, {
+        statusCode: BAD_REQUEST,
+        message: "Could not find owner details",
+      });
 
     try {
       await OwnerService.updateUser({
@@ -494,7 +503,7 @@ describe("Owner service Tests", function () {
         ownerId: userId,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -519,11 +528,14 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${userId}/details`)
-      .reply(200, mockUserDetailsResponse);
+      .reply(OK, mockUserDetailsResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .put(`/user/${userId}/profile`)
-      .reply(400, { statusCode: 400, message: "Failed to update a owner" });
+      .reply(BAD_REQUEST, {
+        statusCode: BAD_REQUEST,
+        message: "Failed to update a owner",
+      });
 
     try {
       await OwnerService.updateUser({
@@ -531,7 +543,7 @@ describe("Owner service Tests", function () {
         ownerId: userId,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -550,13 +562,13 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${userId}/details`)
-      .reply(200, mockUserDetailsResponse);
+      .reply(OK, mockUserDetailsResponse);
 
     const response = await OwnerService.getUser({
       ownerId: userId,
     });
 
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -565,14 +577,17 @@ describe("Owner service Tests", function () {
 
     nock(process.env.CONSUMER_SERVICE_URL)
       .get(`/user/${userId}/details`)
-      .reply(400, { statusCode: 400, message: "Could not find owner details" });
+      .reply(BAD_REQUEST, {
+        statusCode: BAD_REQUEST,
+        message: "Could not find owner details",
+      });
 
     try {
       await OwnerService.getUser({
         ownerId: userId,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
