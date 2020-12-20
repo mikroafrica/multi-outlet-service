@@ -140,9 +140,17 @@ export const loginMultiOutletOwner = async ({ params }) => {
           });
         }
       }
+      const store = userDetailsData.store[0];
+      const ownerAccountDetails = {
+        accountName: store.accountName,
+        accountNumber: store.accountNumber,
+        bank: store.bank,
+        bankCode: store.bankCode,
+      };
 
       loginResponseData.data = {
         ...loginResponseData.data,
+        ...ownerAccountDetails,
         ...userDetailsData,
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });

@@ -8,7 +8,7 @@ import {
   resetPasswordRequest,
   updateUserProfile,
   fetchOwnerDetails,
-} from "./owner.controller.js";
+} from "./owner.controller";
 
 const auth = ({ server, subBase }) => {
   server.post(`${subBase}/signup`, signup);

@@ -65,6 +65,7 @@
     "restify-clients": "^2.5.2",
     "restify-cors-middleware": "^1.1.1",
     "tsscmp": "^1.0.6",
+    "uuid": "^8.3.2",
     "winston": "^3.2.1"
   }
 }

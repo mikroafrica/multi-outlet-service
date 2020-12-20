@@ -1,5 +1,6 @@
 import {
   signupMultiOutletOwner,
+  loginMultiOutletOwner,
   sendVerificationEmail,
   validateEmail,
   changePassword,
@@ -8,7 +9,6 @@ import {
   updateUser,
   getUser,
 } from "./owner.service.js";
-import { loginMultiOutletOwner } from "./owner.service.js";
 
 export const signup = (req, res) => {
   const params = req.body;

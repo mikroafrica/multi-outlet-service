@@ -4,9 +4,10 @@ import dotenv from "dotenv";
 import corsMiddleware from "restify-cors-middleware";
 import { connect } from "./db";
 import auth from "./api/resources/owner";
-import wallet from "./api/resources/wallet/index";
-import transaction from "./api/resources/transaction/index";
-import outlet from "./api/resources/outlet/index";
+import wallet from "./api/resources/wallet";
+import transaction from "./api/resources/transaction";
+import outlet from "./api/resources/outlet";
+import transfer from "./api/resources/transfer";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -47,5 +48,6 @@ auth({ server: server, subBase: "/auth" });
 outlet({ server: server, subBase: "/outlet" });
 wallet({ server: server, subBase: "/wallet" });
 transaction({ server: server, subBase: "/transaction" });
+transfer({ server: server, subBase: "/transfer" });
 
 export default server;

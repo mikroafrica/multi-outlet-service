@@ -12,7 +12,6 @@ export const walletById = async ({ ownerId }) => {
 
       try {
         const wallet = await WalletService.getWalletById(walletId);
-        console.log(wallet);
         const walletSummary = wallet.data;
 
         return Promise.resolve({
