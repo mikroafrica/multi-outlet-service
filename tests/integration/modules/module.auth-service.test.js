@@ -3,6 +3,7 @@ import nock from "nock";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import * as AuthService from "../../../src/api/modules/auth-service";
+import { OK } from "../../../src/api/modules/status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -20,10 +21,10 @@ describe("Auth service module Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/create")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await AuthService.signup({});
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -38,10 +39,10 @@ describe("Auth service module Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/auth/login")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await AuthService.login({});
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -53,10 +54,10 @@ describe("Auth service module Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .post("/password/reset-request")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await AuthService.resetPasswordRequest({});
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -67,10 +68,10 @@ describe("Auth service module Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put("/password/reset-password-web")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await AuthService.resetPassword({});
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -84,10 +85,10 @@ describe("Auth service module Tests", function () {
 
     nock(process.env.AUTH_SERVICE_URL)
       .put("/password/change")
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await AuthService.changePassword({});
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 });
