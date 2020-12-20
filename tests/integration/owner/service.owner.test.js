@@ -476,7 +476,7 @@ describe("Owner service Tests", function () {
   });
 
   it("should fail to update a owner if owner details cannot be found", async function () {
-    const userId = "123";
+    const userId = "12345";
     const params = {
       firstName: "John",
       lastName: "Doe",
