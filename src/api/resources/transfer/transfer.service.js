@@ -42,28 +42,43 @@ export const walletTransfer = async ({
       });
     }
 
+    const owner = await Owner.findOne({ userId: ownerId });
+    const outlet = await Outlet.findOne({ userId: outletId });
+
+    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+    const ownerDetailsData = ownerDetails.data.data;
+
+    const outletDetails = await ConsumerService.getUserDetails(outletId);
+    const outletDetailsData = outletDetails.data.data;
     if (destination === "owner") {
-      const outlet = await Outlet.findOne({ userId: outletId });
       params.userWalletId = outlet.walletId;
+      params.userId = outletId;
       params.recipientId = ownerId;
+      params.customerBillerId = owner.walletId;
 
-      const ownerDetails = await ConsumerService.getUserDetails(ownerId);
-      const ownerDetailsData = ownerDetails.data.data;
-      params.sourceName = ownerDetailsData.businessName;
-    } else if (destination === "outlet") {
-      const owner = await Owner.findOne({ userId: ownerId });
-      params.userWalletId = owner.walletId;
-      params.recipientId = outletId;
-
-      const outletDetails = await ConsumerService.getUserDetails(outletId);
-      const outletDetailsData = outletDetails.data.data;
       params.sourceName = outletDetailsData.businessName;
+
+      params.recipientPhoneNumber = ownerDetailsData.phoneNumber;
+      params.recipientName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
+      params.destinationFcmToken = "";
+    } else if (destination === "outlet") {
+      params.userWalletId = owner.walletId;
+      params.userId = ownerId;
+      params.recipientId = outletId;
+      params.customerBillerId = outlet.walletId;
+
+      params.sourceName = ownerDetailsData.businessName;
+
+      params.recipientPhoneNumber = outletDetailsData.phoneNumber;
+      params.recipientName = `${outletDetailsData.firstName} ${outletDetailsData.lastName}`;
+      params.destinationFcmToken = outletDetailsData.fcmToken;
     }
 
+    const uuid = uuidv4();
     params = {
       ...params,
       transactionType: "P2P",
-      uniqueIdentifier: uuidv4(),
+      uniqueIdentifier: uuid,
     };
 
     logger.info(

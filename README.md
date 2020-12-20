@@ -159,6 +159,10 @@ _Response Body_
     "data": {
         "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmY2UzZWY4NDFiNDFmMDAxNzcxMjc2NyIsInJvbGUiOiJhZG1pbiIsInVzZXJuYW1lIjoiZWxpaHUudHlraW5nQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmY2UzZWY2ZTE5NTRkMGY1MzIwNTFmZCIsImlhdCI6MTYwNzM2MjMzMSwiZXhwIjoxNjA3NDM3MzMxfQ.TEFsCAcfUAtMZ0ZHOfvHmnSYyYyohwnVAaz7BdmfVFM",
         "userId": "5fce3ef6e1954d0f532051fd",
+        "accountName": "alex snow",
+        "accountNumber": "4000050197",
+        "bank": "Providus Bank",
+        "bankCode": "101",
         "id": "5fce3ef6e1954d0f532051fd",
         "firstName": "alex",
         "lastName": "snow",
@@ -426,6 +430,26 @@ _Response Body_
         "utilityImageIdVerified": false,
         "identificationImageVerified": false,
         "ninVerified": false
+    }
+}
+```
+
+
+### View MultiOutlet owner monnify account details
+`GET /auth/account`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "bank": "Providus Bank",
+        "bankCode": "101",
+        "accountName": "alex snow",
+        "accountNumber": "4000050197"
     }
 }
 ```
@@ -934,13 +958,15 @@ _Response Body_
 {
     "status": true,
     "data": {
-        "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
-        "balance": 16832.5,
-        "totalCredit": 32100.5,
-        "totalDebit": 15268,
-        "numberOfTransaction": 71,
-        "currency": "NGN",
-        "timeCreated": 1587589856175
+        "id": "b4c5011a-b503-4bba-ab6e-c9a7c8f6122f",
+        "amount": 100,
+        "userId": "5fd35d158677251eabdf8ef5",
+        "transactionReference": "P2P-718173f7-a730-4ea2-abb7-a5f048ea3727",
+        "transactionStatus": "successful",
+        "transactionType": "p2p",
+        "user": "meshileya seun",
+        "product": null,
+        "timeCreated": 1608394276296
     }
 }
 ```
@@ -963,13 +989,15 @@ _Response Body_
 {
     "status": true,
     "data": {
-        "id": "eb8c541c-f589-43b4-91f7-5090bf08a395",
-        "balance": 51170,
-        "totalCredit": 61180,
-        "totalDebit": 10010,
-        "numberOfTransaction": 9,
-        "currency": "NGN",
-        "timeCreated": 1608057460322
+        "id": "d71300e6-315e-4ceb-9cbd-0d91d087ba72",
+        "amount": 100,
+        "userId": "5e9a348ecf896e4e613b7fe7",
+        "transactionReference": "P2P-9cf01f71-a9b2-49db-a349-c64ecdf836b5",
+        "transactionStatus": "successful",
+        "transactionType": "p2p",
+        "user": "alex snow",
+        "product": null,
+        "timeCreated": 1608394300931
     }
 }
 ```
