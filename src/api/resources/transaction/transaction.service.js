@@ -202,7 +202,7 @@ export const outletTransactionSummary = async ({
       successAmount + pendingAmount + failedAmount;
 
     return Promise.resolve({
-      statusCode: 200,
+      statusCode: OK,
       data: outletTransactionSummary,
     });
   } catch (e) {
