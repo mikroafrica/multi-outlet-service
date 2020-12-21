@@ -109,7 +109,7 @@ export const unlinkOutletFromOwner = async ({ ownerId, outletUserId }) => {
     });
     if (!existingOutlet) {
       return Promise.reject({
-        statusCode: BAD_REQUEST,
+        statusCode: NOT_FOUND,
         message: "Outlet not found. Please supply a valid outlet",
       });
     }
@@ -163,14 +163,15 @@ export const switchOutletSuspendedStatus = async ({
       status: AuthServiceAction[status],
     });
 
-    const updatedOutlet = await Outlet.findOneAndUpdate(
+    const findAndUpdateOutlet = await Outlet.findOneAndUpdate(
       {
         userId: outletUserId,
         ownerId,
       },
       { $set: { status } },
       { new: true }
-    ).exec();
+    );
+    const updatedOutlet = findAndUpdateOutlet.exec();
 
     return Promise.resolve({
       statusCode: OK,
@@ -187,19 +188,19 @@ export const switchOutletSuspendedStatus = async ({
   }
 };
 
-const sendVerificationOtp = async ({ phoneNumber }) => {
+export const sendVerificationOtp = async ({ phoneNumber }) => {
   try {
     const params = { phoneNumber, type: "PHONE_NUMBER" };
 
     logger.info(
-      `Request to link outlet with request b [${JSON.stringify(params)}]`
+      `Request to link outlet with request body [${JSON.stringify(params)}]`
     );
     const otpResponse = await ConsumerService.generateOtp(params);
     return otpResponse.data;
   } catch (err) {
     logger.error("Could not send verification OTP");
     return Promise.reject({
-      statusCode: NOT_FOUND,
+      statusCode: BAD_REQUEST,
       message: "Could not send verification OTP",
     });
   }
