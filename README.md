@@ -552,7 +552,33 @@ _Response Body_
                 "utilityImageId": null,
                 "identificationImageId": null,
                 "placeOfBusinessImageId": null,
-                "store": [],
+                "store": [
+                    {
+                        "id": "5e9a348fcf896e4e613b7fe9",
+                        "address": "Lagos ikotun",
+                        "state": "Benue",
+                        "lga": "Gboko",
+                        "country": "ngn",
+                        "bank": "Providus Bank",
+                        "bankCode": "101",
+                        "accountName": "mesh seun",
+                        "accountNumber": "4000038493",
+                        "terminalId": "1010101",
+                        "wallet": [
+                            {
+                                "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                                "currency": "NGN",
+                                "type": "MAIN",
+                                "balance": 6732.5,
+                                "totalCredit": 42410.5,
+                                "totalDebit": 35678,
+                                "numberOfTransaction": 83,
+                                "timeCreated": 1587589856175
+                            }
+                        ],
+                        "terminalMapped": true
+                    }
+                ],       
                 "region": "Garki",
                 "zone": "zone 1",
                 "goal": "ACTIVE",
@@ -583,7 +609,33 @@ _Response Body_
                 "utilityImageId": null,
                 "identificationImageId": null,
                 "placeOfBusinessImageId": null,
-                "store": [],
+                "store": [
+                    {
+                        "id": "5e9a348fcf896e4e613b7fe9",
+                        "address": "Lagos ikotun",
+                        "state": "Benue",
+                        "lga": "Gboko",
+                        "country": "ngn",
+                        "bank": "Providus Bank",
+                        "bankCode": "101",
+                        "accountName": "mesh seun",
+                        "accountNumber": "4000038493",
+                        "terminalId": "1010101",
+                        "wallet": [
+                            {
+                                "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                                "currency": "NGN",
+                                "type": "MAIN",
+                                "balance": 6732.5,
+                                "totalCredit": 42410.5,
+                                "totalDebit": 35678,
+                                "numberOfTransaction": 83,
+                                "timeCreated": 1587589856175
+                            }
+                        ],
+                        "terminalMapped": true
+                    }
+                ],                
                 "region": "Garki",
                 "zone": "zone 1",
                 "goal": "ACTIVE",
@@ -614,7 +666,33 @@ _Response Body_
                 "utilityImageId": null,
                 "identificationImageId": null,
                 "placeOfBusinessImageId": null,
-                "store": [],
+                "store": [
+                    {
+                        "id": "5e9a348fcf896e4e613b7fe9",
+                        "address": "Lagos ikotun",
+                        "state": "Benue",
+                        "lga": "Gboko",
+                        "country": "ngn",
+                        "bank": "Providus Bank",
+                        "bankCode": "101",
+                        "accountName": "mesh seun",
+                        "accountNumber": "4000038493",
+                        "terminalId": "1010101",
+                        "wallet": [
+                            {
+                                "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                                "currency": "NGN",
+                                "type": "MAIN",
+                                "balance": 6732.5,
+                                "totalCredit": 42410.5,
+                                "totalDebit": 35678,
+                                "numberOfTransaction": 83,
+                                "timeCreated": 1587589856175
+                            }
+                        ],
+                        "terminalMapped": true
+                    }
+                ],                
                 "region": "Garki",
                 "zone": "zone 1",
                 "goal": "ACTIVE",
