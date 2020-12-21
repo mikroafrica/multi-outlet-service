@@ -2,6 +2,7 @@ import Joi from "joi";
 import async from "async";
 import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
+import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
@@ -366,9 +367,21 @@ export const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
   await async.forEach(outlets, async (outlet) => {
     const response = await ConsumerService.getUserDetails(outlet.userId);
-    const responseData = response.data;
+    const userDetailsData = response.data;
+
+    const wallet = userDetailsData.data.store[0].wallet[0];
+    const walletId = wallet.id;
+
+    const walletSummaryResponse = await WalletService.getWalletById(walletId);
+    const walletSummaryData = walletSummaryResponse.data;
+
+    userDetailsData.data.store[0].wallet[0] = {
+      ...wallet,
+      ...walletSummaryData.data,
+    };
+
     outletDetails.push({
-      ...responseData.data,
+      ...userDetailsData.data,
       status: outlet.status,
     });
   });
