@@ -1,4 +1,4 @@
-import { walletTransfer, transferToOutletWallet } from "./transfer.service";
+import { walletTransfer } from "./transfer.service";
 
 export const transferAcrossWallets = (req, res) => {
   const ownerId = req.user.userId;
