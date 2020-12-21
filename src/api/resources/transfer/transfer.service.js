@@ -50,6 +50,7 @@ export const walletTransfer = async ({
 
     const outletDetails = await ConsumerService.getUserDetails(outletId);
     const outletDetailsData = outletDetails.data.data;
+
     if (destination === "owner") {
       params.userWalletId = outlet.walletId;
       params.userId = outletId;
@@ -82,7 +83,7 @@ export const walletTransfer = async ({
     };
 
     logger.info(
-      `Transfer to outlet owner wallet request body ${JSON.stringify(params)}`
+      `Transfer to ${destination} wallet request body ${JSON.stringify(params)}`
     );
 
     const response = await TransactionService.creteTransaction(params);

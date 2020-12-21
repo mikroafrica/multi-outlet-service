@@ -116,7 +116,6 @@ export const getTransactionsSummary = async ({
 const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
   const outletsTransactionSummary = [];
   await async.forEach(outlets, async (outlet) => {
-    console.log(outlet);
     try {
       const outletUserId = outlet.id;
 

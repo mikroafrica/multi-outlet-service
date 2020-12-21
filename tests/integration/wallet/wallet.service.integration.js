@@ -5,6 +5,7 @@ import sinon from "sinon";
 import chaiAsPromised from "chai-as-promised";
 import * as WalletService from "../../../src/api/resources/wallet/wallet.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
+import { BAD_REQUEST, OK } from "../../../src/api/modules/status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -34,11 +35,11 @@ describe("Wallet service Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/wallets/${walletId}`)
-      .reply(200, mockWalletResponse);
+      .reply(OK, mockWalletResponse);
 
     const response = await WalletService.walletById({ ownerId });
 
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
 
     findOneOwner.restore();
@@ -61,12 +62,12 @@ describe("Wallet service Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/wallets/${walletId}`)
-      .reply(400, mockWalletResponse);
+      .reply(BAD_REQUEST, mockWalletResponse);
 
     try {
       await WalletService.walletById({ ownerId });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
 
@@ -96,14 +97,14 @@ describe("Wallet service Tests", function () {
       .get(
         `/transactions/${walletId}/balance?dateFrom=${dateFrom}&dateTo=${dateTo}`
       )
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await WalletService.walletSummaryById({
       walletId,
       dateTo,
       dateFrom,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -121,7 +122,7 @@ describe("Wallet service Tests", function () {
       .get(
         `/transactions/${walletId}/balance?dateFrom=${dateFrom}&dateTo=${dateTo}`
       )
-      .reply(400, mockResponse);
+      .reply(BAD_REQUEST, mockResponse);
 
     try {
       await WalletService.walletSummaryById({
@@ -130,7 +131,7 @@ describe("Wallet service Tests", function () {
         dateFrom,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
@@ -156,14 +157,14 @@ describe("Wallet service Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/transactions/${walletId}?dateFrom=${dateFrom}&dateTo=${dateTo}`)
-      .reply(200, mockResponse);
+      .reply(OK, mockResponse);
 
     const response = await WalletService.walletTransactionsById({
       walletId,
       dateTo,
       dateFrom,
     });
-    expect(response.statusCode).equals(200);
+    expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
@@ -188,7 +189,7 @@ describe("Wallet service Tests", function () {
 
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/transactions/${walletId}?dateFrom=${dateFrom}&dateTo=${dateTo}`)
-      .reply(400, mockResponse);
+      .reply(BAD_REQUEST, mockResponse);
 
     try {
       await WalletService.walletTransactionsById({
@@ -197,7 +198,7 @@ describe("Wallet service Tests", function () {
         dateFrom,
       });
     } catch (err) {
-      expect(err.statusCode).equals(400);
+      expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
   });
