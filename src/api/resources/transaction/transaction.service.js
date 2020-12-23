@@ -157,3 +157,63 @@ const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
 
   return Promise.resolve(outletsTransactionSummary);
 };
+
+export const outletTransactionSummary = async ({
+  outletId,
+  dateFrom,
+  dateTo,
+}) => {
+  try {
+    let outletTransactionSummary = {
+      count: 0,
+      success: 0,
+      pending: 0,
+      failed: 0,
+      successAmount: 0,
+      pendingAmount: 0,
+      failedAmount: 0,
+    };
+
+    const response = await TransactionService.fetchTransactionSummary({
+      outletId,
+      dateFrom,
+      dateTo,
+    });
+    const responseData = response.data;
+    const transactionSummaryResponse = responseData.data;
+
+    const transactionKeys = Object.keys(outletTransactionSummary);
+
+    for (let transactionKey of transactionKeys) {
+      outletTransactionSummary[
+        transactionKey
+      ] = transactionSummaryResponse.reduce(
+        (acc = 0, curr) => acc + curr[transactionKey],
+        0
+      );
+    }
+
+    const {
+      successAmount,
+      pendingAmount,
+      failedAmount,
+    } = outletTransactionSummary;
+    outletTransactionSummary.totalTransactionsAmount =
+      successAmount + pendingAmount + failedAmount;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: outletTransactionSummary,
+    });
+  } catch (e) {
+    logger.error(
+      `Error occurred while fetching transaction summary for outlet with error ${JSON.stringify(
+        e
+      )}`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: e.message || "Something went wrong. Please try again",
+    });
+  }
+};

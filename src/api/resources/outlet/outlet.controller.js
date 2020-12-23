@@ -4,6 +4,7 @@ import {
   getOutlets,
   unlinkOutletFromOwner,
   switchOutletSuspendedStatus,
+  getOutletByOutletId,
 } from "./outlet.service";
 
 export const linkOutlet = (req, res) => {
@@ -65,6 +66,18 @@ export const fetchOutlets = (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
 
   getOutlets({ ownerId, page, limit })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const fetchOutletById = (req, res) => {
+  const outletId = req.params.id;
+
+  getOutletByOutletId({ outletId })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

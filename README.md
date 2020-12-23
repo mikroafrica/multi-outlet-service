@@ -552,7 +552,33 @@ _Response Body_
                 "utilityImageId": null,
                 "identificationImageId": null,
                 "placeOfBusinessImageId": null,
-                "store": [],
+                "store": [
+                    {
+                        "id": "5e9a348fcf896e4e613b7fe9",
+                        "address": "Lagos ikotun",
+                        "state": "Benue",
+                        "lga": "Gboko",
+                        "country": "ngn",
+                        "bank": "Providus Bank",
+                        "bankCode": "101",
+                        "accountName": "mesh seun",
+                        "accountNumber": "4000038493",
+                        "terminalId": "1010101",
+                        "wallet": [
+                            {
+                                "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                                "currency": "NGN",
+                                "type": "MAIN",
+                                "balance": 6732.5,
+                                "totalCredit": 42410.5,
+                                "totalDebit": 35678,
+                                "numberOfTransaction": 83,
+                                "timeCreated": 1587589856175
+                            }
+                        ],
+                        "terminalMapped": true
+                    }
+                ],       
                 "region": "Garki",
                 "zone": "zone 1",
                 "goal": "ACTIVE",
@@ -583,7 +609,33 @@ _Response Body_
                 "utilityImageId": null,
                 "identificationImageId": null,
                 "placeOfBusinessImageId": null,
-                "store": [],
+                "store": [
+                    {
+                        "id": "5e9a348fcf896e4e613b7fe9",
+                        "address": "Lagos ikotun",
+                        "state": "Benue",
+                        "lga": "Gboko",
+                        "country": "ngn",
+                        "bank": "Providus Bank",
+                        "bankCode": "101",
+                        "accountName": "mesh seun",
+                        "accountNumber": "4000038493",
+                        "terminalId": "1010101",
+                        "wallet": [
+                            {
+                                "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                                "currency": "NGN",
+                                "type": "MAIN",
+                                "balance": 6732.5,
+                                "totalCredit": 42410.5,
+                                "totalDebit": 35678,
+                                "numberOfTransaction": 83,
+                                "timeCreated": 1587589856175
+                            }
+                        ],
+                        "terminalMapped": true
+                    }
+                ],                
                 "region": "Garki",
                 "zone": "zone 1",
                 "goal": "ACTIVE",
@@ -614,7 +666,33 @@ _Response Body_
                 "utilityImageId": null,
                 "identificationImageId": null,
                 "placeOfBusinessImageId": null,
-                "store": [],
+                "store": [
+                    {
+                        "id": "5e9a348fcf896e4e613b7fe9",
+                        "address": "Lagos ikotun",
+                        "state": "Benue",
+                        "lga": "Gboko",
+                        "country": "ngn",
+                        "bank": "Providus Bank",
+                        "bankCode": "101",
+                        "accountName": "mesh seun",
+                        "accountNumber": "4000038493",
+                        "terminalId": "1010101",
+                        "wallet": [
+                            {
+                                "id": "0268886f-cd69-4b02-9e9d-a4e2efbb70bc",
+                                "currency": "NGN",
+                                "type": "MAIN",
+                                "balance": 6732.5,
+                                "totalCredit": 42410.5,
+                                "totalDebit": 35678,
+                                "numberOfTransaction": 83,
+                                "timeCreated": 1587589856175
+                            }
+                        ],
+                        "terminalMapped": true
+                    }
+                ],                
                 "region": "Garki",
                 "zone": "zone 1",
                 "goal": "ACTIVE",
@@ -627,6 +705,72 @@ _Response Body_
                 "status": "ACTIVE"
             }
         ]
+    }
+}
+```
+
+
+
+### Get outlet details by id 
+`GET /outlet/:outletId`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "id": "5e989ea99bc21b6b100836f3",
+        "firstName": "easy up",
+        "lastName": "raeliij",
+        "dateOfBirth": "Fri Dec 11 00:00:00 West Africa Standard Time 2020",
+        "profileImageId": "5e989ea07c63cd00175cb919",
+        "gender": "MALE",
+        "businessName": "Loop your ",
+        "businessType": "AGENT",
+        "username": null,
+        "email": "meshileyaseun@gmail.com",
+        "phoneNumber": "+234 813 706 5162",
+        "phoneCarrier": "mtn",
+        "userType": "AGENT",
+        "tierLevel": "TIER_ZERO",
+        "fcmToken": "f_He_e4HRpC8-od46snBzO:APA91bFlVU8f5-RgXyyVsg-uTjwmY6cpd3jL9BeEEHTRbXKj9-IsEYBMwmMc6Rgy6c-ya4oXT2GxqnbZdPwrStlHp9VrGjeQ5Ezk0La8OwzNXLVRXQWpIi6OHn2M3X2TpV8ALzmU-evI",
+        "utilityImageId": "5f802369a6d5860017712cee",
+        "identificationImageId": "5f4aca5aee0eb40017317ab1",
+        "placeOfBusinessImageId": "5fceaf2a8d62550017348650",
+        "store": [
+            {
+                "id": "5e989ea99bc21b6b100836f5",
+                "address": "test business address",
+                "state": "Zamfara",
+                "lga": "Bukkuyum",
+                "country": "ngn",
+                "bank": "Providus Bank",
+                "bankCode": "101",
+                "accountName": "israel tester",
+                "accountNumber": "4000047378",
+                "terminalId": "1010101",
+                "wallet": [
+                    {
+                        "id": "39590c8a-3fec-48b4-a1d2-d042cbe1d3d4",
+                        "currency": "NGN",
+                        "type": "MAIN"
+                    }
+                ],
+                "terminalMapped": true
+            }
+        ],
+        "region": "north",
+        "zone": "north west",
+        "goal": "ACTIVE",
+        "emailVerified": true,
+        "bvnVerified": false,
+        "placeOfBusinessImageVerified": false,
+        "utilityImageIdVerified": false,
+        "identificationImageVerified": false,
+        "ninVerified": false
     }
 }
 ```
@@ -937,6 +1081,30 @@ _Response Body_
             "status": "ACTIVE"
         }
     ]
+}
+```
+
+
+### Get transaction summary for an outlet
+`GET /transaction/summary/:outletId`
+
+`Authorization: Bearer eyJhbGciOiJIUJuYW1lIjoiY29laG4uamFoZWltQGV4dHJhYWxlLmNvbSIsInVzZXJJZCI6IjVmZDM1`
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "count": 490,
+        "success": 275,
+        "pending": 180,
+        "failed": 16,
+        "successAmount": 1004499,
+        "pendingAmount": 71900,
+        "failedAmount": 12598,
+        "totalTransactionsAmount": 1088997
+    }
 }
 ```
 
