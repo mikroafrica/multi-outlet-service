@@ -710,7 +710,6 @@ _Response Body_
 ```
 
 
-
 ### Get outlet details by id 
 `GET /outlet/:outletId`
 
@@ -770,7 +769,11 @@ _Response Body_
         "placeOfBusinessImageVerified": false,
         "utilityImageIdVerified": false,
         "identificationImageVerified": false,
-        "ninVerified": false
+        "ninVerified": false,
+        "status": "ACTIVE",
+        "walletId": "39590c8a-3fec-48b4-a1d2-d042cbe1d3d4",
+        "createdAt": "2020-12-18T15:22:24.502Z",
+        "updatedAt": "2020-12-18T15:26:57.164Z"
     }
 }
 ```
@@ -1168,4 +1171,37 @@ _Response Body_
         "timeCreated": 1608394300931
     }
 }
+```
+
+
+### Upload a file
+`POST /media/upload`
+
+_Form Data_
+
+```javascript
+{
+    "file": {file_to_upload}
+}
+```
+
+_Response Body_
+
+```javascript
+{
+    "status": true,
+    "data": {
+        "id": "5fe89035a93673001796dd67"
+    }
+}
+```
+
+
+### Get an uploaded file by file id
+`GET /media/{fileId}`
+
+_Response Body_
+
+```javascript
+{IMAGE}
 ```
