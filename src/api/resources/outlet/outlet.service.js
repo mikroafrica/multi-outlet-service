@@ -390,12 +390,24 @@ export const fetchOutletDetails = async (outlets) => {
 
 export const getOutletByOutletId = async ({ outletId }) => {
   try {
-    const outletUserDetails = await ConsumerService.getUserDetails(outletId);
-    const outletUserDetailsData = outletUserDetails.data;
+    const outletUserDetailsResponse = await ConsumerService.getUserDetails(
+      outletId
+    );
+    const outletUserDetailsData = outletUserDetailsResponse.data;
+
+    const outlet = await Outlet.findOne({ userId: outletId });
+
+    const outletDetailsData = {
+      ...outletUserDetailsData.data,
+      status: outlet.status,
+      walletId: outlet.walletId,
+      createdAt: outlet.createdAt,
+      updatedAt: outlet.updatedAt,
+    };
 
     return Promise.resolve({
       statusCode: OK,
-      data: outletUserDetailsData.data,
+      data: outletDetailsData,
     });
   } catch (e) {
     logger.error(

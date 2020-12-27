@@ -11,3 +11,8 @@ export const validatePhone = ({ phone, countryCode = "NG" }) => {
   }
   return phoneUtil.format(formatPhoneNumber, PNF.INTERNATIONAL);
 };
+
+export const convertToBase64 = (value: string) => {
+  const buffer = Buffer.from(value);
+  return buffer.toString("base64");
+};
