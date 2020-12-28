@@ -36,7 +36,7 @@ export const secureRoute = (req, res, next) => {
     })
     .catch((err) => {
       logger.error(
-        `Failed to validate token with error ${JSON.stringify(err)}`
+        `failed to validate token with error ${JSON.stringify(err)}`
       );
       return res.send(err.statusCode || UN_AUTHORISED, {
         status: false,
