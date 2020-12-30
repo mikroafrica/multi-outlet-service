@@ -1099,14 +1099,88 @@ _Response Body_
 {
     "status": true,
     "data": {
-        "count": 490,
-        "success": 275,
-        "pending": 180,
-        "failed": 16,
-        "successAmount": 1004499,
-        "pendingAmount": 71900,
-        "failedAmount": 12598,
-        "totalTransactionsAmount": 1088997
+        "summary": {
+            "count": 533,
+            "success": 297,
+            "pending": 201,
+            "failed": 16,
+            "successAmount": 1007923,
+            "pendingAmount": 74792,
+            "failedAmount": 12598,
+            "totalTransactionsAmount": 1095313
+        },
+        "types": [
+            {
+                "count": 114,
+                "type": "Savings",
+                "success": 114,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 201769,
+                "pendingAmount": 0,
+                "failedAmount": 0
+            },
+            {
+                "count": 167,
+                "type": "Transfer",
+                "success": 12,
+                "pending": 150,
+                "failed": 5,
+                "successAmount": 1484,
+                "pendingAmount": 53991,
+                "failedAmount": 5173
+            },
+            {
+                "count": 4,
+                "type": "Wallet TopUp",
+                "success": 4,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 70000,
+                "pendingAmount": 0,
+                "failedAmount": 0
+            },
+            {
+                "count": 68,
+                "type": "P2P",
+                "success": 65,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 101794,
+                "pendingAmount": 0,
+                "failedAmount": 0
+            },
+            {
+                "count": 33,
+                "type": "Cash",
+                "success": 33,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 464494,
+                "pendingAmount": 0,
+                "failedAmount": 0
+            },
+            {
+                "count": 86,
+                "type": "Withdrawal",
+                "success": 56,
+                "pending": 3,
+                "failed": 11,
+                "successAmount": 145424,
+                "pendingAmount": 3501,
+                "failedAmount": 7425
+            },
+            {
+                "count": 61,
+                "type": "Bills",
+                "success": 13,
+                "pending": 48,
+                "failed": 0,
+                "successAmount": 22958,
+                "pendingAmount": 17300,
+                "failedAmount": 0
+            }
+        ]
     }
 }
 ```

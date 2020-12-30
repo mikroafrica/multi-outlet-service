@@ -201,9 +201,16 @@ export const outletTransactionSummary = async ({
     outletTransactionSummary.totalTransactionsAmount =
       successAmount + pendingAmount + failedAmount;
 
+    let outletTransactionTypesSummary = computeOutletTransactionTypes(
+      transactionSummaryResponse
+    );
+
     return Promise.resolve({
       statusCode: OK,
-      data: outletTransactionSummary,
+      data: {
+        summary: outletTransactionSummary,
+        types: outletTransactionTypesSummary,
+      },
     });
   } catch (e) {
     logger.error(
@@ -216,4 +223,44 @@ export const outletTransactionSummary = async ({
       message: e.message || "Something went wrong. Please try again",
     });
   }
+};
+
+const computeOutletTransactionTypes = (transactionTypes) => {
+  let computedTransactionTypes = [];
+  let billTransactions = {
+    count: 0,
+    type: "Bills",
+    success: 0,
+    pending: 0,
+    failed: 0,
+    successAmount: 0,
+    pendingAmount: 0,
+    failedAmount: 0,
+  };
+
+  const bills = ["airtime", "data", "cabletv", "phcn"];
+
+  for (let transactionType of transactionTypes) {
+    if (bills.includes(transactionType.type.toLowerCase())) {
+      billTransactions = {
+        ...billTransactions,
+        count: billTransactions.count + transactionType.count,
+        success: billTransactions.success + transactionType.success,
+        pending: billTransactions.pending + transactionType.pending,
+        failed: billTransactions.failed + transactionType.failed,
+        successAmount:
+          billTransactions.successAmount + transactionType.successAmount,
+        pendingAmount:
+          billTransactions.pendingAmount + transactionType.pendingAmount,
+        failedAmount:
+          billTransactions.failedAmount + transactionType.failedAmount,
+      };
+    } else {
+      computedTransactionTypes.push(transactionType);
+    }
+  }
+  if (billTransactions.count > 0) {
+    computedTransactionTypes.push(billTransactions);
+  }
+  return computedTransactionTypes;
 };
