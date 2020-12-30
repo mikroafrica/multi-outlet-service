@@ -1118,7 +1118,8 @@ _Response Body_
                 "failed": 0,
                 "successAmount": 201769,
                 "pendingAmount": 0,
-                "failedAmount": 0
+                "failedAmount": 0,
+                "percentageAmount": 20.02
             },
             {
                 "count": 167,
@@ -1128,7 +1129,8 @@ _Response Body_
                 "failed": 5,
                 "successAmount": 1484,
                 "pendingAmount": 53991,
-                "failedAmount": 5173
+                "failedAmount": 5173,
+                "percentageAmount": 0.15
             },
             {
                 "count": 4,
@@ -1138,7 +1140,8 @@ _Response Body_
                 "failed": 0,
                 "successAmount": 70000,
                 "pendingAmount": 0,
-                "failedAmount": 0
+                "failedAmount": 0,
+                "percentageAmount": 6.94
             },
             {
                 "count": 68,
@@ -1148,7 +1151,8 @@ _Response Body_
                 "failed": 0,
                 "successAmount": 101794,
                 "pendingAmount": 0,
-                "failedAmount": 0
+                "failedAmount": 0,
+                "percentageAmount": 10.1
             },
             {
                 "count": 33,
@@ -1158,7 +1162,8 @@ _Response Body_
                 "failed": 0,
                 "successAmount": 464494,
                 "pendingAmount": 0,
-                "failedAmount": 0
+                "failedAmount": 0,
+                "percentageAmount": 46.08
             },
             {
                 "count": 86,
@@ -1168,7 +1173,8 @@ _Response Body_
                 "failed": 11,
                 "successAmount": 145424,
                 "pendingAmount": 3501,
-                "failedAmount": 7425
+                "failedAmount": 7425,
+                "percentageAmount": 14.43
             },
             {
                 "count": 61,
@@ -1178,7 +1184,8 @@ _Response Body_
                 "failed": 0,
                 "successAmount": 22958,
                 "pendingAmount": 17300,
-                "failedAmount": 0
+                "failedAmount": 0,
+                "percentageAmount": 2.28
             }
         ]
     }

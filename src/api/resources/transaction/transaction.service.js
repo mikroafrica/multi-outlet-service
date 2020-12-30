@@ -202,7 +202,8 @@ export const outletTransactionSummary = async ({
       successAmount + pendingAmount + failedAmount;
 
     let outletTransactionTypesSummary = computeOutletTransactionTypes(
-      transactionSummaryResponse
+      transactionSummaryResponse,
+      successAmount
     );
 
     return Promise.resolve({
@@ -225,7 +226,10 @@ export const outletTransactionSummary = async ({
   }
 };
 
-const computeOutletTransactionTypes = (transactionTypes) => {
+const computeOutletTransactionTypes = (
+  transactionTypes,
+  totalSuccessAmount
+) => {
   let computedTransactionTypes = [];
   let billTransactions = {
     count: 0,
@@ -256,10 +260,18 @@ const computeOutletTransactionTypes = (transactionTypes) => {
           billTransactions.failedAmount + transactionType.failedAmount,
       };
     } else {
+      transactionType.percentageAmount = +(
+        (transactionType.successAmount / totalSuccessAmount) *
+        100
+      ).toFixed(2);
       computedTransactionTypes.push(transactionType);
     }
   }
   if (billTransactions.count > 0) {
+    billTransactions.percentageAmount = +(
+      (billTransactions.successAmount / totalSuccessAmount) *
+      100
+    ).toFixed(2);
     computedTransactionTypes.push(billTransactions);
   }
   return computedTransactionTypes;
