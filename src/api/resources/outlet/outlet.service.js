@@ -164,7 +164,7 @@ export const switchOutletSuspendedStatus = async ({
       status: AuthServiceAction[status],
     });
 
-    const findAndUpdateOutlet = await Outlet.findOneAndUpdate(
+    const updatedOutlet = await Outlet.findOneAndUpdate(
       {
         userId: outletUserId,
         ownerId,
@@ -172,7 +172,6 @@ export const switchOutletSuspendedStatus = async ({
       { $set: { status } },
       { new: true }
     );
-    const updatedOutlet = findAndUpdateOutlet.exec();
 
     return Promise.resolve({
       statusCode: OK,

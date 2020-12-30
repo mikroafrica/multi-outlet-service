@@ -163,12 +163,10 @@ describe("Outlet service Tests", function () {
     const findOneAndUpdateOutlet = sinon
       .stub(Outlet, "findOneAndUpdate")
       .resolves({
-        exec: () => ({
-          userId: outletId,
-          ownerId: "owner-id",
-          walletId: "some-uuid",
-          status: OutletStatus.ACTIVE,
-        }),
+        userId: outletId,
+        ownerId: "owner-id",
+        walletId: "some-uuid",
+        status: OutletStatus.ACTIVE,
       });
 
     const response = await OutletService.switchOutletSuspendedStatus({
