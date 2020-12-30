@@ -41,11 +41,7 @@ export const fetchTransactions = ({
   return get({ client, path });
 };
 
-export const fetchTransactionsCategorySummary = ({
-  userId,
-  dateFrom,
-  dateTo,
-}) => {
+export const transactionsCategorySummary = ({ userId, dateFrom, dateTo }) => {
   const client = restifyRequest();
 
   const path = {
