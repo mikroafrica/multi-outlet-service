@@ -9,18 +9,15 @@ _Request Body_
 
 ```javascript
 {
-    "firstName": "Alex",
-    "lastName": "Snow",
-    "email": "aslan.alice@extraale.com",
+    "firstName": "Mavis",
+    "lastName": "Doe",
+    "email": "andry.harshaan@usweek.net",
     "password": "P@ssword123",
     "profileImageId": "image-id",
     "gender": "MALE",
-    "phoneNumber": "08034767464",
+    "phoneNumber": "08031290924",
     "businessName": "GOOD BUSINESS",
-    "address": "12 Adewole Street",
-    "state": "Abuja",
-    "lga": "Garki",
-    "dob": "01-07-1990"
+    "noOfOutlets": "0-10"
 }
 ```
 
@@ -33,15 +30,15 @@ _Response Body_
         "id": "5fce3ef6e1954d0f532051fd",
         "firstName": "alex",
         "lastName": "snow",
-        "dateOfBirth": "01-07-1990",
+        "dateOfBirth": null,
         "profileImageId": null,
-        "gender": "UNDEFINED",
+        "gender": "MALE",
         "businessName": "good business",
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "aslan.alice@extraale.com",
-        "phoneNumber": "+234 803 476 7464",
-        "phoneCarrier": "mtn",
+        "phoneNumber": "08034767464",
+        "phoneCarrier": "",
         "userType": "OUTLET_OWNER",
         "tierLevel": null,
         "fcmToken": null,
@@ -57,7 +54,8 @@ _Response Body_
         "ninVerified": false,
         "utilityImageIdVerified": false,
         "identificationImageVerified": false,
-        "placeOfBusinessImageVerified": false
+        "placeOfBusinessImageVerified": false,
+        "noOfOutlets": "0-10"
     }
 }
 ```
@@ -1099,14 +1097,95 @@ _Response Body_
 {
     "status": true,
     "data": {
-        "count": 490,
-        "success": 275,
-        "pending": 180,
-        "failed": 16,
-        "successAmount": 1004499,
-        "pendingAmount": 71900,
-        "failedAmount": 12598,
-        "totalTransactionsAmount": 1088997
+        "summary": {
+            "count": 533,
+            "success": 297,
+            "pending": 201,
+            "failed": 16,
+            "successAmount": 1007923,
+            "pendingAmount": 74792,
+            "failedAmount": 12598,
+            "totalTransactionsAmount": 1095313
+        },
+        "types": [
+            {
+                "count": 114,
+                "type": "Savings",
+                "success": 114,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 201769,
+                "pendingAmount": 0,
+                "failedAmount": 0,
+                "percentageAmount": 20.02
+            },
+            {
+                "count": 167,
+                "type": "Transfer",
+                "success": 12,
+                "pending": 150,
+                "failed": 5,
+                "successAmount": 1484,
+                "pendingAmount": 53991,
+                "failedAmount": 5173,
+                "percentageAmount": 0.15
+            },
+            {
+                "count": 4,
+                "type": "Wallet TopUp",
+                "success": 4,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 70000,
+                "pendingAmount": 0,
+                "failedAmount": 0,
+                "percentageAmount": 6.94
+            },
+            {
+                "count": 68,
+                "type": "P2P",
+                "success": 65,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 101794,
+                "pendingAmount": 0,
+                "failedAmount": 0,
+                "percentageAmount": 10.1
+            },
+            {
+                "count": 33,
+                "type": "Cash",
+                "success": 33,
+                "pending": 0,
+                "failed": 0,
+                "successAmount": 464494,
+                "pendingAmount": 0,
+                "failedAmount": 0,
+                "percentageAmount": 46.08
+            },
+            {
+                "count": 86,
+                "type": "Withdrawal",
+                "success": 56,
+                "pending": 3,
+                "failed": 11,
+                "successAmount": 145424,
+                "pendingAmount": 3501,
+                "failedAmount": 7425,
+                "percentageAmount": 14.43
+            },
+            {
+                "count": 61,
+                "type": "Bills",
+                "success": 13,
+                "pending": 48,
+                "failed": 0,
+                "successAmount": 22958,
+                "pendingAmount": 17300,
+                "failedAmount": 0,
+                "percentageAmount": 2.28
+            }
+        ]
     }
 }
 ```
