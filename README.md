@@ -9,18 +9,15 @@ _Request Body_
 
 ```javascript
 {
-    "firstName": "Alex",
-    "lastName": "Snow",
-    "email": "aslan.alice@extraale.com",
+    "firstName": "Mavis",
+    "lastName": "Doe",
+    "email": "andry.harshaan@usweek.net",
     "password": "P@ssword123",
     "profileImageId": "image-id",
     "gender": "MALE",
-    "phoneNumber": "08034767464",
+    "phoneNumber": "08031290924",
     "businessName": "GOOD BUSINESS",
-    "address": "12 Adewole Street",
-    "state": "Abuja",
-    "lga": "Garki",
-    "dob": "01-07-1990"
+    "noOfOutlets": "0-10"
 }
 ```
 
@@ -33,15 +30,15 @@ _Response Body_
         "id": "5fce3ef6e1954d0f532051fd",
         "firstName": "alex",
         "lastName": "snow",
-        "dateOfBirth": "01-07-1990",
+        "dateOfBirth": null,
         "profileImageId": null,
-        "gender": "UNDEFINED",
+        "gender": "MALE",
         "businessName": "good business",
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "aslan.alice@extraale.com",
-        "phoneNumber": "+234 803 476 7464",
-        "phoneCarrier": "mtn",
+        "phoneNumber": "08034767464",
+        "phoneCarrier": "",
         "userType": "OUTLET_OWNER",
         "tierLevel": null,
         "fcmToken": null,
@@ -57,7 +54,8 @@ _Response Body_
         "ninVerified": false,
         "utilityImageIdVerified": false,
         "identificationImageVerified": false,
-        "placeOfBusinessImageVerified": false
+        "placeOfBusinessImageVerified": false,
+        "noOfOutlets": "0-10"
     }
 }
 ```
