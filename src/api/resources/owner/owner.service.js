@@ -8,6 +8,7 @@ import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
+import { TempOwner } from "./temp.owner.model";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -38,6 +39,12 @@ export const signupMultiOutletOwner = async (params) => {
 
       try {
         await AuthService.signup(authServiceSignUpParams(params, userId));
+        const tempOwner = new TempOwner({
+          userId,
+          phoneNumber: params.phoneNumber,
+          noOfOutlets: params.noOfOutlets,
+        });
+        await tempOwner.save();
         return Promise.resolve({
           statusCode: OK,
           data: outletOwnerData.data,
@@ -120,7 +127,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
       const userDetailsData = userDetails.data.data;
 
       // CHECK TO SEE THAT WALLET-ID HAS BEEN MAPPED TO USER ON THE OUTLET SERVICE
-      const owner = await Owner.findOne({
+      let owner = await Owner.findOne({
         userId,
       });
 
@@ -130,9 +137,16 @@ export const loginMultiOutletOwner = async ({ params }) => {
           userDetailsData.store[0].wallet.length > 0
         ) {
           const walletId = userDetailsData.store[0].wallet[0].id;
+          const tempOwner = await TempOwner.findOne({ userId });
 
-          const createdOwner = new Owner({ walletId, userId });
+          const createdOwner = new Owner({
+            walletId,
+            userId,
+            phoneNumber: tempOwner.phoneNumber,
+            noOfOutlets: tempOwner.noOfOutlets,
+          });
           await createdOwner.save();
+          owner = createdOwner;
         } else {
           return Promise.reject({
             statusCode: BAD_REQUEST,
@@ -148,6 +162,8 @@ export const loginMultiOutletOwner = async ({ params }) => {
         bankCode: store.bankCode,
       };
 
+      userDetailsData.phoneNumber = owner.phoneNumber;
+      userDetailsData.noOfOutlets = owner.noOfOutlets;
       loginResponseData.data = {
         ...loginResponseData.data,
         ...ownerAccountDetails,
@@ -378,12 +394,8 @@ export const updateUser = async ({ params, ownerId }) => {
     lastName: Joi.string(),
     phoneNumber: Joi.string(),
     businessName: Joi.string(),
-    address: Joi.string(),
     gender: Joi.string(),
-    state: Joi.string(),
-    lga: Joi.string(),
     profileImageId: Joi.string(),
-    dob: Joi.string(),
   });
 
   const validateSchema = Joi.validate(params, schema);
@@ -460,16 +472,13 @@ const validateSignupParamsSchema = (params) => {
   const schema = Joi.object().keys({
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
-    email: Joi.string().email(),
-    phoneNumber: Joi.string(),
+    email: Joi.string().email().required(),
+    phoneNumber: Joi.string().required(),
     password: Joi.string().required(),
     businessName: Joi.string().required(),
-    address: Joi.string().required(),
     gender: Joi.string().required(),
-    state: Joi.string().required(),
-    lga: Joi.string().required(),
+    noOfOutlets: Joi.string().required(),
     profileImageId: Joi.string(),
-    dob: Joi.string().required(),
   });
 
   return Joi.validate(params, schema);
