@@ -24,12 +24,9 @@ describe("Owner service Tests", function () {
     phoneNumber: "08023548653",
     password: "P@ssword123",
     businessName: "Active Business",
-    address: "12 Awolowo drive",
     gender: "MALE",
-    state: "Lagos",
-    lga: "Ikeja",
     profileImageId: "https://url-to-visit.png",
-    dob: "10-09-1990",
+    noOfOutlets: "5-10",
   };
 
   const loginParams = {
@@ -443,7 +440,6 @@ describe("Owner service Tests", function () {
       firstName: "John",
       lastName: "Doe",
       businessName: "Good Stores",
-      address: "12 Salami Street",
     };
 
     const mockUserDetailsResponse = {
@@ -488,7 +484,6 @@ describe("Owner service Tests", function () {
       firstName: "John",
       lastName: "Doe",
       businessName: "Good Stores",
-      address: "12 Salami Street",
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
@@ -515,7 +510,6 @@ describe("Owner service Tests", function () {
       firstName: "John",
       lastName: "Doe",
       businessName: "Good Stores",
-      address: "12 Salami Street",
     };
 
     const mockUserDetailsResponse = {
