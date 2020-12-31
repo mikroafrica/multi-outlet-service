@@ -32,6 +32,9 @@ export const signupMultiOutletOwner = async (params) => {
       password: "",
     })}`
   );
+
+  params.personalPhoneNumber = params.phoneNumber;
+
   return ConsumerService.signup(params)
     .then(async (outletOwner) => {
       const outletOwnerData = outletOwner.data;
@@ -176,6 +179,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
           e
         )}`
       );
+
       if (e.statusCode === 403) {
         return Promise.reject({
           statusCode: e.statusCode,
