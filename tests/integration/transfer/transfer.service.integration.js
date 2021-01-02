@@ -25,7 +25,6 @@ describe("Owner service Tests", function () {
       lastName: "Awesome",
       fcmToken: "another-fcm-token",
       phoneNumber: "+234 9016 43 834",
-      businessName: "Great business",
     },
   };
 
@@ -36,7 +35,6 @@ describe("Owner service Tests", function () {
       lastName: "Cool",
       fcmToken: "some-fcm-token",
       phoneNumber: "+234 8145 834",
-      businessName: "Good business",
     },
   };
 

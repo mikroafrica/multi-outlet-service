@@ -16,7 +16,6 @@ _Request Body_
     "profileImageId": "image-id",
     "gender": "MALE",
     "phoneNumber": "08031290924",
-    "businessName": "GOOD BUSINESS",
     "noOfOutlets": "0-10"
 }
 ```
@@ -33,7 +32,7 @@ _Response Body_
         "dateOfBirth": null,
         "profileImageId": null,
         "gender": "MALE",
-        "businessName": "good business",
+        "businessName": null,
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "aslan.alice@extraale.com",
@@ -109,8 +108,8 @@ _Response Body_
         "lastName": "snow",
         "dateOfBirth": "01-07-1990",
         "profileImageId": null,
-        "gender": "UNDEFINED",
-        "businessName": "good business",
+        "gender": "MALE",
+        "businessName": null,
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "aslan.alice@extraale.com",
@@ -166,8 +165,8 @@ _Response Body_
         "lastName": "snow",
         "dateOfBirth": "01-07-1990",
         "profileImageId": null,
-        "gender": "UNDEFINED",
-        "businessName": "good business",
+        "gender": "MALE",
+        "businessName": null,
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "elihu.tyking@extraale.com",
@@ -299,12 +298,7 @@ _Request Body_
     "lastName": "snow",
     "profileImageId": "image-id-2",
     "gender": "MALE",
-    "phoneNumber": "+234 803 476 4424",
-    "businessName": "Good business",
-    "address": "12 Adewole Street",
-    "state": "Abuja",
-    "lga": "Garki",
-    "dob": "01-07-1991"
+    "phoneNumber": "+234 803 476 4424"
 }
 ```
 
@@ -320,7 +314,7 @@ _Response Body_
         "dateOfBirth": "01-07-1991",
         "profileImageId": null,
         "gender": "MALE",
-        "businessName": "Good business",
+        "businessName": null,
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "coehn.jaheim@extraale.com",
@@ -385,7 +379,7 @@ _Response Body_
         "dateOfBirth": "01-07-1991",
         "profileImageId": null,
         "gender": "MALE",
-        "businessName": "Good business",
+        "businessName": null,
         "businessType": "OUTLET_OWNER",
         "username": null,
         "email": "coehn.jaheim@extraale.com",
