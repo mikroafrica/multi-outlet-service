@@ -393,14 +393,14 @@ export const updateUser = async ({ params, ownerId }) => {
     });
   }
 
-  const schema = Joi.object().keys({
-    firstName: Joi.string(),
-    lastName: Joi.string(),
-    phoneNumber: Joi.string(),
-    businessName: Joi.string(),
-    gender: Joi.string(),
-    profileImageId: Joi.string(),
-  });
+  const schema = Joi.object()
+    .keys({
+      firstName: Joi.string(),
+      lastName: Joi.string(),
+      gender: Joi.string(),
+      profileImageId: Joi.string(),
+    })
+    .unknown(true);
 
   const validateSchema = Joi.validate(params, schema);
   if (validateSchema.error) {
@@ -473,17 +473,18 @@ export const getUser = async ({ ownerId }) => {
 };
 
 const validateSignupParamsSchema = (params) => {
-  const schema = Joi.object().keys({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    email: Joi.string().email().required(),
-    phoneNumber: Joi.string().required(),
-    password: Joi.string().required(),
-    businessName: Joi.string().required(),
-    gender: Joi.string().required(),
-    noOfOutlets: Joi.string().required(),
-    profileImageId: Joi.string(),
-  });
+  const schema = Joi.object()
+    .keys({
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      email: Joi.string().email().required(),
+      phoneNumber: Joi.string().required(),
+      password: Joi.string().required(),
+      gender: Joi.string().required(),
+      noOfOutlets: Joi.string().required(),
+      profileImageId: Joi.string(),
+    })
+    .unknown(true);
 
   return Joi.validate(params, schema);
 };

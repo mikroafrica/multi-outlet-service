@@ -23,7 +23,6 @@ describe("Owner service Tests", function () {
     email: "johndoe@mikro.africa",
     phoneNumber: "08023548653",
     password: "P@ssword123",
-    businessName: "Active Business",
     gender: "MALE",
     profileImageId: "https://url-to-visit.png",
     noOfOutlets: "5-10",
@@ -439,7 +438,6 @@ describe("Owner service Tests", function () {
     const params = {
       firstName: "John",
       lastName: "Doe",
-      businessName: "Good Stores",
     };
 
     const mockUserDetailsResponse = {
@@ -447,7 +445,6 @@ describe("Owner service Tests", function () {
         userId,
         firstName: "Joe",
         lastName: "Doe",
-        businessName: "Great Stores",
       },
     };
 
@@ -456,7 +453,6 @@ describe("Owner service Tests", function () {
         userId,
         firstName: "John",
         lastName: "Doe",
-        businessName: "Good Stores",
         gender: "MALE",
       },
     };
@@ -483,7 +479,6 @@ describe("Owner service Tests", function () {
     const params = {
       firstName: "John",
       lastName: "Doe",
-      businessName: "Good Stores",
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
@@ -509,7 +504,6 @@ describe("Owner service Tests", function () {
     const params = {
       firstName: "John",
       lastName: "Doe",
-      businessName: "Good Stores",
     };
 
     const mockUserDetailsResponse = {
@@ -517,7 +511,6 @@ describe("Owner service Tests", function () {
         userId,
         firstName: "Joe",
         lastName: "Doe",
-        businessName: "Great Stores",
       },
     };
 
@@ -551,7 +544,6 @@ describe("Owner service Tests", function () {
         userId,
         firstName: "Joe",
         lastName: "Doe",
-        businessName: "Great Stores",
       },
     };
 
