@@ -12,6 +12,7 @@ import {
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
+import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -60,6 +61,12 @@ describe("Owner service Tests", function () {
       .reply(OK, mockResponse);
 
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(OK, {});
+
+    sinon.stub(TempOwner.prototype, "save").resolves({
+      userId: "user-id",
+      phoneNumber: "09024764875",
+      noOfOutlets: "5-10",
+    });
 
     const response = await OwnerService.signupMultiOutletOwner(signupParams);
 
@@ -465,6 +472,10 @@ describe("Owner service Tests", function () {
       .put(`/user/${userId}/profile`)
       .reply(OK, mockUpdateProfileResponse);
 
+    const findOneOwner = sinon
+      .stub(Owner, "findOne")
+      .resolves({ userId: "id", walletId: "74hr-nj3b4" });
+
     const response = await OwnerService.updateUser({
       params,
       ownerId: userId,
@@ -472,6 +483,9 @@ describe("Owner service Tests", function () {
 
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
+
+    findOneOwner.restore();
+    sinon.assert.calledOnce(findOneOwner);
   });
 
   it("should fail to update a owner if owner details cannot be found", async function () {
