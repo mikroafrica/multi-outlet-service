@@ -432,9 +432,11 @@ export const updateUser = async ({ params, ownerId }) => {
         userId: ownerId,
       });
       const responseData = updateUserResponse.data;
+      const owner = await Owner.findOne({ userId: ownerId });
+
       return Promise.resolve({
         statusCode: OK,
-        data: responseData.data,
+        data: { ...responseData.data, phoneNumber: owner.phoneNumber },
       });
     } catch (e) {
       logger.error(
