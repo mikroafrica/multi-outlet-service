@@ -145,8 +145,8 @@ export const loginMultiOutletOwner = async ({ params }) => {
           const createdOwner = new Owner({
             walletId,
             userId,
-            phoneNumber: tempOwner.phoneNumber,
-            noOfOutlets: tempOwner.noOfOutlets,
+            phoneNumber: tempOwner ? tempOwner.phoneNumber : "",
+            noOfOutlets: tempOwner ? tempOwner.noOfOutlets : "",
           });
           await createdOwner.save();
           owner = createdOwner;
@@ -165,8 +165,8 @@ export const loginMultiOutletOwner = async ({ params }) => {
         bankCode: store.bankCode,
       };
 
-      userDetailsData.phoneNumber = owner.phoneNumber;
-      userDetailsData.noOfOutlets = owner.noOfOutlets;
+      userDetailsData.phoneNumber = owner ? owner.phoneNumber : "";
+      userDetailsData.noOfOutlets = owner ? owner.noOfOutlets : "";
       loginResponseData.data = {
         ...loginResponseData.data,
         ...ownerAccountDetails,
@@ -436,7 +436,10 @@ export const updateUser = async ({ params, ownerId }) => {
 
       return Promise.resolve({
         statusCode: OK,
-        data: { ...responseData.data, phoneNumber: owner.phoneNumber },
+        data: {
+          ...responseData.data,
+          phoneNumber: owner ? owner.phoneNumber : "",
+        },
       });
     } catch (e) {
       logger.error(

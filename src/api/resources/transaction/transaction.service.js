@@ -175,7 +175,7 @@ export const outletTransactionSummary = async ({
     };
 
     const response = await TransactionService.fetchTransactionSummary({
-      outletId,
+      userId: outletId,
       dateFrom,
       dateTo,
     });
