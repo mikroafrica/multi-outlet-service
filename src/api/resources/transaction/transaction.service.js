@@ -242,7 +242,7 @@ const computeOutletTransactionTypes = (
     failedAmount: 0,
   };
 
-  const bills = ["airtime", "data", "cabletv", "phcn"];
+  const bills = ["airtime", "data", "cable tv", "phcn"];
 
   for (let transactionType of transactionTypes) {
     if (bills.includes(transactionType.type.toLowerCase())) {
