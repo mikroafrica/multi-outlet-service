@@ -60,7 +60,7 @@ export const fetchTransactionSummary = (req, res) => {
 
 export const fetchOutletTransactionSummary = (req, res) => {
   const outletId = req.params.id;
-  const dateFrom = req.query.dateFrom;
+  const dateFrom = req.query.dateFrom || 1601506800000;
   const dateTo = req.query.dateTo;
 
   outletTransactionSummary({ outletId, dateFrom, dateTo })
