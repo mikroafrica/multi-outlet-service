@@ -84,7 +84,7 @@ export const getTransactionsSummary = async ({
         { status: OutletStatus.SUSPENDED },
       ],
     },
-    { page, limit }
+    { page, limit, sort: { createdAt: -1 } }
   )
     .then(async (outlets) => {
       const outletDetails = await OutletService.fetchOutletDetails(

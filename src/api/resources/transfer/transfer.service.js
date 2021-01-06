@@ -57,7 +57,7 @@ export const walletTransfer = async ({
       params.recipientId = ownerId;
       params.customerBillerId = owner.walletId;
 
-      params.sourceName = `${outletDetailsData.firstName} ${outletDetailsData.lastName}`;
+      params.sourceName = `${outletDetailsData.businessName}`;
 
       params.recipientPhoneNumber = ownerDetailsData.phoneNumber;
       params.recipientName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
@@ -68,7 +68,7 @@ export const walletTransfer = async ({
       params.recipientId = outletId;
       params.customerBillerId = outlet.walletId;
 
-      params.sourceName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
+      params.sourceName = `Admin`;
 
       params.recipientPhoneNumber = outletDetailsData.phoneNumber;
       params.recipientName = `${outletDetailsData.firstName} ${outletDetailsData.lastName}`;
