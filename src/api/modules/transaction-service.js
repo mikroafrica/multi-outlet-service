@@ -66,7 +66,6 @@ export const fetchTransactionSummary = ({ userId, dateFrom, dateTo }) => {
       userId,
     },
   };
-  console.log(path);
   return get({ client, path });
 };
 
