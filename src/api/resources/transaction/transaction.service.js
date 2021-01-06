@@ -84,7 +84,7 @@ export const getTransactionsSummary = async ({
         { status: OutletStatus.SUSPENDED },
       ],
     },
-    { page, limit }
+    { page, limit, sort: { createdAt: -1 } }
   )
     .then(async (outlets) => {
       const outletDetails = await OutletService.fetchOutletDetails(
@@ -181,6 +181,7 @@ export const outletTransactionSummary = async ({
     });
     const responseData = response.data;
     const transactionSummaryResponse = responseData.data;
+    console.log(transactionSummaryResponse);
 
     const transactionKeys = Object.keys(outletTransactionSummary);
 
