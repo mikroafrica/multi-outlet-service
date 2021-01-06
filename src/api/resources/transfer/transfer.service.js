@@ -60,7 +60,7 @@ export const walletTransfer = async ({
       params.sourceName = `${outletDetailsData.businessName}`;
 
       params.recipientPhoneNumber = ownerDetailsData.phoneNumber;
-      params.recipientName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
+      params.recipientName = `Admin`;
       params.destinationFcmToken = "";
     } else if (destination === "outlet") {
       params.userWalletId = owner.walletId;
@@ -71,7 +71,7 @@ export const walletTransfer = async ({
       params.sourceName = `Admin`;
 
       params.recipientPhoneNumber = outletDetailsData.phoneNumber;
-      params.recipientName = `${outletDetailsData.firstName} ${outletDetailsData.lastName}`;
+      params.recipientName = `${outletDetailsData.businessName}`;
       params.destinationFcmToken = outletDetailsData.fcmToken;
     }
 
