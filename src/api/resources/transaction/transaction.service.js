@@ -169,12 +169,12 @@ export const outletTransactionSummary = async ({
       success: 0,
       pending: 0,
       failed: 0,
-      successAmount: 0,
+      successfulAmount: 0,
       pendingAmount: 0,
       failedAmount: 0,
     };
 
-    const response = await TransactionService.fetchTransactionSummary({
+    const response = await TransactionService.transactionsCategorySummary({
       userId: outletId,
       dateFrom,
       dateTo,
@@ -194,16 +194,16 @@ export const outletTransactionSummary = async ({
     }
 
     const {
-      successAmount,
+      successfulAmount,
       pendingAmount,
       failedAmount,
     } = outletTransactionSummary;
     outletTransactionSummary.totalTransactionsAmount =
-      successAmount + pendingAmount + failedAmount;
+      successfulAmount + pendingAmount + failedAmount;
 
     let outletTransactionTypesSummary = computeOutletTransactionTypes(
       transactionSummaryResponse,
-      successAmount
+      successfulAmount
     );
 
     return Promise.resolve({
@@ -237,7 +237,7 @@ const computeOutletTransactionTypes = (
     success: 0,
     pending: 0,
     failed: 0,
-    successAmount: 0,
+    successfulAmount: 0,
     pendingAmount: 0,
     failedAmount: 0,
   };
@@ -261,7 +261,7 @@ const computeOutletTransactionTypes = (
       };
     } else {
       transactionType.percentageAmount = +(
-        (transactionType.successAmount / totalSuccessAmount) *
+        (transactionType.successfulAmount / totalSuccessAmount) *
         100
       ).toFixed(2);
       computedTransactionTypes.push(transactionType);
@@ -269,7 +269,7 @@ const computeOutletTransactionTypes = (
   }
   if (billTransactions.count > 0) {
     billTransactions.percentageAmount = +(
-      (billTransactions.successAmount / totalSuccessAmount) *
+      (billTransactions.successfulAmount / totalSuccessAmount) *
       100
     ).toFixed(2);
     computedTransactionTypes.push(billTransactions);
