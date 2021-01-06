@@ -74,7 +74,7 @@ export const walletTransfer = async ({
       params.recipientName = `${outletDetailsData.businessName}`;
       params.destinationFcmToken = outletDetailsData.fcmToken;
     }
-
+    console.log(params);
     const uuid = uuidv4();
     params = {
       ...params,

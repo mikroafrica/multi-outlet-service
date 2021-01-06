@@ -39,7 +39,7 @@ export const fetchTransactionSummary = (req, res) => {
   const ownerId = req.user.userId;
 
   const dateFrom = req.query.dateFrom || 1601506800000;
-  const dateTo = req.query.dateTo || Date.now();
+  const dateTo = req.query.dateTo || Date.now() + 1000;
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
 
@@ -61,7 +61,7 @@ export const fetchTransactionSummary = (req, res) => {
 export const fetchOutletTransactionSummary = (req, res) => {
   const outletId = req.params.id;
   const dateFrom = req.query.dateFrom || 1601506800000;
-  const dateTo = req.query.dateTo || Date.now();
+  const dateTo = req.query.dateTo || Date.now() + 1000;
 
   outletTransactionSummary({ outletId, dateFrom, dateTo })
     .then(({ statusCode, data }) =>
