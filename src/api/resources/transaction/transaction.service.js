@@ -198,9 +198,21 @@ export const outletTransactionSummary = async ({
       pendingAmount,
       failedAmount,
     } = outletTransactionSummary;
-    outletTransactionSummary.totalTransactionsAmount =
-      successfulAmount + pendingAmount + failedAmount;
+    outletTransactionSummary.totalTransactionsAmount = +(
+      successfulAmount +
+      pendingAmount +
+      failedAmount
+    ).toFixed(2);
 
+    outletTransactionSummary.successfulAmount = +outletTransactionSummary.successfulAmount.toFixed(
+      2
+    );
+    outletTransactionSummary.pendingAmount = +outletTransactionSummary.pendingAmount.toFixed(
+      2
+    );
+    outletTransactionSummary.failedAmount = +outletTransactionSummary.failedAmount.toFixed(
+      2
+    );
     let outletTransactionTypesSummary = computeOutletTransactionTypes(
       transactionSummaryResponse,
       successfulAmount
