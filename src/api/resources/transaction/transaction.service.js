@@ -164,6 +164,18 @@ export const outletTransactionSummary = async ({
   dateTo,
 }) => {
   try {
+    let outletTransactionSummary = {
+      count: 0,
+      success: 0,
+      pending: 0,
+      failed: 0,
+      successfulAmount: 0,
+      pendingAmount: 0,
+      failedAmount: 0,
+      totalAmount: 0,
+    };
+
+    const transactionKeys = Object.keys(outletTransactionSummary);
     const response = await TransactionService.transactionsCategorySummary({
       userId: outletId,
       dateFrom,
@@ -171,10 +183,18 @@ export const outletTransactionSummary = async ({
     });
     const responseData = response.data;
     const transactionSummaryResponse = responseData.data;
-    let outletTransactionSummary = transactionCategoriesSummary(
-      transactionSummaryResponse,
-      true
-    );
+
+    for (let transactionKey of transactionKeys) {
+      let currentValue = 0.0;
+      // sum up the corresponding keys in the array
+      transactionSummaryResponse.forEach(function (data) {
+        currentValue += parseFloat(data[transactionKey] || 0);
+      });
+      // ensure the current value for the key is exactly in two decimal place
+      outletTransactionSummary[transactionKey] = parseFloat(
+        currentValue
+      ).toFixed(2);
+    }
 
     let outletTransactionTypesSummary = computeOutletTransactionTypes(
       transactionSummaryResponse,
@@ -201,45 +221,10 @@ export const outletTransactionSummary = async ({
   }
 };
 
-const transactionCategoriesSummary = (arr, format = false) => {
-  let outletTransactionSummary = {
-    count: 0,
-    success: 0,
-    pending: 0,
-    failed: 0,
-    successfulAmount: 0,
-    pendingAmount: 0,
-    failedAmount: 0,
-    totalAmount: 0,
-  };
-
-  const formatter = new Intl.NumberFormat();
-  const transactionKeys = Object.keys(outletTransactionSummary);
-
-  for (let transactionKey of transactionKeys) {
-    let currentValue = 0.0;
-    // sum up the corresponding keys in the array
-    arr.forEach(function (data) {
-      currentValue += parseFloat(data[transactionKey] || 0);
-    });
-    // ensure the current value for the key is exactly in two decimal place
-    const totalValue = parseFloat(currentValue).toFixed(2);
-    if (format) {
-      outletTransactionSummary[transactionKey] = formatter.format(totalValue);
-    } else {
-      outletTransactionSummary[transactionKey] = totalValue;
-    }
-  }
-  return outletTransactionSummary;
-};
-
-const computeOutletTransactionTypes = (transactionTypes) => {
-  let outletTransactionSummary = transactionCategoriesSummary(
-    transactionTypes,
-    false
-  );
-  const totalSuccessAmount = outletTransactionSummary.successfulAmount;
-
+const computeOutletTransactionTypes = (
+  transactionTypes,
+  totalSuccessAmount
+) => {
   let computedTransactionTypes = [];
   let billTransactions = {
     count: 0,
