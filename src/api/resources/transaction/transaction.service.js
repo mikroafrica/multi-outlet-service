@@ -172,6 +172,7 @@ export const outletTransactionSummary = async ({
       successfulAmount: 0,
       pendingAmount: 0,
       failedAmount: 0,
+      totalAmount: 0,
     };
 
     const response = await TransactionService.transactionsCategorySummary({
@@ -182,40 +183,23 @@ export const outletTransactionSummary = async ({
     const responseData = response.data;
     const transactionSummaryResponse = responseData.data;
 
+    const formatter = new Intl.NumberFormat();
     const transactionKeys = Object.keys(outletTransactionSummary);
 
     for (let transactionKey of transactionKeys) {
-      outletTransactionSummary[
-        transactionKey
-      ] = transactionSummaryResponse.reduce(
-        (acc = 0, curr) => acc + curr[transactionKey],
-        0
-      );
+      let currentValue = 0.0;
+      // sum up the corresponding keys in the array
+      transactionSummaryResponse.forEach(function (data) {
+        currentValue += parseFloat(data[transactionKey] || 0);
+      });
+      // ensure the current value for the key is exactly in two decimal place
+      const totalValue = parseFloat(currentValue).toFixed(2);
+      outletTransactionSummary[transactionKey] = formatter.format(totalValue);
     }
 
-    const {
-      successfulAmount,
-      pendingAmount,
-      failedAmount,
-    } = outletTransactionSummary;
-    outletTransactionSummary.totalTransactionsAmount = +(
-      successfulAmount +
-      pendingAmount +
-      failedAmount
-    ).toFixed(2);
-
-    outletTransactionSummary.successfulAmount = +outletTransactionSummary.successfulAmount.toFixed(
-      2
-    );
-    outletTransactionSummary.pendingAmount = +outletTransactionSummary.pendingAmount.toFixed(
-      2
-    );
-    outletTransactionSummary.failedAmount = +outletTransactionSummary.failedAmount.toFixed(
-      2
-    );
     let outletTransactionTypesSummary = computeOutletTransactionTypes(
       transactionSummaryResponse,
-      successfulAmount
+      outletTransactionSummary.successfulAmount
     );
 
     return Promise.resolve({
