@@ -164,17 +164,6 @@ export const outletTransactionSummary = async ({
   dateTo,
 }) => {
   try {
-    let outletTransactionSummary = {
-      count: 0,
-      success: 0,
-      pending: 0,
-      failed: 0,
-      successfulAmount: 0,
-      pendingAmount: 0,
-      failedAmount: 0,
-      totalAmount: 0,
-    };
-
     const response = await TransactionService.transactionsCategorySummary({
       userId: outletId,
       dateFrom,
@@ -182,20 +171,10 @@ export const outletTransactionSummary = async ({
     });
     const responseData = response.data;
     const transactionSummaryResponse = responseData.data;
-
-    const formatter = new Intl.NumberFormat();
-    const transactionKeys = Object.keys(outletTransactionSummary);
-
-    for (let transactionKey of transactionKeys) {
-      let currentValue = 0.0;
-      // sum up the corresponding keys in the array
-      transactionSummaryResponse.forEach(function (data) {
-        currentValue += parseFloat(data[transactionKey] || 0);
-      });
-      // ensure the current value for the key is exactly in two decimal place
-      const totalValue = parseFloat(currentValue).toFixed(2);
-      outletTransactionSummary[transactionKey] = formatter.format(totalValue);
-    }
+    let outletTransactionSummary = transactionCategoriesSummary(
+      transactionSummaryResponse,
+      true
+    );
 
     let outletTransactionTypesSummary = computeOutletTransactionTypes(
       transactionSummaryResponse,
@@ -222,10 +201,45 @@ export const outletTransactionSummary = async ({
   }
 };
 
-const computeOutletTransactionTypes = (
-  transactionTypes,
-  totalSuccessAmount
-) => {
+const transactionCategoriesSummary = (arr, format = false) => {
+  let outletTransactionSummary = {
+    count: 0,
+    success: 0,
+    pending: 0,
+    failed: 0,
+    successfulAmount: 0,
+    pendingAmount: 0,
+    failedAmount: 0,
+    totalAmount: 0,
+  };
+
+  const formatter = new Intl.NumberFormat();
+  const transactionKeys = Object.keys(outletTransactionSummary);
+
+  for (let transactionKey of transactionKeys) {
+    let currentValue = 0.0;
+    // sum up the corresponding keys in the array
+    arr.forEach(function (data) {
+      currentValue += parseFloat(data[transactionKey] || 0);
+    });
+    // ensure the current value for the key is exactly in two decimal place
+    const totalValue = parseFloat(currentValue).toFixed(2);
+    if (format) {
+      outletTransactionSummary[transactionKey] = formatter.format(totalValue);
+    } else {
+      outletTransactionSummary[transactionKey] = totalValue;
+    }
+  }
+  return outletTransactionSummary;
+};
+
+const computeOutletTransactionTypes = (transactionTypes) => {
+  let outletTransactionSummary = transactionCategoriesSummary(
+    transactionTypes,
+    false
+  );
+  const totalSuccessAmount = outletTransactionSummary.successfulAmount;
+
   let computedTransactionTypes = [];
   let billTransactions = {
     count: 0,
@@ -236,6 +250,7 @@ const computeOutletTransactionTypes = (
     successfulAmount: 0,
     pendingAmount: 0,
     failedAmount: 0,
+    totalAmount: 0,
   };
 
   const bills = ["airtime", "data", "cable tv", "phcn"];
@@ -248,12 +263,13 @@ const computeOutletTransactionTypes = (
         success: billTransactions.success + transactionType.success,
         pending: billTransactions.pending + transactionType.pending,
         failed: billTransactions.failed + transactionType.failed,
-        successAmount:
-          billTransactions.successAmount + transactionType.successAmount,
+        successfulAmount:
+          billTransactions.successfulAmount + transactionType.successfulAmount,
         pendingAmount:
           billTransactions.pendingAmount + transactionType.pendingAmount,
         failedAmount:
           billTransactions.failedAmount + transactionType.failedAmount,
+        totalAmount: billTransactions.totalAmount + transactionType.totalAmount,
       };
     } else {
       transactionType.percentageAmount = +(
