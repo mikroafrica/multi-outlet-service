@@ -79,10 +79,6 @@ export const getTransactionsSummary = async ({
   return Outlet.paginate(
     {
       ownerId,
-      $or: [
-        { status: OutletStatus.ACTIVE },
-        { status: OutletStatus.SUSPENDED },
-      ],
     },
     { page, limit, sort: { createdAt: -1 } }
   )

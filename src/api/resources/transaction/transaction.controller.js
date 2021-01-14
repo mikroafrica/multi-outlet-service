@@ -38,8 +38,8 @@ export const fetchTransactionsByOutletId = (req, res) => {
 export const fetchTransactionSummary = (req, res) => {
   const ownerId = req.user.userId;
 
-  const dateFrom = req.query.dateFrom || 1578000000000;
-  const dateTo = req.query.dateTo || Date.now();
+  const dateFrom = req.query.dateFrom;
+  const dateTo = req.query.dateTo;
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
 
