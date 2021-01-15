@@ -339,7 +339,7 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
       {
         ownerId,
       },
-      { page, limit }
+      { page, limit, sort: { createdAt: -1 } }
     );
 
     const outletDetails = await fetchOutletDetails(outlets.docs);

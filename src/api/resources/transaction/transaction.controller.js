@@ -1,6 +1,5 @@
 import {
   fetchOutletTransactions,
-  getTransactionsCategorySummary,
   getTransactionsSummary,
   outletTransactionSummary,
 } from "./transaction.service.js";
@@ -60,7 +59,7 @@ export const fetchTransactionSummary = (req, res) => {
 
 export const fetchOutletTransactionSummary = (req, res) => {
   const outletId = req.params.id;
-  const dateFrom = req.query.dateFrom || 1578000000000;
+  const dateFrom = req.query.dateFrom;
   const dateTo = req.query.dateTo;
 
   outletTransactionSummary({ outletId, dateFrom, dateTo })
