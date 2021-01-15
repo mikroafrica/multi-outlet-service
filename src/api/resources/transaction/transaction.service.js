@@ -120,11 +120,12 @@ const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
         dateFrom,
         dateTo,
       };
-      const outletTransactions = await TransactionService.fetchTransactionSummary(
+      const outletTransactions = await TransactionService.transactionsCategorySummary(
         params
       );
 
       const outletTransactionData = outletTransactions.data.data;
+
       let transactionSummary = {
         transactionValue: 0,
         transactionVolume: 0,
@@ -136,7 +137,7 @@ const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
           0
         );
         transactionSummary.transactionValue = outletTransactionData.reduce(
-          (total, curr) => curr.successAmount + total,
+          (total, curr) => curr.successfulAmount + total,
           0
         );
       }
