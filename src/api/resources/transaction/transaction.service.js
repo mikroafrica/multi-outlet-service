@@ -2,7 +2,6 @@ import async from "async";
 import { BAD_REQUEST, OK } from "../../modules/status.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import logger from "../../../logger.js";
-import { OutletStatus } from "../outlet/outlet.status";
 import { Outlet } from "../outlet/outlet.model";
 import * as OutletService from "../outlet/outlet.service";
 

@@ -1,6 +1,5 @@
 import {
   fetchOutletTransactions,
-  getTransactionsCategorySummary,
   getTransactionsSummary,
   outletTransactionSummary,
 } from "./transaction.service.js";
