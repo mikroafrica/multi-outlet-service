@@ -2,7 +2,6 @@ import async from "async";
 import { BAD_REQUEST, OK } from "../../modules/status.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import logger from "../../../logger.js";
-import { OutletStatus } from "../outlet/outlet.status";
 import { Outlet } from "../outlet/outlet.model";
 import * as OutletService from "../outlet/outlet.service";
 
@@ -79,10 +78,6 @@ export const getTransactionsSummary = async ({
   return Outlet.paginate(
     {
       ownerId,
-      $or: [
-        { status: OutletStatus.ACTIVE },
-        { status: OutletStatus.SUSPENDED },
-      ],
     },
     { page, limit, sort: { createdAt: -1 } }
   )
@@ -124,11 +119,12 @@ const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
         dateFrom,
         dateTo,
       };
-      const outletTransactions = await TransactionService.fetchTransactionSummary(
+      const outletTransactions = await TransactionService.transactionsCategorySummary(
         params
       );
 
       const outletTransactionData = outletTransactions.data.data;
+
       let transactionSummary = {
         transactionValue: 0,
         transactionVolume: 0,
@@ -140,7 +136,7 @@ const fetchOutletsTransactionSummary = async (outlets, dateFrom, dateTo) => {
           0
         );
         transactionSummary.transactionValue = outletTransactionData.reduce(
-          (total, curr) => curr.successAmount + total,
+          (total, curr) => curr.successfulAmount + total,
           0
         );
       }
