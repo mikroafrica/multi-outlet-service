@@ -3,16 +3,7 @@ import * as AuthService from "../api/modules/auth-service.js";
 import logger from "../logger.js";
 
 export const secureRoute = (req, res, next) => {
-  const path = req.route.path;
-
-  if (
-    path.includes("signup") ||
-    path.includes("login") ||
-    path.includes("email-verification") ||
-    path.includes("email-validation") ||
-    path.includes("reset-password-request") ||
-    path.includes("reset-password")
-  ) {
+  if (allowRoutes(req)) {
     return next();
   }
 
@@ -43,4 +34,29 @@ export const secureRoute = (req, res, next) => {
         message: err.message || "Your session has expired",
       });
     });
+};
+
+const allowRoutes = (req) => {
+  const path = req.route.path;
+  const method = req.method;
+
+  if (Object.is(method, "GET") && path === "/") {
+    return true;
+  }
+
+  const routes = [
+    "login",
+    "signup",
+    "metrics",
+    "reset-password",
+    "email-validation",
+    "email-verification",
+    "reset-password-request",
+  ];
+  for (let i = 0; i < routes.length; i++) {
+    if (path.includes(routes[i])) {
+      return true;
+    }
+  }
+  return false;
 };
