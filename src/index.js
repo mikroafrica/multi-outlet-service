@@ -1,12 +1,5 @@
-import client from "prom-client";
-import * as Prometheus from "./metrics";
 import server from "./server.js";
 import logger from "./logger.js";
-
-server.use(Prometheus.requestCounters);
-server.use(Prometheus.responseCounters);
-server.use(Prometheus.hisResCounters);
-Prometheus.metricsEndpoint(server);
 
 process.on("uncaughtException", function (err) {
   logger.error(`uncaught error has been fired with Error: ${err}`);

@@ -1,14 +1,22 @@
 import Joi from "joi";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as AuthService from "../../modules/auth-service.js";
-import { BAD_REQUEST, OK } from "../../modules/status.js";
+import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
-import { UserType } from "./user.type.js";
+import { UserRole } from "./user.role.js";
 import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
 import { TempOwner } from "./temp.owner.model";
+import { Commission } from "./commission.model";
+import { OutletStatus } from "../outlet/outlet.status";
+import { UserType, PartnerApproval } from "./user.type";
+import { CommissionType, TransactionType } from "./commission.type";
+import { Outlet } from "../outlet/outlet.model";
+import { Verification } from "../outlet/verification.model";
+import { validatePhone } from "../../modules/util";
+import { sendVerificationOtp } from "../outlet/outlet.service";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -48,6 +56,7 @@ export const signupMultiOutletOwner = async (params) => {
           noOfOutlets: params.noOfOutlets,
         });
         await tempOwner.save();
+
         return Promise.resolve({
           statusCode: OK,
           data: outletOwnerData.data,
@@ -85,7 +94,7 @@ const authServiceSignUpParams = (params, userId) => {
     username: params.email,
     userId: userId,
     password: params.password,
-    role: UserType.ADMIN,
+    role: UserRole.ADMIN,
   };
 };
 
@@ -385,6 +394,24 @@ export const changePassword = async ({ params, ownerId }) => {
   }
 };
 
+export const getUser = async ({ ownerId }) => {
+  try {
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
+
+    const userDetailsData = userDetails.data;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: userDetailsData.data,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch owner details. Please try again",
+    });
+  }
+};
+
 export const updateUser = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
@@ -459,20 +486,199 @@ export const updateUser = async ({ params, ownerId }) => {
   }
 };
 
-export const getUser = async ({ ownerId }) => {
+export const getUsers = async ({ usertype, page, limit }) => {
   try {
-    const userDetails = await ConsumerService.getUserDetails(ownerId);
+    const userType = UserType[usertype];
+    if (!userType) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Invalid user type supplied. Please supply a valid user type",
+      });
+    }
 
-    const userDetailsData = userDetails.data;
+    let filter = { userType: usertype };
+
+    const owners = await Owner.paginate(filter, {
+      page,
+      limit,
+      sort: { createdAt: -1 },
+    });
 
     return Promise.resolve({
       statusCode: OK,
-      data: userDetailsData.data,
+      data: {
+        page: owners.page,
+        pages: owners.pages,
+        limit: owners.limit,
+        total: owners.total,
+        list: owners.docs,
+      },
     });
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not fetch owner details. Please try again",
+      message: "Could not fetch users by type. Please try again",
+    });
+  }
+};
+
+export const createCommission = async ({
+  params,
+  ownerId,
+  userId,
+  transaction,
+  commissiontype,
+  withdrawallevel,
+}) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const schema = Joi.object().keys({
+    condition: Joi.number().required(),
+    amount: Joi.number().required(),
+  });
+
+  const validateSchema = Joi.validate(params, schema);
+
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    // const withdrawalLevels = WithdrawalLevel[withdrawallevel];
+    const userType = UserType.PARTNER;
+    const commissionType = CommissionType[commissiontype];
+    if (!commissionType) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message:
+          "Invalid commission type supplied. Please supply a valid commission type",
+      });
+    }
+
+    logger.info(`user type supplied as ${userType}`);
+
+    //create commission based on defined condition
+    let condition;
+    let amount;
+    if (
+      commissiontype === "ONBOARDING" ||
+      commissiontype === "THRIFT_ONBOARDING"
+    ) {
+      condition = params.condition;
+      amount = params.amount;
+    } else if (commissiontype === "TRANSACTION") {
+      if (transaction === TransactionType.TRANSFERS) {
+        condition = params.condition;
+        amount = params.amount;
+      } else if (transaction === TransactionType.WITHDRAWALS) {
+        if (
+          withdrawallevel === "LEVEL1" ||
+          withdrawallevel === "LEVEL2" ||
+          withdrawallevel === "LEVEL3" ||
+          withdrawalLevel === "LEVEL4" ||
+          withdrawallevel === "LEVEL5"
+        ) {
+          condition = params.condition;
+          amount = params.amount;
+        }
+      }
+    }
+
+    // check if the currently logged in person has an admin role
+    const adminCheck = await Owner.findOne({ userId: ownerId });
+    if (adminCheck.role !== "admin") {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Commissions can only be created by an admin",
+      });
+    }
+
+    const commission = new Commission({
+      condition: condition,
+      amount: amount,
+      owner: userId,
+      type: commissionType,
+    });
+
+    await commission.save();
+
+    logger.info(`commission created as ${commission}`);
+
+    //set commission for the partner
+    const partner = await Owner.findOne({
+      userId: userId,
+      userType: userType,
+    });
+    if (!partner) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Cannot set commission for non-partners",
+      });
+    }
+
+    logger.info(`commision created for ${partner}`);
+    partner.commissions.push(commission);
+    await partner.save();
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: commission,
+      partner,
+    });
+  } catch (err) {
+    logger.error(
+      `An error occurred while trying to create commission: ${JSON.stringify(
+        err
+      )}`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: err.message || "Could not create commission. Please try again",
+    });
+  }
+};
+
+export const getPartnerCommissions = async ({ userId, commissiontype }) => {
+  try {
+    const commissionType = CommissionType[commissiontype];
+
+    const partner = await Owner.findOne({ userId });
+    // .populate("commission").exec();
+    if (!partner) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Partner not found",
+      });
+    }
+
+    // const createdAt = partner.createdAt;
+    // const updatedAt = partner.updatedAt;
+    // const approvalTime = updatedAt - createdAt;
+    let approval;
+    const commissionsCheck = partner.commissions;
+    if (commissionsCheck === null) {
+      partner.approval = PartnerApproval.PENDING;
+    } else {
+      partner.approval = PartnerApproval.APPROVED;
+    }
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: partner,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch commissions for partner. Please try again",
     });
   }
 };

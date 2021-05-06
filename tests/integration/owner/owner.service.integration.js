@@ -5,6 +5,7 @@ import sinon from "sinon";
 import chaiAsPromised from "chai-as-promised";
 import * as OwnerService from "../../../src/api/resources/owner/owner.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
+import { Commission } from "../../../src/api/resources/owner/commission.model";
 import {
   BAD_REQUEST,
   CONFLICT,
@@ -57,7 +58,7 @@ describe("Owner service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post("/user/create/OUTLET_PARTNER")
       .reply(OK, mockResponse);
 
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(OK, {});
@@ -80,7 +81,7 @@ describe("Owner service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post("/user/create/OUTLET_PARTNER")
       .reply(BAD_REQUEST, mockResponse);
 
     try {
@@ -99,7 +100,7 @@ describe("Owner service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post("/user/create/OUTLET_PARTNER")
       .reply(OK, mockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
@@ -591,5 +592,86 @@ describe("Owner service Tests", function () {
       expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
+  });
+
+  it("should fetch users when a valid usertype is supplied", async function () {
+    const usertype = "OUTLET_OWNER";
+    const userType = "OUTLET_OWNER";
+    const filter = { userType: usertype };
+    const page = 1;
+    const limit = 2;
+
+    const findOwners = sinon
+      .stub(Owner, "paginate")
+      .resolves({ filter, page, limit });
+
+    const response = await OwnerService.getUsers({ usertype, page, limit });
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+
+    findOwners.restore();
+    sinon.assert.calledOnce(findOwners);
+  });
+
+  // it("should create commission for a partner when a valid commisiontype is supplied", async function () {
+  //   const ownerId = "tyuyj87";
+  //   const userId = "vhvuyi9";
+  //   const commissiontype = "ONBOARDING";
+  //   const commissionType = "ONBOARDING";
+  //   const userType = "OUTLET_OWNER";
+  //
+  //   const params = {
+  //     condition: 1234,
+  //     amount: 3265,
+  //   };
+  //
+  //   const checkAdmin = sinon.stub(Owner, "findOne")
+  //       .resolves({ userId: userId })
+  //
+  //   const savedCommission = new Commission();
+  //   sinon.stub(savedCommission, "save").resolves({
+  //     condition: params.condition,
+  //     amount: params.amount,
+  //     owner: ownerId,
+  //     type: commissionType,
+  //   });
+  //
+  //
+  //   const findOnePartner = sinon.stub(Owner, "findOne")
+  //       .resolves({ userId: userId, userType: "OUTLET_PARTNER" });
+  //
+  //   const response = await OwnerService.createCommission({
+  //     params,
+  //     ownerId: ownerId,
+  //     userId: userId,
+  //     commissiontype: commissiontype,
+  //   });
+  //
+  //   expect(response.statusCode).equals(OK);
+  //   expect(response.data).to.exist;
+  //
+  //   checkAdmin.restore();
+  //   sinon.assert.calledOnce(checkAdmin);
+  //   findOnePartner.restore();
+  //   sinon.assert.calledOnce(findOnePartner);
+  // });
+
+  it("should successfully fetch commissions for a patner when userId is supplied", async function () {
+    const userId = "rtyghbnj79";
+    const commissiontype = "ONBOARDING";
+
+    const findPartner = sinon.stub(Owner, "findOne").resolves({ userId });
+
+    const response = await OwnerService.getPartnerCommissions({
+      userId,
+      commissiontype,
+    });
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+
+    findPartner.restore();
+    sinon.assert.calledOnce(findPartner);
   });
 });

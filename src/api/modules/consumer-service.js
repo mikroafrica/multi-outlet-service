@@ -17,7 +17,7 @@ const restifyRequest = function () {
 
 export const signup = (params) => {
   const client = restifyRequest();
-  const path = "/user/create/OUTLET_OWNER";
+  const path = "/user/create/OUTLET_PARTNER";
 
   return post({ client, path, params });
 };

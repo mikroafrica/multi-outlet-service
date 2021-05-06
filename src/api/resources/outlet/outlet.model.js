@@ -6,6 +6,10 @@ const schema = {
   userId: String,
   ownerId: String,
   walletId: String,
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Owner",
+  },
   status: {
     type: String,
     default: OutletStatus.ACTIVE,

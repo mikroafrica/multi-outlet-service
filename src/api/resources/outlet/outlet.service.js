@@ -4,11 +4,14 @@ import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
+import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
+import { Partnerverification } from "./partnerverification.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
+import { UserRole } from "../owner/user.role";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -61,6 +64,8 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
     });
+    logger.info(`Linking ${JSON.stringify(outletUserId)}`);
+
     if (existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -68,9 +73,6 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
       });
     }
 
-    logger.info(
-      `Sending verification OTP to ${JSON.stringify(params.phoneNumber)}`
-    );
     const otpResponse = await sendVerificationOtp({
       phoneNumber: params.phoneNumber,
     });
@@ -86,6 +88,95 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
     return Promise.resolve({
       statusCode: OK,
       data: otpResponseData,
+    });
+  } catch (err) {
+    logger.error(
+      `An error occurred while trying to link outlet: ${JSON.stringify(err)}`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: err.message || "Could not link outlet. Please try again",
+    });
+  }
+};
+
+export const linkUserToPartner = async ({ params, ownerId }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const schema = Joi.object().keys({
+    phoneNumber: Joi.string().required(),
+    userId: Joi.string().required(),
+  });
+
+  const validateSchema = Joi.validate(params, schema);
+
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  let phoneNumber = "";
+  try {
+    phoneNumber = validatePhone({ phone: params.phoneNumber });
+  } catch (err) {
+    logger.error("An error occurred while linking outlet");
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: err,
+    });
+  }
+
+  try {
+    // const adminCheck = await Owner.findOne({ userId: ownerId });
+    // if (adminCheck.role !== "admin") {
+    //   return Promise.reject({
+    //     statusCode: BAD_REQUEST,
+    //     message: "Outlets can only be added by an admin",
+    //   });
+    // }
+
+    const userDetails = await ConsumerService.getUserDetails(params.userId);
+
+    const userDetailsData = userDetails.data;
+    const outletUserId = userDetailsData.data.id;
+    const userOnboarded = userDetailsData.data.userOnboarded;
+
+    logger.info(
+      `Verify outlet linking with request ${JSON.stringify(userDetailsData)}`
+    );
+
+    const existingOutlet = await Outlet.findOne({
+      userId: outletUserId,
+    });
+
+    if (existingOutlet) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Outlet has been added previously",
+      });
+    }
+
+    logger.info(
+      `Existing outlet details ${JSON.stringify({ existingOutlet })}`
+    );
+
+    await savePartnerVerification({
+      outletUserId,
+      ownerId,
+      userOnboarded: true,
+    });
+
+    return Promise.resolve({
+      statusCode: OK,
+      message: "Outlet succesfully added.",
     });
   } catch (err) {
     logger.error(
@@ -236,6 +327,34 @@ const saveVerification = async ({
   await verification.save();
 };
 
+const savePartnerVerification = async ({
+  outletUserId,
+  ownerId,
+  userOnboarded,
+}) => {
+  const existingPartnerVerification = await Partnerverification.findOne({
+    outletUserId,
+    ownerId,
+  });
+
+  // UPDATE AN EXISTING VERIFICATION IF IT ALREADY EXISTS
+  if (existingPartnerVerification) {
+    await Partnerverification.findOneAndUpdate(
+      { outletUserId, ownerId },
+      { $set: { userOnboarded } },
+      { new: true }
+    ).exec();
+    return;
+  }
+
+  const partnerverification = new Partnerverification({
+    outletUserId,
+    ownerId,
+    userOnboarded,
+  });
+  await partnerverification.save();
+};
+
 export const verifyOutletLinking = async ({ params }) => {
   if (!params) {
     return Promise.reject({
@@ -367,6 +486,10 @@ export const fetchOutletDetails = async (outlets) => {
   await async.forEach(outlets, async (outlet) => {
     const response = await ConsumerService.getUserDetails(outlet.userId);
     const userDetailsData = response.data;
+
+    logger.info(
+      `Verify outlet linking with request [${JSON.stringify(userDetailsData)}]`
+    );
 
     const wallet = userDetailsData.data.store[0].wallet[0];
     const walletId = wallet.id;
