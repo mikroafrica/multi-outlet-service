@@ -159,23 +159,23 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
       });
     }
 
-    // logger.info(
-    //   `Retrieving user details from consumer service as ${JSON.stringify(
-    //     userDetails
-    //   )}`
-    // );
+    logger.info(
+      `Retrieving user details from consumer service as ${JSON.stringify(
+        userDetails
+      )}`
+    );
 
-    // const existingOutlet = await Outletpartner.findOne({
-    //   userId: outletUserId,
-    // });
-    //
-    // if (existingOutlet) {
-    //   return Promise.reject({
-    //     statusCode: BAD_REQUEST,
-    //     message: "Outlet has been added previously",
-    //   });
-    // }
-    //
+    const existingOutlet = await Outletpartner.findOne({
+      userId: outletUserId,
+    });
+
+    if (existingOutlet) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Outlet has been added previously",
+      });
+    }
+
     const addedOutlet = new Outletpartner({
       userId: outletUserId,
       ownerId,
@@ -252,24 +252,42 @@ const addCommissionToPartner = async ({
     const commissionBalance = await CommissionBalance.findOne({
       ownerId,
       type: "ONBOARDING",
-    });
+    }).lean();
     console.log("commissionBalance", commissionBalance);
+    // console.log("commissionBalance type", typeof commissionBalance.amount);
 
     if (commissionBalance) {
+      console.log("entered hereeeeeeeeeee Nowwwwwwww");
       commissionBalance.amount =
         commissionBalance.amount +
         onboardingCommission.multiplier * totalTransactionAmount;
       await commissionBalance.save();
     } else {
+      const a = onboardingCommission.multiplier * totalTransactionAmount;
+      console.log(
+        "onboardingCommission.multiplier * totalTransactionAmount",
+        onboardingCommission.multiplier,
+        totalTransactionAmount
+      );
+      console.log(
+        "typeof onboardingCommission.multiplier",
+        typeof onboardingCommission.multiplier
+      );
+
       const newCommissionBalance = new CommissionBalance({
         amount: onboardingCommission.multiplier * totalTransactionAmount,
         owner: ownerId,
-      });
+      }).lean();
       await newCommissionBalance.save();
     }
-    console.log("commissionBalance", commissionBalance);
   }
+  console.log(
+    "onboardingCommission.multiplier * totalTransactionAmount",
+    onboardingCommission.multiplier * totalTransactionAmount
+  );
+  console.log("newCommissionBalance", newCommissionBalance);
 
+  // ? onboardingCommission.multiplier * totalTransactionAmount : 0
   // logger.info(`user transactions ${JSON.stringify(outletTransactionData)}`);
 
   // filter transaction details to return transactions made within the first 30 days
