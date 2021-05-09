@@ -225,6 +225,8 @@ const addCommissionToPartner = async ({
     params
   );
 
+  // doSomething({outletTransactions})
+
   const outletTransactionData = outletTransactions.data.data;
   const totalTransactionAmount = outletTransactionData.reduce(
     (acc, transaction) => {
@@ -262,18 +264,8 @@ const addCommissionToPartner = async ({
         amount: onboardingCommission.multiplier * totalTransactionAmount,
         owner: ownerId,
       });
-      // console.log("commissionBalance", commissionBalance);
     }
   }
-  // console.log(
-  //   "onboardingCommission.multiplier * totalTransactionAmount",
-  //   onboardingCommission.multiplier * totalTransactionAmount
-  // );
-  // console.log("ownerId", ownerId);
-  // console.log("commissionBalance", commissionBalance);
-
-  // ? onboardingCommission.multiplier * totalTransactionAmount : 0
-  // logger.info(`user transactions ${JSON.stringify(outletTransactionData)}`);
 
   // filter transaction details to return transactions made within the first 30 days
 
@@ -287,7 +279,8 @@ const addCommissionToPartner = async ({
   //            credit partner with the commission and
   //            set flag that the partner has been credited with thrift-onboarding commission
 
-  //   Filter transactions for every transfer (type TRANSFER) made by user that corresponds to settings (set by admin) e.g recharge card
+  //   Filter transactions for every transfer (type TRANSFER) made by user
+  //   that corresponds to settings (set by admin) e.g recharge card
   const filteredTransfer = outletTransactionData.filter(
     (transaction) =>
       transaction.type === "Transfer" && transaction.successfulAmount
@@ -325,7 +318,8 @@ const addCommissionToPartner = async ({
     }
   }
 
-  //   Filter transactions for every transfer (type WITHDRAWAL) made by user that corresponds to settings (set by admin) e.g recharge card
+  //   Filter transactions for every transfer (type WITHDRAWAL) made by user
+  //   that corresponds to settings (set by admin) e.g recharge card
   const filteredTransaction = outletTransactionData.filter(
     (transaction) =>
       transaction.type === "Withdrawal" && transaction.successfulAmount
