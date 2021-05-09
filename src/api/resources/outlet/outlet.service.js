@@ -274,7 +274,7 @@ const addCommissionToPartner = async ({
 
   // filter transaction details to return transactions made within the first 30 days
 
-  // apply business logic based on the filtered transactions
+  // apply logic commission based on the filtered transactions
   //   if filtered transaction sum >= minimum amount
   //        credit partner 0.03% of transaction sum
   //   if partner has not been credited with thrift onboarding commission
