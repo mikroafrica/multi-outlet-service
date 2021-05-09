@@ -86,6 +86,7 @@ const allowRoutes = (req) => {
     "user/:id",
     "link-outlet/:id",
     "/:id",
+    "commission-setting/:id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {

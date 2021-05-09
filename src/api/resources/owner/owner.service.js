@@ -604,31 +604,51 @@ export const createCommission = async ({
   }
 };
 
-export const getPartnerCommissions = async ({ userId, commissiontype }) => {
+export const getPartnerApprovalStatus = async ({ userId }) => {
   try {
-    const commissionType = CommissionType[commissiontype];
+    // check for partner approval if he has commissions already set
+    const partner = await Owner.findOne({ userId });
+    let returnedApprovalStatus;
+    if (partner.approval === PartnerApproval.APPROVED) {
+      returnedApprovalStatus = PartnerApproval.APPROVED;
+    } else {
+      const partnerCommission = await CommissionBalance.find({ owner: userId });
 
-    const partnerCommission = await CommissionBalance.findOne({ userId });
-    console.log(`log partner commission here as ${partnerCommission}`);
-    if (!partner) {
-      return Promise.reject({
-        statusCode: NOT_FOUND,
-        message: "Partner not found",
-      });
+      if (partnerCommission && partnerCommission.length > 0) {
+        partner.approval = PartnerApproval.APPROVED;
+        await partner.save();
+        returnedApprovalStatus = PartnerApproval.APPROVED;
+      } else {
+        returnedApprovalStatus = PartnerApproval.PENDING;
+      }
     }
 
-    // const createdAt = partner.createdAt;
-    // const updatedAt = partner.updatedAt;
-    // const approvalTime = updatedAt - createdAt;
+    return Promise.resolve({
+      statusCode: OK,
+      data: returnedApprovalStatus,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not confirm partner approval status",
+    });
+  }
+};
 
+export const getPartnerCommissionSetting = async ({
+  userId,
+  commissiontype,
+}) => {
+  try {
+    const commissionType = CommissionType[commissiontype];
     // check for partner approval if he has commissions already set
-    // let approval;
-    // const commissionsCheck = partner.commissions;
-    // if (commissionsCheck === null) {
-    //   partner.approval = PartnerApproval.PENDING;
-    // } else {
-    //   partner.approval = PartnerApproval.APPROVED;
-    // }
+    const partnerCommission = await CommissionBalance.find({ owner: userId });
+    if (!partnerCommission) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Commission not set for partner",
+      });
+    }
 
     return Promise.resolve({
       statusCode: OK,
@@ -637,7 +657,7 @@ export const getPartnerCommissions = async ({ userId, commissiontype }) => {
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not fetch commissions for partner. Please try again",
+      message: "Could not confirm partner approval status",
     });
   }
 };

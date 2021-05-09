@@ -188,7 +188,6 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
       userDetails,
       outletUserId,
       ownerId,
-      // ownerDetails,
     });
 
     return Promise.resolve({
@@ -227,7 +226,6 @@ const addCommissionToPartner = async ({
   );
 
   const outletTransactionData = outletTransactions.data.data;
-  // console.log('outletTransactionData', outletTransactionData)
   const totalTransactionAmount = outletTransactionData.reduce(
     (acc, transaction) => {
       if (transaction.successfulAmount) {
@@ -242,50 +240,37 @@ const addCommissionToPartner = async ({
   const onboardingCommission = await Commission.findOne({
     type: "ONBOARDING",
   }).lean();
-  // console.log('onboardingCommission', onboardingCommission)
-  // console.log('totalTransactionAmount >= onboardingCommission.amount', totalTransactionAmount,  onboardingCommission.amount)
+
+  logger.info(`Print onboarding commission as ${onboardingCommission}`);
   if (
     onboardingCommission &&
-    totalTransactionAmount >= onboardingCommission.amount
+    totalTransactionAmount >= onboardingCommission.multiplier
   ) {
     console.log("entered here");
     const commissionBalance = await CommissionBalance.findOne({
       ownerId,
       type: "ONBOARDING",
     }).lean();
-    console.log("commissionBalance", commissionBalance);
-    // console.log("commissionBalance type", typeof commissionBalance.amount);
 
     if (commissionBalance) {
-      console.log("entered hereeeeeeeeeee Nowwwwwwww");
       commissionBalance.amount =
         commissionBalance.amount +
         onboardingCommission.multiplier * totalTransactionAmount;
       await commissionBalance.save();
     } else {
-      const a = onboardingCommission.multiplier * totalTransactionAmount;
-      console.log(
-        "onboardingCommission.multiplier * totalTransactionAmount",
-        onboardingCommission.multiplier,
-        totalTransactionAmount
-      );
-      console.log(
-        "typeof onboardingCommission.multiplier",
-        typeof onboardingCommission.multiplier
-      );
-
-      const newCommissionBalance = new CommissionBalance({
+      const commissionBalance = await CommissionBalance.create({
         amount: onboardingCommission.multiplier * totalTransactionAmount,
         owner: ownerId,
-      }).lean();
-      await newCommissionBalance.save();
+      });
+      // console.log("commissionBalance", commissionBalance);
     }
   }
-  console.log(
-    "onboardingCommission.multiplier * totalTransactionAmount",
-    onboardingCommission.multiplier * totalTransactionAmount
-  );
-  console.log("newCommissionBalance", newCommissionBalance);
+  // console.log(
+  //   "onboardingCommission.multiplier * totalTransactionAmount",
+  //   onboardingCommission.multiplier * totalTransactionAmount
+  // );
+  // console.log("ownerId", ownerId);
+  // console.log("commissionBalance", commissionBalance);
 
   // ? onboardingCommission.multiplier * totalTransactionAmount : 0
   // logger.info(`user transactions ${JSON.stringify(outletTransactionData)}`);
@@ -303,19 +288,28 @@ const addCommissionToPartner = async ({
   //            set flag that the partner has been credited with thrift-onboarding commission
 
   //   Filter transactions for every transfer (type TRANSFER) made by user that corresponds to settings (set by admin) e.g recharge card
-  const filteredTransfer = outletTransactionData.filter((transaction) => {
-    transaction.type === "Transfer" && transaction.successfulAmount;
-  });
+  const filteredTransfer = outletTransactionData.filter(
+    (transaction) =>
+      transaction.type === "Transfer" && transaction.successfulAmount
+  );
+
+  console.log("filteredTransfer", filteredTransfer);
   //   if transfer exists
+  const transferCommission = await Commission.findOne({
+    transactions: "transfers",
+  }).lean();
+  console.log("transferCommission", transferCommission);
+
   if (filteredTransfer.length > 0) {
-    const creditAmount = filteredTransfer.length * 5;
-    const transferCommission = await Commission.find({
-      transactions: "TRANSFERS",
-    });
+    const creditAmount =
+      filteredTransfer.length * transferCommission.multiplier;
+
     const commissionBalance = await CommissionBalance.findOne({
       ownerId,
       type: "TRANSACTION",
     });
+    console.log("commissionBalance", commissionBalance);
+
     if (commissionBalance) {
       // credit partner for every transfer
       commissionBalance.amount =
@@ -327,13 +321,15 @@ const addCommissionToPartner = async ({
         amount: transferCommission.multiplier * totalTransactionAmount,
         owner: ownerId,
       });
+      await creditAmount.save();
     }
   }
 
   //   Filter transactions for every transfer (type WITHDRAWAL) made by user that corresponds to settings (set by admin) e.g recharge card
-  const filteredTransaction = outletTransactionData.filter((transaction) => {
-    transaction.type === "Withdrawal" && transaction.successfulAmount;
-  });
+  const filteredTransaction = outletTransactionData.filter(
+    (transaction) =>
+      transaction.type === "Withdrawal" && transaction.successfulAmount
+  );
   //   if TRANSACTION exists
   if (filteredTransaction.length > 0) {
     const totalWithdrawalAmount = filteredTransaction.reduce(
@@ -346,8 +342,8 @@ const addCommissionToPartner = async ({
       0
     );
 
-    const withdrawalCommission = await Commission.find({
-      transactions: "WITHDRAWALS",
+    const withdrawalCommission = await Commission.findOne({
+      transactions: "withdrawals",
     });
 
     const tenMillion = 1000000;
@@ -377,19 +373,24 @@ const addCommissionToPartner = async ({
       creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
     }
 
+    logger.info(`computed ${creditAmount}`);
+
     const commissionBalance = await CommissionBalance.findOne({
       ownerId,
       type: "TRANSACTION",
     });
+
     if (commissionBalance) {
       // credit partner for every transfer
       commissionBalance.amount = commissionBalance.amount + creditAmount;
+      await commissionBalance.amount.save();
     } else {
       //  create a commissionBalance with amount === creditAmount
-      const creditAmount = new CommissionBalance({
+      const newCreditAmount = new CommissionBalance({
         amount: creditAmount,
         owner: ownerId,
       });
+      await newCreditAmount.save();
     }
   }
 };

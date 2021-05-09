@@ -10,8 +10,9 @@ import {
   getUser,
   getUsers,
   createCommission,
-  getPartnerCommissions,
+  getPartnerApprovalStatus,
   generateReferralCodeForUsers,
+  getPartnerCommissionSetting,
 } from "./owner.service.js";
 import { getOutlets } from "../outlet/outlet.service";
 
@@ -146,7 +147,6 @@ export const createCommissionForPartner = (req, res) => {
   const commissiontype = req.query.commissiontype;
   const transaction = req.query.transaction;
   const withdrawallevel = req.query.withdrawallevel;
-  console.log("withdrawallevel", withdrawallevel);
 
   createCommission({
     params,
@@ -163,12 +163,10 @@ export const createCommissionForPartner = (req, res) => {
     );
 };
 
-export const fetchCommissionForPartner = (req, res) => {
+export const partnerApprovalStatus = (req, res) => {
   const userId = req.params.id;
-  const commissiontype = req.query.commissiontype;
-  // const commissionId = req.query.commissionId;
 
-  getPartnerCommissions({ userId, commissiontype })
+  getPartnerApprovalStatus({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -181,6 +179,19 @@ export const usersOnboarding = (req, res) => {
   const ownerId = req.user.userId;
 
   generateReferralCodeForUsers({ ownerId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const partnerCommissionSetting = (req, res) => {
+  const userId = req.params.id;
+  const commissiontype = req.query.commissiontype;
+
+  getPartnerCommissionSetting({ userId, commissiontype })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

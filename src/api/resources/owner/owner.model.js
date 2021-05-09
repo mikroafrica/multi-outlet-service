@@ -9,12 +9,6 @@ const schema = {
   walletId: String,
   phoneNumber: String,
   noOfOutlets: String,
-  commissions: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "commission",
-    },
-  ],
   userType: {
     type: String,
     default: UserType.OUTLET_OWNER,
@@ -30,7 +24,6 @@ const schema = {
     default: UserRole.ADMIN,
     enum: [UserRole.ADMIN, UserRole.MANAGER, UserRole.SALES],
   },
-  linkedUser: {},
 };
 
 const ownerSchema = new mongoose.Schema(schema, { timestamps: true });
