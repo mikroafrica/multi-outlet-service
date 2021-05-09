@@ -108,7 +108,6 @@ describe("Outlet service Tests", function () {
   it("should successfully link an outlet to a partner up on multi-outlet", async function () {
     const linkOutletToPartnerParams = {
       phoneNumber: "08123487025",
-      userId: "1",
     };
 
     const mockUserDetailsResponse = {
@@ -121,7 +120,7 @@ describe("Outlet service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .get(`/user/${linkOutletToPartnerParams.userId}/details`)
+      .get(`/user/${linkOutletToPartnerParams.phoneNumber}/details`)
       .reply(OK, mockUserDetailsResponse);
 
     // const userId = mockUserDetailsResponse.data.id;
@@ -148,7 +147,6 @@ describe("Outlet service Tests", function () {
       params: linkOutletToPartnerParams,
     });
     expect(response.statusCode).equals(OK);
-    // expect(response.data).to.exist;
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
@@ -159,7 +157,6 @@ describe("Outlet service Tests", function () {
   it("should fail to link an outlet to partner if linking details are incorrect", async function () {
     const linkOutletToPartnerParams = {
       phoneNumber: "08123487025",
-      userId: 1,
     };
     try {
       await OutletService.linkUserToPartner({

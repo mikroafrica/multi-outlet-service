@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import mongoosePaginate from "mongoose-paginate";
 import { OutletStatus } from "./outlet.status.js";
 
 const schema = {
@@ -13,7 +12,9 @@ const schema = {
   },
 };
 
-const outletSchema = new mongoose.Schema(schema, { timestamps: true });
-outletSchema.plugin(mongoosePaginate);
+const outletpartnerSchema = new mongoose.Schema(schema, { timestamps: true });
 
-export const Outlet = mongoose.model("outlet", outletSchema);
+export const Outletpartner = mongoose.model(
+  "outletpartner",
+  outletpartnerSchema
+);

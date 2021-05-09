@@ -12,7 +12,7 @@ const schema = {
   commissions: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Commission",
+      ref: "commission",
     },
   ],
   userType: {
@@ -30,6 +30,7 @@ const schema = {
     default: UserRole.ADMIN,
     enum: [UserRole.ADMIN, UserRole.MANAGER, UserRole.SALES],
   },
+  linkedUser: {},
 };
 
 const ownerSchema = new mongoose.Schema(schema, { timestamps: true });

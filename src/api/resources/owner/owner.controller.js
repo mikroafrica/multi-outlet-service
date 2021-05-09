@@ -140,17 +140,17 @@ export const fetchUsersByType = (req, res) => {
 };
 
 export const createCommissionForPartner = (req, res) => {
-  const ownerId = req.user.userId;
+  // const ownerId = req.user.userId;
   const params = req.body;
-  const userId = req.query.id;
+  const ownerId = req.query.id;
   const commissiontype = req.query.commissiontype;
   const transaction = req.query.transaction;
   const withdrawallevel = req.query.withdrawallevel;
+  console.log("withdrawallevel", withdrawallevel);
 
   createCommission({
     params,
     ownerId,
-    userId,
     commissiontype,
     transaction,
     withdrawallevel,

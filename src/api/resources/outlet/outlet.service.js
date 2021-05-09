@@ -2,12 +2,16 @@ import Joi from "joi";
 import async from "async";
 import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
+import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
+import { Outletpartner } from "./outletpartner.model.js";
+import { CommissionBalance } from "../owner/commissionbalance.model.js";
 import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
+import { Commission } from "../owner/commission.model.js";
 import { Partnerverification } from "./partnerverification.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
@@ -135,48 +139,61 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
   }
 
   try {
-    // const adminCheck = await Owner.findOne({ userId: ownerId });
-    // if (adminCheck.role !== "admin") {
-    //   return Promise.reject({
-    //     statusCode: BAD_REQUEST,
-    //     message: "Outlets can only be added by an admin",
-    //   });
-    // }
-
     const userDetails = await ConsumerService.getUserDetails(params.userId);
 
     const userDetailsData = userDetails.data;
     const outletUserId = userDetailsData.data.id;
     const userOnboarded = userDetailsData.data.userOnboarded;
+    const walletId = userDetailsData.data.store[0].wallet.id;
 
-    logger.info(
-      `Verify outlet linking with request ${JSON.stringify(userDetailsData)}`
-    );
-
-    const existingOutlet = await Outlet.findOne({
-      userId: outletUserId,
-    });
-
-    if (existingOutlet) {
+    if (
+      userDetailsData.data.store.length < 1 ||
+      userDetailsData.data.store[0].wallet.length < 1
+    ) {
+      logger.error(
+        "Could not link outlet because outlet does not have a wallet"
+      );
       return Promise.reject({
         statusCode: BAD_REQUEST,
-        message: "Outlet has been added previously",
+        message: "Could not verify outlet linking. Please try again",
       });
     }
 
-    logger.info(
-      `Existing outlet details ${JSON.stringify({ existingOutlet })}`
-    );
+    // logger.info(
+    //   `Retrieving user details from consumer service as ${JSON.stringify(
+    //     userDetails
+    //   )}`
+    // );
 
-    await savePartnerVerification({
+    // const existingOutlet = await Outletpartner.findOne({
+    //   userId: outletUserId,
+    // });
+    //
+    // if (existingOutlet) {
+    //   return Promise.reject({
+    //     statusCode: BAD_REQUEST,
+    //     message: "Outlet has been added previously",
+    //   });
+    // }
+    //
+    const addedOutlet = new Outletpartner({
+      userId: outletUserId,
+      ownerId,
+      walletId,
+      status: OutletStatus.ACTIVE,
+    });
+    await addedOutlet.save();
+
+    await addCommissionToPartner({
+      userDetails,
       outletUserId,
       ownerId,
-      userOnboarded: true,
+      // ownerDetails,
     });
 
     return Promise.resolve({
       statusCode: OK,
-      message: "Outlet succesfully added.",
+      data: addedOutlet,
     });
   } catch (err) {
     logger.error(
@@ -187,6 +204,175 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
       statusCode: BAD_REQUEST,
       message: err.message || "Could not link outlet. Please try again",
     });
+  }
+};
+
+const addCommissionToPartner = async ({
+  userDetails,
+  outletUserId,
+  ownerId,
+  // ownerDetails,
+}) => {
+  // fetch user transaction details from the transaction service
+  const dateFrom = 1601506800000;
+  const dateTo = 1620490823119;
+
+  const params = {
+    userId: outletUserId,
+    dateFrom,
+    dateTo,
+  };
+  const outletTransactions = await TransactionService.transactionsCategorySummary(
+    params
+  );
+
+  const outletTransactionData = outletTransactions.data.data;
+  // console.log('outletTransactionData', outletTransactionData)
+  const totalTransactionAmount = outletTransactionData.reduce(
+    (acc, transaction) => {
+      if (transaction.successfulAmount) {
+        return acc + transaction.successfulAmount;
+      }
+      return acc;
+    },
+    0
+  );
+  console.log("totalTransactionAmount", totalTransactionAmount);
+
+  const onboardingCommission = await Commission.findOne({
+    type: "ONBOARDING",
+  }).lean();
+  // console.log('onboardingCommission', onboardingCommission)
+  // console.log('totalTransactionAmount >= onboardingCommission.amount', totalTransactionAmount,  onboardingCommission.amount)
+  if (
+    onboardingCommission &&
+    totalTransactionAmount >= onboardingCommission.amount
+  ) {
+    console.log("entered here");
+    const commissionBalance = await CommissionBalance.findOne({
+      ownerId,
+      type: "ONBOARDING",
+    });
+    console.log("commissionBalance", commissionBalance);
+
+    if (commissionBalance) {
+      commissionBalance.amount =
+        commissionBalance.amount +
+        onboardingCommission.multiplier * totalTransactionAmount;
+      await commissionBalance.save();
+    } else {
+      const newCommissionBalance = new CommissionBalance({
+        amount: onboardingCommission.multiplier * totalTransactionAmount,
+        owner: ownerId,
+      });
+      await newCommissionBalance.save();
+    }
+    console.log("commissionBalance", commissionBalance);
+  }
+
+  // logger.info(`user transactions ${JSON.stringify(outletTransactionData)}`);
+
+  // filter transaction details to return transactions made within the first 30 days
+
+  // apply business logic based on the filtered transactions
+  //   if filtered transaction sum >= minimum amount
+  //        credit partner 0.03% of transaction sum
+  //   if partner has not been credited with thrift onboarding commission
+
+  //     find thrift users onboarded by user and check if the users meet the contract terms
+  //         if met
+  //            credit partner with the commission and
+  //            set flag that the partner has been credited with thrift-onboarding commission
+
+  //   Filter transactions for every transfer (type TRANSFER) made by user that corresponds to settings (set by admin) e.g recharge card
+  const filteredTransfer = outletTransactionData.filter((transaction) => {
+    transaction.type === "Transfer" && transaction.successfulAmount;
+  });
+  //   if transfer exists
+  if (filteredTransfer.length > 0) {
+    const creditAmount = filteredTransfer.length * 5;
+    const transferCommission = await Commission.find({
+      transactions: "TRANSFERS",
+    });
+    const commissionBalance = await CommissionBalance.findOne({
+      ownerId,
+      type: "TRANSACTION",
+    });
+    if (commissionBalance) {
+      // credit partner for every transfer
+      commissionBalance.amount =
+        commissionBalance.amount +
+        transferCommission.multiplier * totalTransactionAmount;
+    } else {
+      //  create a commissionBalance with amount === creditAmount
+      const creditAmount = new CommissionBalance({
+        amount: transferCommission.multiplier * totalTransactionAmount,
+        owner: ownerId,
+      });
+    }
+  }
+
+  //   Filter transactions for every transfer (type WITHDRAWAL) made by user that corresponds to settings (set by admin) e.g recharge card
+  const filteredTransaction = outletTransactionData.filter((transaction) => {
+    transaction.type === "Withdrawal" && transaction.successfulAmount;
+  });
+  //   if TRANSACTION exists
+  if (filteredTransaction.length > 0) {
+    const totalWithdrawalAmount = filteredTransaction.reduce(
+      (acc, transaction) => {
+        if (transaction.successfulAmount) {
+          return acc + transaction.successfulAmount;
+        }
+        return acc;
+      },
+      0
+    );
+
+    const withdrawalCommission = await Commission.find({
+      transactions: "WITHDRAWALS",
+    });
+
+    const tenMillion = 1000000;
+    const sevenMillion = 7000000;
+    const fiveMillion = 5000000;
+    const threeMillion = 3000000;
+
+    let creditAmount;
+    if (totalWithdrawalAmount > tenMillion) {
+      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+    } else if (
+      totalWithdrawalAmount > sevenMillion ||
+      totalWithdrawalAmount < tenMillion
+    ) {
+      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+    } else if (
+      totalWithdrawalAmount > fiveMillion ||
+      totalWithdrawalAmount < sevenMillion
+    ) {
+      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+    } else if (
+      totalWithdrawalAmount > threeMillion ||
+      totalWithdrawalAmount < fiveMillion
+    ) {
+      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+    } else if (totalWithdrawalAmount < threeMillion) {
+      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+    }
+
+    const commissionBalance = await CommissionBalance.findOne({
+      ownerId,
+      type: "TRANSACTION",
+    });
+    if (commissionBalance) {
+      // credit partner for every transfer
+      commissionBalance.amount = commissionBalance.amount + creditAmount;
+    } else {
+      //  create a commissionBalance with amount === creditAmount
+      const creditAmount = new CommissionBalance({
+        amount: creditAmount,
+        owner: ownerId,
+      });
+    }
   }
 };
 
@@ -325,34 +511,6 @@ const saveVerification = async ({
     status,
   });
   await verification.save();
-};
-
-const savePartnerVerification = async ({
-  outletUserId,
-  ownerId,
-  userOnboarded,
-}) => {
-  const existingPartnerVerification = await Partnerverification.findOne({
-    outletUserId,
-    ownerId,
-  });
-
-  // UPDATE AN EXISTING VERIFICATION IF IT ALREADY EXISTS
-  if (existingPartnerVerification) {
-    await Partnerverification.findOneAndUpdate(
-      { outletUserId, ownerId },
-      { $set: { userOnboarded } },
-      { new: true }
-    ).exec();
-    return;
-  }
-
-  const partnerverification = new Partnerverification({
-    outletUserId,
-    ownerId,
-    userOnboarded,
-  });
-  await partnerverification.save();
 };
 
 export const verifyOutletLinking = async ({ params }) => {

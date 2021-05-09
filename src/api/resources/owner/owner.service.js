@@ -8,11 +8,16 @@ import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
+import { CommissionBalance } from "./commissionbalance.model";
 import { TempOwner } from "./temp.owner.model";
 import { Commission } from "./commission.model";
 import { OutletStatus } from "../outlet/outlet.status";
 import { UserType, PartnerApproval } from "./user.type";
-import { CommissionType, TransactionType } from "./commission.type";
+import {
+  CommissionType,
+  TransactionType,
+  WithdrawalLevel,
+} from "./commission.type";
 import { Outlet } from "../outlet/outlet.model";
 import { Verification } from "../outlet/verification.model";
 import { validatePhone } from "../../modules/util";
@@ -525,7 +530,6 @@ export const getUsers = async ({ usertype, page, limit }) => {
 export const createCommission = async ({
   params,
   ownerId,
-  userId,
   transaction,
   commissiontype,
   withdrawallevel,
@@ -537,9 +541,11 @@ export const createCommission = async ({
     });
   }
 
+  logger.info(`printingand ${ownerId}`);
+
   const schema = Joi.object().keys({
     condition: Joi.number().required(),
-    amount: Joi.number().required(),
+    multiplier: Joi.number().required(),
   });
 
   const validateSchema = Joi.validate(params, schema);
@@ -552,8 +558,9 @@ export const createCommission = async ({
   }
 
   try {
-    // const withdrawalLevels = WithdrawalLevel[withdrawallevel];
-    const userType = UserType.PARTNER;
+    const withdrawalLevel = WithdrawalLevel[withdrawallevel];
+    const userType = UserType.OUTLET_PARTNER;
+    const transactionType = TransactionType[transaction];
     const commissionType = CommissionType[commissiontype];
     if (!commissionType) {
       return Promise.reject({
@@ -562,76 +569,26 @@ export const createCommission = async ({
           "Invalid commission type supplied. Please supply a valid commission type",
       });
     }
+    console.log("withdrawallevel hereee", withdrawalLevel);
 
     logger.info(`user type supplied as ${userType}`);
 
-    //create commission based on defined condition
-    let condition;
-    let amount;
-    if (
-      commissiontype === "ONBOARDING" ||
-      commissiontype === "THRIFT_ONBOARDING"
-    ) {
-      condition = params.condition;
-      amount = params.amount;
-    } else if (commissiontype === "TRANSACTION") {
-      if (transaction === TransactionType.TRANSFERS) {
-        condition = params.condition;
-        amount = params.amount;
-      } else if (transaction === TransactionType.WITHDRAWALS) {
-        if (
-          withdrawallevel === "LEVEL1" ||
-          withdrawallevel === "LEVEL2" ||
-          withdrawallevel === "LEVEL3" ||
-          withdrawalLevel === "LEVEL4" ||
-          withdrawallevel === "LEVEL5"
-        ) {
-          condition = params.condition;
-          amount = params.amount;
-        }
-      }
-    }
-
-    // check if the currently logged in person has an admin role
-    const adminCheck = await Owner.findOne({ userId: ownerId });
-    if (adminCheck.role !== "admin") {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Commissions can only be created by an admin",
-      });
-    }
-
     const commission = new Commission({
-      condition: condition,
-      amount: amount,
-      owner: userId,
+      condition: params.condition,
+      multiplier: params.multiplier,
+      owner: ownerId,
       type: commissionType,
+      transactions: transactionType,
+      withdrawals: withdrawalLevel,
     });
 
     await commission.save();
 
     logger.info(`commission created as ${commission}`);
 
-    //set commission for the partner
-    const partner = await Owner.findOne({
-      userId: userId,
-      userType: userType,
-    });
-    if (!partner) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Cannot set commission for non-partners",
-      });
-    }
-
-    logger.info(`commision created for ${partner}`);
-    partner.commissions.push(commission);
-    await partner.save();
-
     return Promise.resolve({
       statusCode: OK,
       data: commission,
-      partner,
     });
   } catch (err) {
     logger.error(
@@ -651,8 +608,8 @@ export const getPartnerCommissions = async ({ userId, commissiontype }) => {
   try {
     const commissionType = CommissionType[commissiontype];
 
-    const partner = await Owner.findOne({ userId });
-    // .populate("commission").exec();
+    const partnerCommission = await CommissionBalance.findOne({ userId });
+    console.log(`log partner commission here as ${partnerCommission}`);
     if (!partner) {
       return Promise.reject({
         statusCode: NOT_FOUND,
@@ -663,17 +620,19 @@ export const getPartnerCommissions = async ({ userId, commissiontype }) => {
     // const createdAt = partner.createdAt;
     // const updatedAt = partner.updatedAt;
     // const approvalTime = updatedAt - createdAt;
-    let approval;
-    const commissionsCheck = partner.commissions;
-    if (commissionsCheck === null) {
-      partner.approval = PartnerApproval.PENDING;
-    } else {
-      partner.approval = PartnerApproval.APPROVED;
-    }
+
+    // check for partner approval if he has commissions already set
+    // let approval;
+    // const commissionsCheck = partner.commissions;
+    // if (commissionsCheck === null) {
+    //   partner.approval = PartnerApproval.PENDING;
+    // } else {
+    //   partner.approval = PartnerApproval.APPROVED;
+    // }
 
     return Promise.resolve({
       statusCode: OK,
-      data: partner,
+      data: partnerCommission,
     });
   } catch (e) {
     return Promise.reject({

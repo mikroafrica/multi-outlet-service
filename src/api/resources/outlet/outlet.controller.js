@@ -23,7 +23,7 @@ export const linkOutlet = (req, res) => {
 
 export const linkOutletToPartner = (req, res) => {
   const params = req.body;
-  const ownerId = req.user.userId;
+  const ownerId = req.params.id;
 
   linkUserToPartner({ params, ownerId })
     .then(({ statusCode, data }) => {
