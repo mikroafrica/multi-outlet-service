@@ -225,9 +225,14 @@ const addCommissionToPartner = async ({
     params
   );
 
-  // doSomething({outletTransactions})
-
   const outletTransactionData = outletTransactions.data.data;
+
+  // filter transaction details to return transactions made within the first 30 days
+
+  // apply logic commission based on the filtered transactions
+  //   if filtered transaction sum >= minimum amount
+  //        credit partner 0.03% of transaction sum
+
   const totalTransactionAmount = outletTransactionData.reduce(
     (acc, transaction) => {
       if (transaction.successfulAmount) {
@@ -267,18 +272,14 @@ const addCommissionToPartner = async ({
     }
   }
 
-  // filter transaction details to return transactions made within the first 30 days
-
-  // apply logic commission based on the filtered transactions
-  //   if filtered transaction sum >= minimum amount
-  //        credit partner 0.03% of transaction sum
+  //    THRIFT_ONBOARDING COMMISSIONS to be calculated when thrift users onboarded data is available
   //   if partner has not been credited with thrift onboarding commission
-
   //     find thrift users onboarded by user and check if the users meet the contract terms
   //         if met
   //            credit partner with the commission and
   //            set flag that the partner has been credited with thrift-onboarding commission
 
+  //    TRANSACTION COMMISSIONS
   //   Filter transactions for every transfer (type TRANSFER) made by user
   //   that corresponds to settings (set by admin) e.g recharge card
   const filteredTransfer = outletTransactionData.filter(
@@ -286,12 +287,12 @@ const addCommissionToPartner = async ({
       transaction.type === "Transfer" && transaction.successfulAmount
   );
 
-  console.log("filteredTransfer", filteredTransfer);
   //   if transfer exists
   const transferCommission = await Commission.findOne({
     transactions: "transfers",
   }).lean();
-  console.log("transferCommission", transferCommission);
+
+  logger.info(`Get the transfer commission condition as ${transferCommission}`);
 
   if (filteredTransfer.length > 0) {
     const creditAmount =
@@ -301,7 +302,10 @@ const addCommissionToPartner = async ({
       ownerId,
       type: "TRANSACTION",
     });
-    console.log("commissionBalance", commissionBalance);
+
+    logger.info(
+      `Show the partners commisision balance as ${commissionBalance}`
+    );
 
     if (commissionBalance) {
       // credit partner for every transfer
@@ -345,6 +349,7 @@ const addCommissionToPartner = async ({
     const fiveMillion = 5000000;
     const threeMillion = 3000000;
 
+    // calculate partner's credit amount based on the withdrawals level
     let creditAmount;
     if (totalWithdrawalAmount > tenMillion) {
       creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;

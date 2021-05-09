@@ -14,6 +14,7 @@ import {
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
+import { Outletpartner } from "../../../src/api/resources/outlet/outletpartner.model";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -104,69 +105,6 @@ describe("Outlet service Tests", function () {
       expect(err.message).to.exist;
     }
   });
-
-  // it("should successfully link an outlet to a partner up on multi-outlet", async function () {
-  //   const linkOutletToPartnerParams = {
-  //     phoneNumber: "08123487025",
-  //   };
-  //
-  //   const mockUserDetailsResponse = {
-  //     data: {
-  //       id: "1",
-  //       firstName: "Adeola",
-  //       lastName: "Banjo",
-  //       userOnboarded: false,
-  //     },
-  //   };
-  //
-  //   nock(process.env.CONSUMER_SERVICE_URL)
-  //     .get(`/user/${linkOutletToPartnerParams.phoneNumber}/details`)
-  //     .reply(OK, mockUserDetailsResponse);
-  //
-  //   // const userId = mockUserDetailsResponse.data.id;
-  //
-  //   const findOneOutlet = sinon.stub(Outlet, "findOne").resolves(null);
-  //   const findOnePartnerverification = sinon
-  //     .stub(Partnerverification, "findOne")
-  //     .resolves(null);
-  //
-  //   const savedOutlet = new Outlet();
-  //   sinon.stub(savedOutlet, "save").resolves({
-  //     outletUserId: "outletid",
-  //     ownerId: "ownerid",
-  //     status: OutletStatus.ACTIVE,
-  //   });
-  //
-  //   sinon.stub(Partnerverification.prototype, "save").resolves({
-  //     outletUserId: "outletid",
-  //     ownerId: "ownerid",
-  //     userOnboarded: true,
-  //   });
-  //
-  //   const response = await OutletService.linkUserToPartner({
-  //     params: linkOutletToPartnerParams,
-  //   });
-  //   expect(response.statusCode).equals(OK);
-  //
-  //   findOneOutlet.restore();
-  //   sinon.assert.calledOnce(findOneOutlet);
-  //   findOnePartnerverification.restore();
-  //   sinon.assert.calledOnce(findOnePartnerverification);
-  // });
-  //
-  // it("should fail to link an outlet to partner if linking details are incorrect", async function () {
-  //   const linkOutletToPartnerParams = {
-  //     phoneNumber: "08123487025",
-  //   };
-  //   try {
-  //     await OutletService.linkUserToPartner({
-  //       params: linkOutletToPartnerParams,
-  //     });
-  //   } catch (err) {
-  //     expect(err.statusCode).equals(BAD_REQUEST);
-  //     expect(err.message).to.exist;
-  //   }
-  // });
 
   it("should successfully unlink an outlet", async function () {
     const findOneOutlet = sinon.stub(Outlet, "findOne").resolves({

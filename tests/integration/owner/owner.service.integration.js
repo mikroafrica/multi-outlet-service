@@ -59,7 +59,7 @@ describe("Owner service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_PARTNER")
+      .post("/user/create/OUTLET_OWNER")
       .reply(OK, mockResponse);
 
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(OK, {});
@@ -82,7 +82,7 @@ describe("Owner service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_PARTNER")
+      .post("/user/create/OUTLET_OWNER")
       .reply(BAD_REQUEST, mockResponse);
 
     try {
@@ -101,7 +101,7 @@ describe("Owner service Tests", function () {
     };
 
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_PARTNER")
+      .post("/user/create/OUTLET_OWNER")
       .reply(OK, mockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
