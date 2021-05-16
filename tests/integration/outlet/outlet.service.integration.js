@@ -7,14 +7,17 @@ import sinon from "sinon";
 import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
 import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 import { Verification } from "../../../src/api/resources/outlet/verification.model";
-import { Partnerverification } from "../../../src/api/resources/outlet/partnerverification.model";
+import { Partnerverification } from "../../../src/api/resources/outlet/outletpartner.model";
 import {
   BAD_REQUEST,
   NOT_FOUND,
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
+import { Partner } from "../../../src/api/resources/outlet/partner.model";
+import { CommissionBalance } from "../../../src/api/resources/owner/commissionbalance.model";
 import { Outletpartner } from "../../../src/api/resources/outlet/outletpartner.model";
+import { UserType } from "../../../src/api/resources/owner/user.type";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

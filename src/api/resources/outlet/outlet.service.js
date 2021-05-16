@@ -5,17 +5,20 @@ import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
+import { Partner } from "./partner.model.js";
 import { Outletpartner } from "./outletpartner.model.js";
 import { CommissionBalance } from "../owner/commissionbalance.model.js";
 import { Owner } from "../owner/owner.model.js";
+import { WithdrawalLevel } from "../owner/commission.type";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import { Commission } from "../owner/commission.model.js";
-import { Partnerverification } from "./partnerverification.model.js";
+import { Partnerverification } from "./outletpartner.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 import { UserRole } from "../owner/user.role";
+import { UserType } from "../owner/user.type";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -139,25 +142,14 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
   }
 
   try {
+    // Retrieve outlet's dtails from consumer service
     const userDetails = await ConsumerService.getUserDetails(params.userId);
 
     const userDetailsData = userDetails.data;
     const outletUserId = userDetailsData.data.id;
     const userOnboarded = userDetailsData.data.userOnboarded;
-    const walletId = userDetailsData.data.store[0].wallet.id;
-
-    if (
-      userDetailsData.data.store.length < 1 ||
-      userDetailsData.data.store[0].wallet.length < 1
-    ) {
-      logger.error(
-        "Could not link outlet because outlet does not have a wallet"
-      );
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Could not verify outlet linking. Please try again",
-      });
-    }
+    const walletId = userDetailsData.data.store[0].wallet[0].id;
+    const userData = userDetailsData.data;
 
     logger.info(
       `Retrieving user details from consumer service as ${JSON.stringify(
@@ -165,6 +157,11 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
       )}`
     );
 
+    // Retrieve partner's dtails from consumer service
+    const partnerDetails = await ConsumerService.getUserDetails(ownerId);
+    const partnerDetailsData = partnerDetails.data.data;
+
+    // check if outlet is already existing. if not, save outlet
     const existingOutlet = await Outletpartner.findOne({
       userId: outletUserId,
     });
@@ -176,13 +173,52 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
       });
     }
 
-    const addedOutlet = new Outletpartner({
+    const savedOutlet = new Outletpartner({
       userId: outletUserId,
-      ownerId,
-      walletId,
+      owner: ownerId,
+      accountName: userData.accountName,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      dateOfBirth: userData.dateOfBirth,
+      profileImageId: userData.profileImageId,
+      gender: userData.gender,
+      businessName: userData.businessName,
+      businessType: userData.businessType,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      userType: userData.userType,
       status: OutletStatus.ACTIVE,
     });
-    await addedOutlet.save();
+    await savedOutlet.save();
+
+    // Check if partner is already existing
+    const existingPartner = await Partner.findOne({ ownerId });
+
+    let partner;
+    if (!existingPartner) {
+      partner = await Partner.create({
+        ownerId,
+        accountName: partnerDetailsData.accountName,
+        firstName: partnerDetailsData.firstName,
+        lastName: partnerDetailsData.lastName,
+        dateOfBirth: partnerDetailsData.dateOfBirth,
+        profileImageId: partnerDetailsData.profileImageId,
+        gender: partnerDetailsData.gender,
+        businessName: partnerDetailsData.businessName,
+        businessType: partnerDetailsData.businessType,
+        email: partnerDetailsData.email,
+        phoneNumber: partnerDetailsData.phoneNumber,
+        userType: UserType.OUTLET_PARTNER,
+        status: OutletStatus.ACTIVE,
+        users: [],
+      });
+    }
+
+    const newPartner = await Partner.findOne({ ownerId });
+    newPartner.users.push(savedOutlet);
+    await newPartner.save();
+
+    console.log("newPartner", newPartner);
 
     await addCommissionToPartner({
       userDetails,
@@ -192,7 +228,7 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: addedOutlet,
+      message: "Outlet successfully linked.",
     });
   } catch (err) {
     logger.error(
@@ -210,11 +246,15 @@ const addCommissionToPartner = async ({
   userDetails,
   outletUserId,
   ownerId,
-  // ownerDetails,
 }) => {
   // fetch user transaction details from the transaction service
-  const dateFrom = 1601506800000;
-  const dateTo = 1620490823119;
+
+  const timeCreated = userDetails.data.data.timeCreated;
+  console.log("timeCreated", timeCreated);
+
+  const dateFrom = timeCreated;
+  const dateTo = timeCreated + 2592000000;
+  // const dateTo = 1620770487650;
 
   const params = {
     userId: outletUserId,
@@ -226,6 +266,8 @@ const addCommissionToPartner = async ({
   );
 
   const outletTransactionData = outletTransactions.data.data;
+
+  console.log("outletTransactionData", outletTransactionData);
 
   // filter transaction details to return transactions made within the first 30 days
 
@@ -246,16 +288,16 @@ const addCommissionToPartner = async ({
 
   const onboardingCommission = await Commission.findOne({
     type: "ONBOARDING",
-  }).lean();
+    owner: ownerId,
+  });
 
   logger.info(`Print onboarding commission as ${onboardingCommission}`);
   if (
     onboardingCommission &&
-    totalTransactionAmount >= onboardingCommission.multiplier
+    totalTransactionAmount >= onboardingCommission.condition
   ) {
-    console.log("entered here");
     const commissionBalance = await CommissionBalance.findOne({
-      ownerId,
+      owner: ownerId,
       type: "ONBOARDING",
     }).lean();
 
@@ -281,7 +323,7 @@ const addCommissionToPartner = async ({
 
   //    TRANSACTION COMMISSIONS
   //   Filter transactions for every transfer (type TRANSFER) made by user
-  //   that corresponds to settings (set by admin) e.g recharge card
+  //   that corresponds to settings (set by admin)
   const filteredTransfer = outletTransactionData.filter(
     (transaction) =>
       transaction.type === "Transfer" && transaction.successfulAmount
@@ -289,36 +331,40 @@ const addCommissionToPartner = async ({
 
   //   if transfer exists
   const transferCommission = await Commission.findOne({
+    type: "TRANSACTION",
+    owner: ownerId,
     transactions: "transfers",
-  }).lean();
+  });
 
   logger.info(`Get the transfer commission condition as ${transferCommission}`);
 
   if (filteredTransfer.length > 0) {
-    const creditAmount =
+    const commissionOnTransfers =
       filteredTransfer.length * transferCommission.multiplier;
 
     const commissionBalance = await CommissionBalance.findOne({
-      ownerId,
+      owner: ownerId,
       type: "TRANSACTION",
     });
-
-    logger.info(
-      `Show the partners commisision balance as ${commissionBalance}`
-    );
 
     if (commissionBalance) {
       // credit partner for every transfer
       commissionBalance.amount =
-        commissionBalance.amount +
-        transferCommission.multiplier * totalTransactionAmount;
+        commissionBalance.amount + commissionOnTransfers;
+      await commissionBalance.save();
+
+      logger.info(
+        `Show the partners commisision balance as ${commissionBalance.amount}`
+      );
     } else {
       //  create a commissionBalance with amount === creditAmount
       const creditAmount = new CommissionBalance({
-        amount: transferCommission.multiplier * totalTransactionAmount,
+        amount: transferCommission.multiplier * filteredTransfer.length,
         owner: ownerId,
+        type: "TRANSACTION",
       });
       await creditAmount.save();
+      console.log(`Show the credit amount as ${creditAmount}`);
     }
   }
 
@@ -340,54 +386,73 @@ const addCommissionToPartner = async ({
       0
     );
 
-    const withdrawalCommission = await Commission.findOne({
+    const withdrawalCommission = await Commission.find({
       transactions: "withdrawals",
-    });
+      owner: ownerId,
+    }).sort({ withdrawals: 1 });
 
-    const tenMillion = 1000000;
-    const sevenMillion = 7000000;
-    const fiveMillion = 5000000;
-    const threeMillion = 3000000;
+    let condition1;
+    let condition2;
+    let condition3;
+    let condition4;
+    let condition5;
+    if (withdrawalCommission[0].withdrawals === "level1") {
+      condition1 = withdrawalCommission[0].condition;
+    } else if (withdrawalCommission[1].withdrawals === "level2") {
+      condition2 = withdrawalCommission[1].condition;
+    } else if (withdrawalCommission[2].withdrawals === "level3") {
+      condition3 = withdrawalCommission[2].condition;
+    } else if (withdrawalCommission[3].withdrawals === "level4") {
+      condition4 = withdrawalCommission[3].condition;
+    } else if (withdrawalCommission[4].withdrawals === "level5") {
+      condition5 = withdrawalCommission[4].condition;
+    }
 
+    console.log("condition1", condition1);
     // calculate partner's credit amount based on the withdrawals level
     let creditAmount;
-    if (totalWithdrawalAmount > tenMillion) {
-      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+    if (totalWithdrawalAmount > condition1) {
+      creditAmount = withdrawalCommission[0].multiplier * totalWithdrawalAmount;
     } else if (
-      totalWithdrawalAmount > sevenMillion ||
-      totalWithdrawalAmount < tenMillion
+      totalWithdrawalAmount > condition2 ||
+      totalWithdrawalAmount <= condition1
     ) {
-      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+      creditAmount = withdrawalCommission[1].multiplier * totalWithdrawalAmount;
     } else if (
-      totalWithdrawalAmount > fiveMillion ||
-      totalWithdrawalAmount < sevenMillion
+      totalWithdrawalAmount > condition3 ||
+      totalWithdrawalAmount <= condition2
     ) {
-      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+      creditAmount = withdrawalCommission[2].multiplier * totalWithdrawalAmount;
     } else if (
-      totalWithdrawalAmount > threeMillion ||
-      totalWithdrawalAmount < fiveMillion
+      totalWithdrawalAmount > condition4 ||
+      totalWithdrawalAmount <= condition3
     ) {
-      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
-    } else if (totalWithdrawalAmount < threeMillion) {
-      creditAmount = withdrawalCommission.multiplier * totalWithdrawalAmount;
+      creditAmount = withdrawalCommission[3].multiplier * totalWithdrawalAmount;
+    } else if (totalWithdrawalAmount <= condition5) {
+      creditAmount = withdrawalCommission[4].multiplier * totalWithdrawalAmount;
     }
 
     logger.info(`computed ${creditAmount}`);
 
     const commissionBalance = await CommissionBalance.findOne({
-      ownerId,
+      owner: ownerId,
       type: "TRANSACTION",
     });
+
+    console.log("commissionBalance", commissionBalance);
 
     if (commissionBalance) {
       // credit partner for every transfer
       commissionBalance.amount = commissionBalance.amount + creditAmount;
-      await commissionBalance.amount.save();
+      await commissionBalance.save();
+
+      // console.log("commissionBalance", commissionBalance.amount)
     } else {
       //  create a commissionBalance with amount === creditAmount
       const newCreditAmount = new CommissionBalance({
         amount: creditAmount,
         owner: ownerId,
+        type: "TRANSACTION",
       });
       await newCreditAmount.save();
     }

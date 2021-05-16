@@ -82,11 +82,15 @@ const allowRoutes = (req) => {
     "email-verification",
     "reset-password-request",
     "users",
-    "commissions",
+    "commissions/:id",
     "user/:id",
     "link-outlet/:id",
     "/:id",
+    "commission-balance/:id",
     "commission-setting/:id",
+    "update-commission/:id/:commissionId",
+    "partner/:id",
+    "media/:id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {

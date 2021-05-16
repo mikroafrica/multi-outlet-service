@@ -23,6 +23,14 @@ const commissionBalanceSchema = new mongoose.Schema(schema, {
   timestamps: true,
 });
 
+commissionBalanceSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+  },
+});
+
 export const CommissionBalance = mongoose.model(
   "commissionBalance",
   commissionBalanceSchema

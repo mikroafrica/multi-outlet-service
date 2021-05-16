@@ -21,18 +21,23 @@ const schema = {
   },
   transactions: {
     type: String,
-    default: TransactionType.TRANSFERS,
-    enum: [TransactionType.TRANSFERS, TransactionType.WITHDRAWALS],
+    default: TransactionType.NIL,
+    enum: [
+      TransactionType.TRANSFERS,
+      TransactionType.WITHDRAWALS,
+      TransactionType.NIL,
+    ],
   },
   withdrawals: {
     type: String,
-    default: WithdrawalLevel.LEVEL1,
+    default: WithdrawalLevel.NA,
     enum: [
       WithdrawalLevel.LEVEL1,
       WithdrawalLevel.LEVEL2,
       WithdrawalLevel.LEVEL3,
       WithdrawalLevel.LEVEL4,
       WithdrawalLevel.LEVEL5,
+      WithdrawalLevel.NA,
     ],
   },
   owner: {
@@ -42,5 +47,13 @@ const schema = {
 };
 
 const commissionSchema = new mongoose.Schema(schema, { timestamps: true });
+
+commissionSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+  },
+});
 
 export const Commission = mongoose.model("commission", commissionSchema);

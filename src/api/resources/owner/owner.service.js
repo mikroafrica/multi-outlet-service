@@ -8,6 +8,8 @@ import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
+import { Partner } from "../outlet/partner.model";
+import { Outletpartner } from "../outlet/outletpartner.model";
 import { CommissionBalance } from "./commissionbalance.model";
 import { TempOwner } from "./temp.owner.model";
 import { Commission } from "./commission.model";
@@ -541,8 +543,6 @@ export const createCommission = async ({
     });
   }
 
-  logger.info(`printingand ${ownerId}`);
-
   const schema = Joi.object().keys({
     condition: Joi.number().required(),
     multiplier: Joi.number().required(),
@@ -559,7 +559,6 @@ export const createCommission = async ({
 
   try {
     const withdrawalLevel = WithdrawalLevel[withdrawallevel];
-    const userType = UserType.OUTLET_PARTNER;
     const transactionType = TransactionType[transaction];
     const commissionType = CommissionType[commissiontype];
     if (!commissionType) {
@@ -569,9 +568,70 @@ export const createCommission = async ({
           "Invalid commission type supplied. Please supply a valid commission type",
       });
     }
-    console.log("withdrawallevel hereee", withdrawalLevel);
 
-    logger.info(`user type supplied as ${userType}`);
+    //update commission setting if already existing
+    const existingCommissionSettings = await Commission.findOne({
+      $or: [
+        {
+          $and: [
+            { type: commissionType },
+            { transactions: transactionType },
+            { withdrawals: withdrawalLevel },
+          ],
+        },
+        {
+          $and: [
+            { type: commissionType },
+            { transactions: transactionType },
+            { withdrawals: WithdrawalLevel.NA },
+          ],
+        },
+        {
+          $and: [
+            { type: commissionType },
+            { transactions: TransactionType.NIL },
+            { withdrawals: WithdrawalLevel.NA },
+          ],
+        },
+      ],
+    });
+
+    console.log("existingCommissionSettings", existingCommissionSettings);
+
+    if (existingCommissionSettings) {
+      await Commission.findOneAndUpdate(
+        {
+          $or: [
+            {
+              $and: [
+                { type: commissionType },
+                { transactions: transactionType },
+                { withdrawals: withdrawalLevel },
+              ],
+            },
+            {
+              $and: [
+                { type: commissionType },
+                { transactions: transactionType },
+                { withdrawals: WithdrawalLevel.NA },
+              ],
+            },
+            {
+              $and: [
+                { type: commissionType },
+                { transactions: TransactionType.NIL },
+                { withdrawals: WithdrawalLevel.NA },
+              ],
+            },
+          ],
+        },
+        {
+          $set: { condition: params.condition, multiplier: params.multiplier },
+        },
+        { new: true }
+      );
+      return;
+    }
 
     const commission = new Commission({
       condition: params.condition,
@@ -607,7 +667,7 @@ export const createCommission = async ({
 export const getPartnerApprovalStatus = async ({ userId }) => {
   try {
     // check for partner approval if he has commissions already set
-    const partner = await Owner.findOne({ userId });
+    const partner = await Partner.findOne({ ownerId: userId });
     let returnedApprovalStatus;
     if (partner.approval === PartnerApproval.APPROVED) {
       returnedApprovalStatus = PartnerApproval.APPROVED;
@@ -635,13 +695,13 @@ export const getPartnerApprovalStatus = async ({ userId }) => {
   }
 };
 
-export const getPartnerCommissionSetting = async ({
+export const getPartnerCommissionBalance = async ({
   userId,
   commissiontype,
 }) => {
   try {
     const commissionType = CommissionType[commissiontype];
-    // check for partner approval if he has commissions already set
+    // check for if the partner has commissions already set
     const partnerCommission = await CommissionBalance.find({ owner: userId });
     if (!partnerCommission) {
       return Promise.reject({
@@ -658,6 +718,88 @@ export const getPartnerCommissionSetting = async ({
     return Promise.reject({
       statusCode: BAD_REQUEST,
       message: "Could not confirm partner approval status",
+    });
+  }
+};
+
+export const getPartnerCommissionSettings = async ({ ownerId }) => {
+  try {
+    const commissionSettings = await Commission.find({ owner: ownerId });
+    if (!commissionSettings) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Commission rule is yet to be set",
+      });
+    }
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: commissionSettings,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not confirm partner approval status",
+    });
+  }
+};
+
+export const updatePartnerCommissionSettings = async ({
+  params,
+  commissionId,
+  ownerId,
+}) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  try {
+    const updatedCommission = await Commission.findOneAndUpdate(
+      {
+        owner: ownerId,
+        _id: commissionId,
+      },
+      { $set: { condition: params.condition, multiplier: params.multiplier } },
+      { new: true }
+    );
+
+    console.log("updatedCommission", updatedCommission);
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: updatedCommission,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not update commission setting for partner",
+    });
+  }
+};
+
+export const getPartner = async ({ ownerId }) => {
+  try {
+    const partner = await Partner.findOne({ ownerId }).populate("users");
+    if (!partner) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Partner could not be found",
+      });
+    }
+
+    console.log("partner", partner);
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: partner,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch partner",
     });
   }
 };

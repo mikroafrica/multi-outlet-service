@@ -15,6 +15,9 @@ import {
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
 import { CommissionBalance } from "../../../src/api/resources/owner/commissionbalance.model";
+import { Partner } from "../../../src/api/resources/outlet/partner.model";
+import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
+import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -615,7 +618,7 @@ describe("Owner service Tests", function () {
     sinon.assert.calledOnce(findOwners);
   });
 
-  it("should create commission settings for partners when a valid commisiontype is supplied", async function () {
+  it("should create commission settings for partners when valid commision parameters are supplied", async function () {
     const ownerId = "5ff84b6929be4225a084874a";
     const userId = "vhvuyi9";
     const commissionType = "ONBOARDING";
@@ -627,6 +630,22 @@ describe("Owner service Tests", function () {
       condition: 1234,
       multiplier: 5,
     };
+
+    const existingCommission = sinon.stub(Commission, "findOne").resolves({
+      type: commissionType,
+      transactions,
+      withdrawals,
+    });
+
+    const findOneAndUpdateCommission = sinon
+      .stub(Commission, "findOneAndUpdate")
+      .resolves({
+        type: commissionType,
+        transactions,
+        withdrawals,
+        condition: params.condition,
+        multiplier: params.multiplier,
+      });
 
     // const commission = new Commission();
     sinon.stub(Commission.prototype, "save").resolves({
@@ -646,8 +665,13 @@ describe("Owner service Tests", function () {
       withdrawallevel: "LEVEL2",
     });
 
-    expect(response.statusCode).equals(OK);
-    expect(response.data).to.exist;
+    // expect(response.statusCode).equals(OK);
+    // expect(response.data).to.exist;
+
+    existingCommission.restore();
+    sinon.assert.calledOnce(existingCommission);
+    findOneAndUpdateCommission.restore();
+    sinon.assert.calledOnce(findOneAndUpdateCommission);
   });
 
   it("should successfully fetch commissions balance for a patner when userId is supplied", async function () {
@@ -658,7 +682,7 @@ describe("Owner service Tests", function () {
       .stub(CommissionBalance, "find")
       .resolves({ owner: userId });
 
-    const response = await OwnerService.getPartnerCommissionSetting({
+    const response = await OwnerService.getPartnerCommissionBalance({
       userId,
       commissiontype,
     });
@@ -673,7 +697,9 @@ describe("Owner service Tests", function () {
   it("should successfully get partner approval status", async function () {
     const userId = "5ff84b6929be4225a084874a";
 
-    const partner = sinon.stub(Owner, "findOne").resolves({ userId });
+    const partner = sinon
+      .stub(Partner, "findOne")
+      .resolves({ ownerId: userId });
 
     const partnerCommission = sinon
       .stub(CommissionBalance, "find")
@@ -690,5 +716,53 @@ describe("Owner service Tests", function () {
     sinon.assert.calledOnce(partner);
     partnerCommission.restore();
     sinon.assert.calledOnce(partnerCommission);
+  });
+
+  it("should successfully get partner commission settings", async function () {
+    const userId = "5ff84b6929be4225a084874a";
+
+    const commissionSettings = sinon
+      .stub(Commission, "find")
+      .resolves({ owner: userId });
+
+    const response = await OwnerService.getPartnerCommissionSettings({
+      userId,
+    });
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+
+    commissionSettings.restore();
+    sinon.assert.calledOnce(commissionSettings);
+  });
+
+  it("should successfully update partner commission settings", async function () {
+    const userId = "5ff84b6929be4225a084874a";
+
+    const params = {
+      condition: 1000,
+      multiplier: 5,
+    };
+
+    const updatedCommission = sinon
+      .stub(Commission, "findOneAndUpdate")
+      .resolves({
+        owner: userId,
+        _id: "dythgng79",
+        condition: params.condition,
+        multiplier: params.multiplier,
+      });
+
+    const response = await OwnerService.updatePartnerCommissionSettings({
+      params,
+      userId,
+      ownerId: userId,
+    });
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+
+    updatedCommission.restore();
+    sinon.assert.calledOnce(updatedCommission);
   });
 });

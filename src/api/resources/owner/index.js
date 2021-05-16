@@ -11,8 +11,11 @@ import {
   fetchUsersByType,
   createCommissionForPartner,
   partnerApprovalStatus,
-  usersOnboarding,
-  partnerCommissionSetting,
+  // usersOnboarding,
+  partnerCommissionBalance,
+  partnerCommissionSettings,
+  updateCommissionSettings,
+  fetchPartnerById,
 } from "./owner.controller";
 
 const auth = ({ server, subBase }) => {
@@ -26,10 +29,16 @@ const auth = ({ server, subBase }) => {
   server.put(`${subBase}/update-profile`, updateUserProfile);
   server.get(`${subBase}/details`, fetchOwnerDetails);
   server.get(`${subBase}/users`, fetchUsersByType);
-  server.post(`${subBase}/commissions`, createCommissionForPartner);
+  server.post(`${subBase}/commissions/:id`, createCommissionForPartner);
   server.get(`${subBase}/user/:id`, partnerApprovalStatus);
-  server.get(`${subBase}/user-onboarding`, usersOnboarding);
-  server.get(`${subBase}/commission-setting/:id`, partnerCommissionSetting);
+  // server.get(`${subBase}/user-onboarding`, usersOnboarding);
+  server.get(`${subBase}/commission-balance/:id`, partnerCommissionBalance);
+  server.get(`${subBase}/commission-setting/:id`, partnerCommissionSettings);
+  server.put(
+    `${subBase}/update-commission/:id/:commissionId`,
+    updateCommissionSettings
+  );
+  server.get(`${subBase}/partner/:id`, fetchPartnerById);
 };
 
 export default auth;
