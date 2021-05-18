@@ -220,7 +220,10 @@ export const updateCommissionSettings = (req, res) => {
 export const fetchPartnerById = (req, res) => {
   const ownerId = req.params.id;
 
-  getPartner({ ownerId })
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  getPartner({ ownerId, page, limit })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

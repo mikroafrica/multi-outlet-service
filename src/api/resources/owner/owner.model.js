@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate";
-import { UserType } from "./user.type";
+import { UserType, PartnerApproval } from "./user.type";
 
 const schema = {
   userId: String,
+  ownerId: String,
   walletId: String,
   phoneNumber: String,
   noOfOutlets: String,
@@ -11,6 +12,11 @@ const schema = {
     type: String,
     default: UserType.OUTLET_OWNER,
     enum: [UserType.OUTLET_OWNER, UserType.OUTLET_PARTNER],
+  },
+  approval: {
+    type: String,
+    default: PartnerApproval.PENDING,
+    enum: [PartnerApproval.APPROVED, PartnerApproval.PENDING],
   },
 };
 

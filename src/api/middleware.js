@@ -90,7 +90,7 @@ const allowRoutes = (req) => {
     "commission-setting/:id",
     "update-commission/:id/:commissionId",
     "partner/:id",
-    "media/:id",
+    ":id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {

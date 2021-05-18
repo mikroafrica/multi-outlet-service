@@ -5,8 +5,6 @@ import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
-import { Partner } from "./partner.model.js";
-import { Outletpartner } from "./outletpartner.model.js";
 import { CommissionBalance } from "../owner/commissionbalance.model.js";
 import { Owner } from "../owner/owner.model.js";
 import { WithdrawalLevel } from "../owner/commission.type";
@@ -14,7 +12,6 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import { Commission } from "../owner/commission.model.js";
-import { Partnerverification } from "./outletpartner.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 import { UserRole } from "../owner/user.role";
@@ -117,7 +114,6 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
   }
 
   const schema = Joi.object().keys({
-    phoneNumber: Joi.string().required(),
     userId: Joi.string().required(),
   });
 
@@ -130,26 +126,14 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
     });
   }
 
-  let phoneNumber = "";
-  try {
-    phoneNumber = validatePhone({ phone: params.phoneNumber });
-  } catch (err) {
-    logger.error("An error occurred while linking outlet");
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: err,
-    });
-  }
-
   try {
     // Retrieve outlet's dtails from consumer service
     const userDetails = await ConsumerService.getUserDetails(params.userId);
 
     const userDetailsData = userDetails.data;
-    const outletUserId = userDetailsData.data.id;
-    const userOnboarded = userDetailsData.data.userOnboarded;
-    const walletId = userDetailsData.data.store[0].wallet[0].id;
     const userData = userDetailsData.data;
+    const outletUserId = userDetailsData.data.id;
+    const walletId = userDetailsData.data.store[0].wallet[0].id;
 
     logger.info(
       `Retrieving user details from consumer service as ${JSON.stringify(
@@ -158,11 +142,18 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
     );
 
     // Retrieve partner's dtails from consumer service
-    const partnerDetails = await ConsumerService.getUserDetails(ownerId);
-    const partnerDetailsData = partnerDetails.data.data;
+    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+    const ownerDetailsData = ownerDetails.data.data;
+    // const walletId = ownerDetailsData.data.store[0].wallet[0].id;
+
+    logger.info(
+      `Retrieving owner details from consumer service as ${JSON.stringify(
+        ownerDetailsData
+      )}`
+    );
 
     // check if outlet is already existing. if not, save outlet
-    const existingOutlet = await Outletpartner.findOne({
+    const existingOutlet = await Owner.findOne({
       userId: outletUserId,
     });
 
@@ -173,52 +164,14 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
       });
     }
 
-    const savedOutlet = new Outletpartner({
+    const addedOutlet = new Owner({
       userId: outletUserId,
-      owner: ownerId,
-      accountName: userData.accountName,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      dateOfBirth: userData.dateOfBirth,
-      profileImageId: userData.profileImageId,
-      gender: userData.gender,
-      businessName: userData.businessName,
-      businessType: userData.businessType,
-      email: userData.email,
-      phoneNumber: userData.phoneNumber,
-      userType: userData.userType,
-      status: OutletStatus.ACTIVE,
+      ownerId,
+      walletId,
+      userType: UserType.OUTLET_PARTNER,
+      phoneNumber: ownerDetailsData.phoneNumber,
     });
-    await savedOutlet.save();
-
-    // Check if partner is already existing
-    const existingPartner = await Partner.findOne({ ownerId });
-
-    let partner;
-    if (!existingPartner) {
-      partner = await Partner.create({
-        ownerId,
-        accountName: partnerDetailsData.accountName,
-        firstName: partnerDetailsData.firstName,
-        lastName: partnerDetailsData.lastName,
-        dateOfBirth: partnerDetailsData.dateOfBirth,
-        profileImageId: partnerDetailsData.profileImageId,
-        gender: partnerDetailsData.gender,
-        businessName: partnerDetailsData.businessName,
-        businessType: partnerDetailsData.businessType,
-        email: partnerDetailsData.email,
-        phoneNumber: partnerDetailsData.phoneNumber,
-        userType: UserType.OUTLET_PARTNER,
-        status: OutletStatus.ACTIVE,
-        users: [],
-      });
-    }
-
-    const newPartner = await Partner.findOne({ ownerId });
-    newPartner.users.push(savedOutlet);
-    await newPartner.save();
-
-    console.log("newPartner", newPartner);
+    await addedOutlet.save();
 
     await addCommissionToPartner({
       userDetails,
@@ -228,7 +181,7 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      message: "Outlet successfully linked.",
+      data: addedOutlet,
     });
   } catch (err) {
     logger.error(
@@ -250,7 +203,6 @@ const addCommissionToPartner = async ({
   // fetch user transaction details from the transaction service
 
   const timeCreated = userDetails.data.data.timeCreated;
-  console.log("timeCreated", timeCreated);
 
   const dateFrom = timeCreated;
   const dateTo = timeCreated + 2592000000;
@@ -267,8 +219,6 @@ const addCommissionToPartner = async ({
 
   const outletTransactionData = outletTransactions.data.data;
 
-  console.log("outletTransactionData", outletTransactionData);
-
   // filter transaction details to return transactions made within the first 30 days
 
   // apply logic commission based on the filtered transactions
@@ -284,7 +234,9 @@ const addCommissionToPartner = async ({
     },
     0
   );
-  console.log("totalTransactionAmount", totalTransactionAmount);
+  logger.info(
+    `Total transaction amount for the first 30 of getting an outlet estimated as ${totalTransactionAmount}`
+  );
 
   const onboardingCommission = await Commission.findOne({
     type: "ONBOARDING",
@@ -364,12 +316,11 @@ const addCommissionToPartner = async ({
         type: "TRANSACTION",
       });
       await creditAmount.save();
-      console.log(`Show the credit amount as ${creditAmount}`);
     }
   }
 
   //   Filter transactions for every transfer (type WITHDRAWAL) made by user
-  //   that corresponds to settings (set by admin) e.g recharge card
+  //   that corresponds to settings (set by admin)
   const filteredTransaction = outletTransactionData.filter(
     (transaction) =>
       transaction.type === "Withdrawal" && transaction.successfulAmount
@@ -737,6 +688,8 @@ export const fetchOutletDetails = async (outlets) => {
 
     const walletSummaryResponse = await WalletService.getWalletById(walletId);
     const walletSummaryData = walletSummaryResponse.data;
+
+    console.log("walletSummaryData", walletSummaryData);
 
     userDetailsData.data.store[0].wallet[0] = {
       ...wallet,

@@ -26,8 +26,8 @@ export const linkOutletToPartner = (req, res) => {
   const ownerId = req.params.id;
 
   linkUserToPartner({ params, ownerId })
-    .then(({ statusCode, message }) => {
-      res.send(statusCode, { status: true, message });
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
     })
     .catch(({ statusCode, message }) => {
       res.send(statusCode, { status: false, message });

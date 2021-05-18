@@ -15,7 +15,6 @@ import {
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
 import { CommissionBalance } from "../../../src/api/resources/owner/commissionbalance.model";
-import { Partner } from "../../../src/api/resources/outlet/partner.model";
 import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
 import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 
@@ -697,12 +696,10 @@ describe("Owner service Tests", function () {
   it("should successfully get partner approval status", async function () {
     const userId = "5ff84b6929be4225a084874a";
 
-    const partner = sinon
-      .stub(Partner, "findOne")
-      .resolves({ ownerId: userId });
+    const partner = sinon.stub(Owner, "findOne").resolves({ ownerId: userId });
 
     const partnerCommission = sinon
-      .stub(CommissionBalance, "find")
+      .stub(Commission, "find")
       .resolves({ owner: userId });
 
     const response = await OwnerService.getPartnerApprovalStatus({

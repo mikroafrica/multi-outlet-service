@@ -8,13 +8,12 @@ import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
-import { Partner } from "../outlet/partner.model";
-import { Outletpartner } from "../outlet/outletpartner.model";
 import { CommissionBalance } from "./commissionbalance.model";
 import { TempOwner } from "./temp.owner.model";
 import { Commission } from "./commission.model";
 import { OutletStatus } from "../outlet/outlet.status";
 import { UserType, PartnerApproval } from "./user.type";
+
 import {
   CommissionType,
   TransactionType,
@@ -23,7 +22,10 @@ import {
 import { Outlet } from "../outlet/outlet.model";
 import { Verification } from "../outlet/verification.model";
 import { validatePhone } from "../../modules/util";
-import { sendVerificationOtp } from "../outlet/outlet.service";
+import {
+  fetchOutletDetails,
+  sendVerificationOtp,
+} from "../outlet/outlet.service";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -596,8 +598,11 @@ export const createCommission = async ({
       ],
     });
 
-    console.log("existingCommissionSettings", existingCommissionSettings);
-
+    logger.info(
+      `Get existing partner commission settings as  ${JSON.stringify(
+        existingCommissionSettings
+      )}`
+    );
     if (existingCommissionSettings) {
       await Commission.findOneAndUpdate(
         {
@@ -667,12 +672,12 @@ export const createCommission = async ({
 export const getPartnerApprovalStatus = async ({ userId }) => {
   try {
     // check for partner approval if he has commissions already set
-    const partner = await Partner.findOne({ ownerId: userId });
+    const partner = await Owner.findOne({ ownerId: userId });
     let returnedApprovalStatus;
     if (partner.approval === PartnerApproval.APPROVED) {
       returnedApprovalStatus = PartnerApproval.APPROVED;
     } else {
-      const partnerCommission = await CommissionBalance.find({ owner: userId });
+      const partnerCommission = await Commission.find({ owner: userId });
 
       if (partnerCommission && partnerCommission.length > 0) {
         partner.approval = PartnerApproval.APPROVED;
@@ -766,7 +771,9 @@ export const updatePartnerCommissionSettings = async ({
       { new: true }
     );
 
-    console.log("updatedCommission", updatedCommission);
+    logger.info(
+      `Show updated comiision as  ${JSON.stringify(updatedCommission)}`
+    );
 
     return Promise.resolve({
       statusCode: OK,
@@ -780,21 +787,47 @@ export const updatePartnerCommissionSettings = async ({
   }
 };
 
-export const getPartner = async ({ ownerId }) => {
+export const getPartner = async ({ ownerId, page, limit }) => {
   try {
-    const partner = await Partner.findOne({ ownerId }).populate("users");
-    if (!partner) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Partner could not be found",
-      });
-    }
+    const outlets = await Owner.paginate(
+      {
+        ownerId,
+      },
+      { page, limit, sort: { createdAt: -1 } }
+    );
 
-    console.log("partner", partner);
+    // Retrieve partner's details from the consumer service
+    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+    const ownerDetailsData = ownerDetails.data.data;
+
+    const partnerDetails = [];
+    partnerDetails.push({
+      userType: outlets.docs[0].userType,
+      approval: outlets.docs[0].approval,
+      phoneNumber: ownerDetailsData.phoneNumber,
+      firstName: ownerDetailsData.firstName,
+      lastName: ownerDetailsData.lastName,
+      dateOfBirth: ownerDetailsData.dateOfBirth,
+      businessName: ownerDetailsData.businessName,
+      businessType: ownerDetailsData.businessType,
+      email: ownerDetailsData.email,
+    });
+
+    // Use the fetchOutletDetails method to fetch the details of users linked to partner
+    const outletDetails = await fetchOutletDetails(outlets.docs);
+
+    logger.info(`Returning user details as ${JSON.stringify(outletDetails)}`);
 
     return Promise.resolve({
       statusCode: OK,
-      data: partner,
+      data: {
+        page: outlets.page,
+        pages: outlets.pages,
+        limit: outlets.limit,
+        total: outlets.total,
+        partnerDetails,
+        list: outletDetails,
+      },
     });
   } catch (e) {
     return Promise.reject({
