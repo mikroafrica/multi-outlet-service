@@ -55,6 +55,7 @@ export const signupMultiOutletOwner = async (params) => {
           userId,
           phoneNumber: params.phoneNumber,
           noOfOutlets: params.noOfOutlets,
+          userType: params.userType,
         });
         await tempOwner.save();
 
@@ -157,14 +158,16 @@ export const loginMultiOutletOwner = async ({ params }) => {
             userId,
             phoneNumber: tempOwner ? tempOwner.phoneNumber : "",
             noOfOutlets: tempOwner ? tempOwner.noOfOutlets : "",
+            userType: tempOwner ? tempOwner.userType : "",
           });
           await createdOwner.save();
           owner = createdOwner;
 
-          if (owner.userType === "OUTLET_OWNER") {
+          if (owner.userType === UserType.OUTLET_OWNER) {
             owner.approval = Approval.APPROVED;
           } else {
             owner.approval = Approval.PENDING;
+            await owner.save();
           }
         } else {
           return Promise.reject({

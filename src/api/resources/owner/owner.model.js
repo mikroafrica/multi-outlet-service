@@ -6,8 +6,6 @@ const schema = {
   userId: String,
   outletId: String,
   walletId: String,
-  outletWalletId: String,
-  phoneNumber: String,
   noOfOutlets: String,
   userType: {
     type: String,

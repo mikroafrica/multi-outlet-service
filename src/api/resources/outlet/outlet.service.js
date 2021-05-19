@@ -133,7 +133,7 @@ export const linkUserToPartner = async ({ params, userId }) => {
     const userDetailsData = userDetails.data;
     const userData = userDetailsData.data;
     const outletUserId = userDetailsData.data.id;
-    const outletWalletId = userDetailsData.data.store[0].wallet[0].id;
+    const walletId = userDetailsData.data.store[0].wallet[0].id;
 
     logger.info(
       `Retrieving user details from consumer service as ${JSON.stringify(
