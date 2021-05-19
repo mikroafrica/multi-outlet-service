@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { CommissionType } from "./commission.type";
-import { Owner } from "./owner.model";
+import { Owner } from "../owner/owner.model";
 
 const schema = {
   amount: Number,

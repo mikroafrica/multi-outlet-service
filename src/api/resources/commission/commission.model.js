@@ -4,8 +4,8 @@ import {
   TransactionType,
   WithdrawalLevel,
 } from "./commission.type";
-import { Owner } from "./owner.model";
-import { UserRole } from "./user.role";
+import { Owner } from "../owner/owner.model";
+import { UserRole } from "../owner/user.role";
 
 const schema = {
   condition: Number,

@@ -3,7 +3,7 @@ export const UserType = {
   OUTLET_PARTNER: "OUTLET_PARTNER",
 };
 
-export const PartnerApproval = {
+export const Approval = {
   APPROVED: "APPROVED",
   PENDING: "PENDING",
 };

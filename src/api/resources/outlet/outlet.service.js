@@ -5,13 +5,13 @@ import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
-import { CommissionBalance } from "../owner/commissionbalance.model.js";
+import { CommissionBalance } from "../commission/commissionbalance.model.js";
 import { Owner } from "../owner/owner.model.js";
-import { WithdrawalLevel } from "../owner/commission.type";
+import { WithdrawalLevel } from "../commission/commission.type";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
-import { Commission } from "../owner/commission.model.js";
+import { Commission } from "../commission/commission.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 import { UserRole } from "../owner/user.role";
@@ -105,7 +105,7 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   }
 };
 
-export const linkUserToPartner = async ({ params, ownerId }) => {
+export const linkUserToPartner = async ({ params, userId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -114,7 +114,7 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
   }
 
   const schema = Joi.object().keys({
-    userId: Joi.string().required(),
+    outletId: Joi.string().required(),
   });
 
   const validateSchema = Joi.validate(params, schema);
@@ -128,12 +128,12 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
 
   try {
     // Retrieve outlet's dtails from consumer service
-    const userDetails = await ConsumerService.getUserDetails(params.userId);
+    const userDetails = await ConsumerService.getUserDetails(params.outletId);
 
     const userDetailsData = userDetails.data;
     const userData = userDetailsData.data;
     const outletUserId = userDetailsData.data.id;
-    const walletId = userDetailsData.data.store[0].wallet[0].id;
+    const outletWalletId = userDetailsData.data.store[0].wallet[0].id;
 
     logger.info(
       `Retrieving user details from consumer service as ${JSON.stringify(
@@ -142,9 +142,8 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
     );
 
     // Retrieve partner's dtails from consumer service
-    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+    const ownerDetails = await ConsumerService.getUserDetails(userId);
     const ownerDetailsData = ownerDetails.data.data;
-    // const walletId = ownerDetailsData.data.store[0].wallet[0].id;
 
     logger.info(
       `Retrieving owner details from consumer service as ${JSON.stringify(
@@ -154,7 +153,7 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
 
     // check if outlet is already existing. if not, save outlet
     const existingOutlet = await Owner.findOne({
-      userId: outletUserId,
+      outletId: outletUserId,
     });
 
     if (existingOutlet) {
@@ -165,10 +164,9 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
     }
 
     const addedOutlet = new Owner({
-      userId: outletUserId,
-      ownerId,
+      userId,
+      outletId: outletUserId,
       walletId,
-      userType: UserType.OUTLET_PARTNER,
       phoneNumber: ownerDetailsData.phoneNumber,
     });
     await addedOutlet.save();
@@ -176,7 +174,7 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
     await addCommissionToPartner({
       userDetails,
       outletUserId,
-      ownerId,
+      userId,
     });
 
     return Promise.resolve({
@@ -198,7 +196,7 @@ export const linkUserToPartner = async ({ params, ownerId }) => {
 const addCommissionToPartner = async ({
   userDetails,
   outletUserId,
-  ownerId,
+  userId,
 }) => {
   // fetch user transaction details from the transaction service
 
@@ -240,7 +238,7 @@ const addCommissionToPartner = async ({
 
   const onboardingCommission = await Commission.findOne({
     type: "ONBOARDING",
-    owner: ownerId,
+    owner: userId,
   });
 
   logger.info(`Print onboarding commission as ${onboardingCommission}`);
@@ -249,7 +247,7 @@ const addCommissionToPartner = async ({
     totalTransactionAmount >= onboardingCommission.condition
   ) {
     const commissionBalance = await CommissionBalance.findOne({
-      owner: ownerId,
+      owner: userId,
       type: "ONBOARDING",
     }).lean();
 
@@ -261,7 +259,7 @@ const addCommissionToPartner = async ({
     } else {
       const commissionBalance = await CommissionBalance.create({
         amount: onboardingCommission.multiplier * totalTransactionAmount,
-        owner: ownerId,
+        owner: userId,
       });
     }
   }
@@ -284,7 +282,7 @@ const addCommissionToPartner = async ({
   //   if transfer exists
   const transferCommission = await Commission.findOne({
     type: "TRANSACTION",
-    owner: ownerId,
+    owner: userId,
     transactions: "transfers",
   });
 
@@ -295,7 +293,7 @@ const addCommissionToPartner = async ({
       filteredTransfer.length * transferCommission.multiplier;
 
     const commissionBalance = await CommissionBalance.findOne({
-      owner: ownerId,
+      owner: userId,
       type: "TRANSACTION",
     });
 
@@ -312,7 +310,7 @@ const addCommissionToPartner = async ({
       //  create a commissionBalance with amount === creditAmount
       const creditAmount = new CommissionBalance({
         amount: transferCommission.multiplier * filteredTransfer.length,
-        owner: ownerId,
+        owner: userId,
         type: "TRANSACTION",
       });
       await creditAmount.save();
@@ -339,7 +337,7 @@ const addCommissionToPartner = async ({
 
     const withdrawalCommission = await Commission.find({
       transactions: "withdrawals",
-      owner: ownerId,
+      owner: userId,
     }).sort({ withdrawals: 1 });
 
     let condition1;
@@ -359,7 +357,6 @@ const addCommissionToPartner = async ({
       condition5 = withdrawalCommission[4].condition;
     }
 
-    console.log("condition1", condition1);
     // calculate partner's credit amount based on the withdrawals level
     let creditAmount;
     if (totalWithdrawalAmount > condition1) {
@@ -386,23 +383,19 @@ const addCommissionToPartner = async ({
     logger.info(`computed ${creditAmount}`);
 
     const commissionBalance = await CommissionBalance.findOne({
-      owner: ownerId,
+      owner: userId,
       type: "TRANSACTION",
     });
-
-    console.log("commissionBalance", commissionBalance);
 
     if (commissionBalance) {
       // credit partner for every transfer
       commissionBalance.amount = commissionBalance.amount + creditAmount;
       await commissionBalance.save();
-
-      // console.log("commissionBalance", commissionBalance.amount)
     } else {
       //  create a commissionBalance with amount === creditAmount
       const newCreditAmount = new CommissionBalance({
         amount: creditAmount,
-        owner: ownerId,
+        owner: userId,
         type: "TRANSACTION",
       });
       await newCreditAmount.save();
