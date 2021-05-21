@@ -1,6 +1,6 @@
 import {
   linkOutlet,
-  linkOutletToPartner,
+  linkOutletToOwner,
   unlinkOutlet,
   verifyLinkedOutlet,
   fetchOutlets,
@@ -12,7 +12,7 @@ import {
 
 const outlet = ({ server, subBase }) => {
   server.post(`${subBase}/link`, linkOutlet);
-  server.post(`${subBase}/link-outlet/:id`, linkOutletToPartner);
+  server.post(`${subBase}/link-outlet/:id`, linkOutletToOwner);
   server.post(`${subBase}/verify`, verifyLinkedOutlet);
   server.put(`${subBase}/:id/unlink`, unlinkOutlet);
   server.put(`${subBase}/:id/:status`, switchOutletStatus);

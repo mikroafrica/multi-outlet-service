@@ -105,7 +105,7 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   }
 };
 
-export const linkUserToPartner = async ({ params, userId }) => {
+export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -141,17 +141,7 @@ export const linkUserToPartner = async ({ params, userId }) => {
       )}`
     );
 
-    // Retrieve partner's dtails from consumer service
-    const ownerDetails = await ConsumerService.getUserDetails(userId);
-    const ownerDetailsData = ownerDetails.data.data;
-
-    logger.info(
-      `Retrieving owner details from consumer service as ${JSON.stringify(
-        ownerDetailsData
-      )}`
-    );
-
-    // check if outlet is already existing. if not, save outlet
+    // check if outlet is already existing.
     const existingOutlet = await Owner.findOne({
       outletId: outletUserId,
     });
@@ -163,23 +153,21 @@ export const linkUserToPartner = async ({ params, userId }) => {
       });
     }
 
-    const addedOutlet = new Owner({
-      userId,
-      outletId: outletUserId,
+    const outletMapping = await saveOutletWithOwner({
+      outletUserId,
+      ownerId,
       walletId,
-      phoneNumber: ownerDetailsData.phoneNumber,
     });
-    await addedOutlet.save();
 
     await addCommissionToPartner({
       userDetails,
       outletUserId,
-      userId,
+      ownerId,
     });
 
     return Promise.resolve({
       statusCode: OK,
-      data: addedOutlet,
+      data: outletMapping,
     });
   } catch (err) {
     logger.error(
@@ -196,7 +184,7 @@ export const linkUserToPartner = async ({ params, userId }) => {
 const addCommissionToPartner = async ({
   userDetails,
   outletUserId,
-  userId,
+  ownerId,
 }) => {
   // fetch user transaction details from the transaction service
 
@@ -238,7 +226,7 @@ const addCommissionToPartner = async ({
 
   const onboardingCommission = await Commission.findOne({
     type: "ONBOARDING",
-    owner: userId,
+    owner: ownerId,
   });
 
   logger.info(`Print onboarding commission as ${onboardingCommission}`);
@@ -247,7 +235,7 @@ const addCommissionToPartner = async ({
     totalTransactionAmount >= onboardingCommission.condition
   ) {
     const commissionBalance = await CommissionBalance.findOne({
-      owner: userId,
+      owner: ownerId,
       type: "ONBOARDING",
     }).lean();
 
@@ -259,7 +247,7 @@ const addCommissionToPartner = async ({
     } else {
       const commissionBalance = await CommissionBalance.create({
         amount: onboardingCommission.multiplier * totalTransactionAmount,
-        owner: userId,
+        owner: ownerId,
       });
     }
   }
@@ -282,7 +270,7 @@ const addCommissionToPartner = async ({
   //   if transfer exists
   const transferCommission = await Commission.findOne({
     type: "TRANSACTION",
-    owner: userId,
+    owner: ownerId,
     transactions: "transfers",
   });
 
@@ -293,7 +281,7 @@ const addCommissionToPartner = async ({
       filteredTransfer.length * transferCommission.multiplier;
 
     const commissionBalance = await CommissionBalance.findOne({
-      owner: userId,
+      owner: ownerId,
       type: "TRANSACTION",
     });
 
@@ -310,7 +298,7 @@ const addCommissionToPartner = async ({
       //  create a commissionBalance with amount === creditAmount
       const creditAmount = new CommissionBalance({
         amount: transferCommission.multiplier * filteredTransfer.length,
-        owner: userId,
+        owner: ownerId,
         type: "TRANSACTION",
       });
       await creditAmount.save();
@@ -337,7 +325,7 @@ const addCommissionToPartner = async ({
 
     const withdrawalCommission = await Commission.find({
       transactions: "withdrawals",
-      owner: userId,
+      owner: ownerId,
     }).sort({ withdrawals: 1 });
 
     let condition1;
@@ -383,7 +371,7 @@ const addCommissionToPartner = async ({
     logger.info(`computed ${creditAmount}`);
 
     const commissionBalance = await CommissionBalance.findOne({
-      owner: userId,
+      owner: ownerId,
       type: "TRANSACTION",
     });
 
@@ -395,7 +383,7 @@ const addCommissionToPartner = async ({
       //  create a commissionBalance with amount === creditAmount
       const newCreditAmount = new CommissionBalance({
         amount: creditAmount,
-        owner: userId,
+        owner: ownerId,
         type: "TRANSACTION",
       });
       await newCreditAmount.save();
@@ -629,6 +617,45 @@ export const verifyOutletLinking = async ({ params }) => {
       statusCode: BAD_REQUEST,
       message: err.message,
     });
+  }
+};
+
+const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
+  // Check if owner is an OUTLET_PARTNER
+  const owner = await Owner.findOne({ userId: ownerId });
+  if (!owner) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Owner does not exist.",
+    });
+  }
+
+  if (owner.userType === UserType.OUTLET_PARTNER) {
+    const outletUserDetails = await ConsumerService.getUserDetails(
+      outletUserId
+    );
+    const outletUserDetailsData = outletUserDetails.data.data;
+    const walletId = outletUserDetailsData.store[0].wallet[0].id;
+    console.log("walletId", walletId);
+
+    if (
+      outletUserDetailsData.store.length < 1 ||
+      outletUserDetailsData.store[0].wallet.length < 1
+    ) {
+      logger.error(
+        "Could not verify outlet linking because outlet does not have a wallet"
+      );
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Could not verify outlet linking. Please try again",
+      });
+    }
+    const outletMapping = new Owner({
+      userId: ownerId,
+      outletId: outletUserId,
+      walletId,
+    });
+    return outletMapping.save();
   }
 };
 
