@@ -10,7 +10,7 @@ const schema = {
   userType: {
     type: String,
     default: UserType.OUTLET_OWNER,
-    enum: [UserType.OUTLET_OWNER, UserType.OUTLET_PARTNER],
+    enum: [UserType.OUTLET_OWNER, UserType.PARTNER],
   },
   approval: {
     type: String,

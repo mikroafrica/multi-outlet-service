@@ -9,7 +9,6 @@ import {
   updateUserProfile,
   fetchOwnerDetails,
   fetchUsersByType,
-  // usersOnboarding,
   fetchPartnerById,
 } from "./owner.controller";
 
@@ -25,7 +24,6 @@ const auth = ({ server, subBase }) => {
   server.get(`${subBase}/details`, fetchOwnerDetails);
   server.get(`${subBase}/users`, fetchUsersByType);
   server.get(`${subBase}/partner/:id`, fetchPartnerById);
-  // server.get(`${subBase}/user-onboarding`, usersOnboarding);
 };
 
 export default auth;

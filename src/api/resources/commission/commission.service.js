@@ -150,19 +150,19 @@ export const createCommission = async ({
   }
 };
 
-export const getPartnerApprovalStatus = async ({ userId }) => {
+export const getOwnerApprovalStatus = async ({ userId }) => {
   try {
     // check for partner approval if he has commissions already set
-    const partner = await Owner.findOne({ userId });
+    const owner = await Owner.find({ userId });
     let returnedApprovalStatus;
-    if (partner.approval === Approval.APPROVED) {
+    if (owner.approval === Approval.APPROVED) {
       returnedApprovalStatus = Approval.APPROVED;
     } else {
-      const partnerCommission = await Commission.find({ owner: userId });
+      const ownerCommission = await Commission.find({ owner: userId });
 
-      if (partnerCommission && partnerCommission.length > 0) {
-        partner.approval = Approval.APPROVED;
-        await partner.save();
+      if (ownerCommission && ownerCommission.length > 0) {
+        owner.approval = Approval.APPROVED;
+        await owner.save();
         returnedApprovalStatus = Approval.APPROVED;
       } else {
         returnedApprovalStatus = Approval.PENDING;
@@ -181,12 +181,11 @@ export const getPartnerApprovalStatus = async ({ userId }) => {
   }
 };
 
-export const getPartnerCommissionBalance = async ({ userId }) => {
+export const getOwnerCommissionBalance = async ({ userId }) => {
   try {
-    // const commissionType = CommissionType[commissiontype];
     // check for if the partner has commissions already set
-    const partnerCommission = await CommissionBalance.find({ owner: userId });
-    if (!partnerCommission) {
+    const ownerCommission = await CommissionBalance.find({ owner: userId });
+    if (!ownerCommission) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
         message: "Commission not set for partner",
@@ -195,7 +194,7 @@ export const getPartnerCommissionBalance = async ({ userId }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: partnerCommission,
+      data: ownerCommission,
     });
   } catch (e) {
     return Promise.reject({
@@ -205,7 +204,7 @@ export const getPartnerCommissionBalance = async ({ userId }) => {
   }
 };
 
-export const getPartnerCommissionSettings = async ({ ownerId }) => {
+export const getOwnerCommissionSettings = async ({ ownerId }) => {
   try {
     const commissionSettings = await Commission.find({ owner: ownerId });
     if (!commissionSettings) {
@@ -227,10 +226,11 @@ export const getPartnerCommissionSettings = async ({ ownerId }) => {
   }
 };
 
-export const updatePartnerCommissionSettings = async ({
+export const updateOwnerCommissionSettings = async ({
   params,
   commissionId,
   ownerId,
+  s,
 }) => {
   if (!params) {
     return Promise.reject({
@@ -249,9 +249,7 @@ export const updatePartnerCommissionSettings = async ({
       { new: true }
     );
 
-    logger.info(
-      `Show updated comiision as  ${JSON.stringify(updatedCommission)}`
-    );
+    logger.info(`Owner updated comiision ${JSON.stringify(updatedCommission)}`);
 
     return Promise.resolve({
       statusCode: OK,

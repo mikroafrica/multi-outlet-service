@@ -593,10 +593,7 @@ const validateSignupParamsSchema = (params) => {
       gender: Joi.string().required(),
       noOfOutlets: Joi.string().required(),
       profileImageId: Joi.string(),
-      userType: Joi.string().valid([
-        UserType.OUTLET_OWNER,
-        UserType.OUTLET_PARTNER,
-      ]),
+      userType: Joi.string().valid([UserType.OUTLET_OWNER, UserType.PARTNER]),
     })
     .unknown(true);
 

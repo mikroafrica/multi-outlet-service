@@ -1,12 +1,12 @@
 import {
   createCommission,
-  getPartnerApprovalStatus,
-  getPartnerCommissionBalance,
-  getPartnerCommissionSettings,
-  updatePartnerCommissionSettings,
+  getOwnerApprovalStatus,
+  getOwnerCommissionBalance,
+  getOwnerCommissionSettings,
+  updateOwnerCommissionSettings,
 } from "./commission.service";
 
-export const createCommissionForPartner = (req, res) => {
+export const createCommissionForOwner = (req, res) => {
   const params = req.body;
   const ownerId = req.params.id;
   const commissiontype = req.query.commissiontype;
@@ -28,10 +28,10 @@ export const createCommissionForPartner = (req, res) => {
     );
 };
 
-export const partnerApprovalStatus = (req, res) => {
+export const ownerApprovalStatus = (req, res) => {
   const userId = req.params.id;
 
-  getPartnerApprovalStatus({ userId })
+  getOwnerApprovalStatus({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -40,11 +40,11 @@ export const partnerApprovalStatus = (req, res) => {
     );
 };
 
-export const partnerCommissionBalance = (req, res) => {
+export const ownerCommissionBalance = (req, res) => {
   const userId = req.params.id;
   // const commissiontype = req.query.commissiontype;
 
-  getPartnerCommissionBalance({ userId })
+  getOwnerCommissionBalance({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -53,11 +53,11 @@ export const partnerCommissionBalance = (req, res) => {
     );
 };
 
-export const partnerCommissionSettings = (req, res) => {
+export const ownerCommissionSettings = (req, res) => {
   // const commissiontype = req.query.commissiontype;
   const ownerId = req.params.id;
 
-  getPartnerCommissionSettings({ ownerId })
+  getOwnerCommissionSettings({ ownerId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -66,12 +66,12 @@ export const partnerCommissionSettings = (req, res) => {
     );
 };
 
-export const updateCommissionSettings = (req, res) => {
+export const updateCommissionSetting = (req, res) => {
   const params = req.body;
   const ownerId = req.params.id;
   const commissionId = req.params.commissionId;
 
-  updatePartnerCommissionSettings({ params, commissionId, ownerId })
+  updateOwnerCommissionSettings({ params, commissionId, ownerId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

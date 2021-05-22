@@ -9,8 +9,8 @@ const checkAccess = (name: string, password: string): Boolean => {
   let valid: Boolean = true;
 
   // prevent short-cricuit and use timing-safe compare
-  valid = compare(name, process.env.AUTH_SERVICE_USERNAME) && valid;
-  valid = compare(password, process.env.AUTH_SERVICE_PASSWORD) && valid;
+  valid = compare(name, process.env.OUTLET_SERVICE_USERNAME) && valid;
+  valid = compare(password, process.env.OUTLET_SERVICE_PASSWORD) && valid;
   return valid;
 };
 

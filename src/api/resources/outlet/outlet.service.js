@@ -153,13 +153,13 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
       });
     }
 
-    const outletMapping = await saveOutletWithOwner({
+    const newOutletMapping = await saveOutletWithOwner({
       outletUserId,
       ownerId,
       walletId,
     });
 
-    await addCommissionToPartner({
+    await addCommissionToOwner({
       userDetails,
       outletUserId,
       ownerId,
@@ -167,7 +167,7 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: outletMapping,
+      data: newOutletMapping,
     });
   } catch (err) {
     logger.error(
@@ -181,11 +181,7 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
   }
 };
 
-const addCommissionToPartner = async ({
-  userDetails,
-  outletUserId,
-  ownerId,
-}) => {
+const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
   // fetch user transaction details from the transaction service
 
   const timeCreated = userDetails.data.data.timeCreated;
@@ -253,10 +249,10 @@ const addCommissionToPartner = async ({
   }
 
   //    THRIFT_ONBOARDING COMMISSIONS to be calculated when thrift users onboarded data is available
-  //   if partner has not been credited with thrift onboarding commission
+  //   if PARTNER has not been credited with thrift onboarding commission
   //     find thrift users onboarded by user and check if the users meet the contract terms
   //         if met
-  //            credit partner with the commission and
+  //            credit PARTNER with the commission and
   //            set flag that the partner has been credited with thrift-onboarding commission
 
   //    TRANSACTION COMMISSIONS
@@ -621,22 +617,21 @@ export const verifyOutletLinking = async ({ params }) => {
 };
 
 const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
-  // Check if owner is an OUTLET_PARTNER
+  // Check if owner is an PARTNER
   const owner = await Owner.findOne({ userId: ownerId });
   if (!owner) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Owner does not exist.",
+      message: "Owner does not exist. Please sign up.",
     });
   }
 
-  if (owner.userType === UserType.OUTLET_PARTNER) {
+  if (owner.userType === UserType.PARTNER) {
     const outletUserDetails = await ConsumerService.getUserDetails(
       outletUserId
     );
     const outletUserDetailsData = outletUserDetails.data.data;
     const walletId = outletUserDetailsData.store[0].wallet[0].id;
-    console.log("walletId", walletId);
 
     if (
       outletUserDetailsData.store.length < 1 ||
@@ -650,12 +645,13 @@ const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
         message: "Could not verify outlet linking. Please try again",
       });
     }
-    const outletMapping = new Owner({
+    const newOutletMapping = new Owner({
       userId: ownerId,
       outletId: outletUserId,
       walletId,
+      userType: UserType.PARTNER,
     });
-    return outletMapping.save();
+    return newOutletMapping.save();
   }
 };
 
