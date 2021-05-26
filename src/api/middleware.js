@@ -17,13 +17,6 @@ const checkAccess = (name: string, password: string): Boolean => {
 export const secureRoute = (req, res, next) => {
   const credentials = basicAuth(req);
 
-  const path = req.route.path;
-  const method = req.method;
-
-  if (Object.is(method, "GET") && path === "/") {
-    return next();
-  }
-
   // check against account credentials stored
   if (!credentials || !checkAccess(credentials.name, credentials.pass)) {
     logger.info(`Route is not authorized`);
@@ -82,7 +75,7 @@ const allowRoutes = (req) => {
     "email-verification",
     "reset-password-request",
     "users",
-    "commissions/:id",
+    "/setCommission/:id",
     "user/:id",
     "link-outlet/:id",
     "/:id",

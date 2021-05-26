@@ -11,8 +11,6 @@ const schema = {
   condition: Number,
   multiplier: Number,
   type: {
-    type: String,
-    default: CommissionType.ONBOARDING,
     enum: [
       CommissionType.ONBOARDING,
       CommissionType.THRIFT_ONBOARDING,

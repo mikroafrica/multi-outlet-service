@@ -142,7 +142,7 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
     );
 
     // check if outlet is already existing.
-    const existingOutlet = await Owner.findOne({
+    const existingOutlet = await Outlet.findOne({
       outletId: outletUserId,
     });
 
@@ -282,13 +282,13 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
     });
 
     if (commissionBalance) {
-      // credit partner for every transfer
+      // credit owner for every transfer
       commissionBalance.amount =
         commissionBalance.amount + commissionOnTransfers;
       await commissionBalance.save();
 
       logger.info(
-        `Show the partners commisision balance as ${commissionBalance.amount}`
+        `Show owners commisision balance as ${commissionBalance.amount}`
       );
     } else {
       //  create a commissionBalance with amount === creditAmount
@@ -617,7 +617,7 @@ export const verifyOutletLinking = async ({ params }) => {
 };
 
 const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
-  // Check if owner is an PARTNER
+  // Find owner and check if owner is a PARTNER
   const owner = await Owner.findOne({ userId: ownerId });
   if (!owner) {
     return Promise.reject({
@@ -645,13 +645,17 @@ const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
         message: "Could not verify outlet linking. Please try again",
       });
     }
-    const newOutletMapping = new Owner({
-      userId: ownerId,
-      outletId: outletUserId,
+    const newOutletMapping = new Outlet({
+      userId: outletUserId,
+      ownerId,
       walletId,
-      userType: UserType.PARTNER,
     });
     return newOutletMapping.save();
+  } else {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Outlets cannot be added to owner.",
+    });
   }
 };
 
@@ -704,8 +708,6 @@ export const fetchOutletDetails = async (outlets) => {
 
     const walletSummaryResponse = await WalletService.getWalletById(walletId);
     const walletSummaryData = walletSummaryResponse.data;
-
-    console.log("walletSummaryData", walletSummaryData);
 
     userDetailsData.data.store[0].wallet[0] = {
       ...wallet,

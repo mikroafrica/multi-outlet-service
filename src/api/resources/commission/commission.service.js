@@ -8,16 +8,10 @@ import {
 import { Commission } from "./commission.model";
 import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
-import { Approval } from "../owner/user.type";
+import { Approval, UserType } from "../owner/user.type";
 import { CommissionBalance } from "./commissionbalance.model";
 
-export const createCommission = async ({
-  params,
-  ownerId,
-  transaction,
-  commissiontype,
-  withdrawallevel,
-}) => {
+export const createCommission = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -25,13 +19,7 @@ export const createCommission = async ({
     });
   }
 
-  const schema = Joi.object().keys({
-    condition: Joi.number().required(),
-    multiplier: Joi.number().required(),
-  });
-
-  const validateSchema = Joi.validate(params, schema);
-
+  const validateSchema = validateCommissionSchema(params);
   if (validateSchema.error) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -40,9 +28,9 @@ export const createCommission = async ({
   }
 
   try {
-    const withdrawalLevel = WithdrawalLevel[withdrawallevel];
-    const transactionType = TransactionType[transaction];
-    const commissionType = CommissionType[commissiontype];
+    const withdrawalLevel = WithdrawalLevel[params.withdrawalLevel];
+    const transactionType = TransactionType[params.transactionType];
+    const commissionType = CommissionType[params.commissionType];
     if (!commissionType) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -65,14 +53,14 @@ export const createCommission = async ({
           $and: [
             { type: commissionType },
             { transactions: transactionType },
-            { withdrawals: WithdrawalLevel.NA },
+            { withdrawals: "na" },
           ],
         },
         {
           $and: [
             { type: commissionType },
-            { transactions: TransactionType.NIL },
-            { withdrawals: WithdrawalLevel.NA },
+            { transactions: "nil" },
+            { withdrawals: "na" },
           ],
         },
       ],
@@ -99,14 +87,14 @@ export const createCommission = async ({
               $and: [
                 { type: commissionType },
                 { transactions: transactionType },
-                { withdrawals: WithdrawalLevel.NA },
+                { withdrawals: "na" },
               ],
             },
             {
               $and: [
                 { type: commissionType },
-                { transactions: TransactionType.NIL },
-                { withdrawals: WithdrawalLevel.NA },
+                { transactions: "nil" },
+                { withdrawals: "na" },
               ],
             },
           ],
@@ -119,7 +107,7 @@ export const createCommission = async ({
       return updatedCommission;
     }
 
-    const commission = new Commission({
+    const saveNewCommission = new Commission({
       condition: params.condition,
       multiplier: params.multiplier,
       owner: ownerId,
@@ -128,13 +116,13 @@ export const createCommission = async ({
       withdrawals: withdrawalLevel,
     });
 
-    await commission.save();
+    await saveNewCommission.save();
 
     logger.info(`commission created as ${commission}`);
 
     return Promise.resolve({
       statusCode: OK,
-      data: commission,
+      data: saveNewCommission,
     });
   } catch (err) {
     logger.error(
@@ -230,7 +218,6 @@ export const updateOwnerCommissionSettings = async ({
   params,
   commissionId,
   ownerId,
-  s,
 }) => {
   if (!params) {
     return Promise.reject({
@@ -261,4 +248,34 @@ export const updateOwnerCommissionSettings = async ({
       message: "Could not update commission setting for partner",
     });
   }
+};
+
+const validateCommissionSchema = ({ params }) => {
+  const schema = Joi.object()
+    .keys({
+      condition: Joi.number().required(),
+      multiplier: Joi.number().required(),
+      commissionType: Joi.string()
+        .valid([
+          CommissionType.ONBOARDING,
+          CommissionType.THRIFT_ONBOARDING,
+          CommissionType.TRANSACTION,
+        ])
+        .required(),
+      transactionType: Joi.string()
+        .valid(TransactionType.TRANSFERS, TransactionType.WITHDRAWALS)
+        .optional(),
+      withdrawalLevel: Joi.string()
+        .valid(
+          WithdrawalLevel.LEVEL1,
+          WithdrawalLevel.LEVEL2,
+          WithdrawalLevel.LEVEL3,
+          WithdrawalLevel.LEVEL4,
+          WithdrawalLevel.LEVEL5
+        )
+        .optional(),
+    })
+    .unknown(true);
+
+  return Joi.validate(params, schema);
 };

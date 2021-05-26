@@ -532,9 +532,9 @@ export const getUsers = async ({ usertype, page, limit }) => {
   }
 };
 
-export const getPartner = async ({ ownerId, page, limit }) => {
+export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
   try {
-    const outlets = await Owner.paginate(
+    const outlets = await Outlet.paginate(
       {
         ownerId,
       },
@@ -545,10 +545,19 @@ export const getPartner = async ({ ownerId, page, limit }) => {
     const ownerDetails = await ConsumerService.getUserDetails(ownerId);
     const ownerDetailsData = ownerDetails.data.data;
 
-    const partnerDetails = [];
-    partnerDetails.push({
-      userType: outlets.docs[0].userType,
-      approval: outlets.docs[0].approval,
+    // Find owner and extract data
+    const owner = await Owner.findOne({ userId: ownerId });
+    if (!params) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Could not find owner.",
+      });
+    }
+
+    let ownerData = [];
+    ownerData.push({
+      userType: owner.userType,
+      approval: owner.approval,
       phoneNumber: ownerDetailsData.phoneNumber,
       firstName: ownerDetailsData.firstName,
       lastName: ownerDetailsData.lastName,
@@ -570,7 +579,7 @@ export const getPartner = async ({ ownerId, page, limit }) => {
         pages: outlets.pages,
         limit: outlets.limit,
         total: outlets.total,
-        partnerDetails,
+        ownerData,
         list: outletDetails,
       },
     });
@@ -593,7 +602,9 @@ const validateSignupParamsSchema = (params) => {
       gender: Joi.string().required(),
       noOfOutlets: Joi.string().required(),
       profileImageId: Joi.string(),
-      userType: Joi.string().valid([UserType.OUTLET_OWNER, UserType.PARTNER]),
+      userType: Joi.string()
+        .valid(UserType.OUTLET_OWNER, UserType.PARTNER)
+        .required(),
     })
     .unknown(true);
 

@@ -10,7 +10,7 @@ import {
   getUser,
   getUsers,
   // generateReferralCodeForUsers,
-  getPartner,
+  getOwnerWithOutlets,
 } from "./owner.service.js";
 import { getOutlets } from "../outlet/outlet.service";
 
@@ -138,13 +138,13 @@ export const fetchUsersByType = (req, res) => {
     });
 };
 
-export const fetchPartnerById = (req, res) => {
+export const fetchOwnerById = (req, res) => {
   const ownerId = req.params.id;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  getPartner({ ownerId, page, limit })
+  getOwnerWithOutlets({ ownerId, page, limit })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

@@ -9,16 +9,10 @@ import {
 export const createCommissionForOwner = (req, res) => {
   const params = req.body;
   const ownerId = req.params.id;
-  const commissiontype = req.query.commissiontype;
-  const transaction = req.query.transaction;
-  const withdrawallevel = req.query.withdrawallevel;
 
   createCommission({
     params,
     ownerId,
-    commissiontype,
-    transaction,
-    withdrawallevel,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })

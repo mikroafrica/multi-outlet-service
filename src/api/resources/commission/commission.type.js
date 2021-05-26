@@ -7,7 +7,6 @@ export const CommissionType = {
 export const TransactionType = {
   TRANSFERS: "transfers",
   WITHDRAWALS: "withdrawals",
-  NIL: "nil",
 };
 
 export const WithdrawalLevel = {
@@ -16,5 +15,4 @@ export const WithdrawalLevel = {
   LEVEL3: "level3",
   LEVEL4: "level4",
   LEVEL5: "level5",
-  NA: "na",
 };
