@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
-import {
-  CommissionType,
-  TransactionType,
-  WithdrawalLevel,
-} from "./commission.type";
+import { CommissionType, WithdrawalLevel } from "./commission.type";
 import { Owner } from "../owner/owner.model";
 import { UserRole } from "../owner/user.role";
 
@@ -11,31 +7,21 @@ const schema = {
   condition: Number,
   multiplier: Number,
   type: {
+    type: String,
     enum: [
       CommissionType.ONBOARDING,
-      CommissionType.THRIFT_ONBOARDING,
-      CommissionType.TRANSACTION,
+      CommissionType.TRANSFER,
+      CommissionType.WITHDRAWAL,
     ],
   },
-  transactions: {
+  level: {
     type: String,
-    default: TransactionType.NIL,
     enum: [
-      TransactionType.TRANSFERS,
-      TransactionType.WITHDRAWALS,
-      TransactionType.NIL,
-    ],
-  },
-  withdrawals: {
-    type: String,
-    default: WithdrawalLevel.NA,
-    enum: [
-      WithdrawalLevel.LEVEL1,
-      WithdrawalLevel.LEVEL2,
-      WithdrawalLevel.LEVEL3,
-      WithdrawalLevel.LEVEL4,
-      WithdrawalLevel.LEVEL5,
-      WithdrawalLevel.NA,
+      WithdrawalLevel.LEVEL_ONE,
+      WithdrawalLevel.LEVEL_TWO,
+      WithdrawalLevel.LEVEL_THREE,
+      WithdrawalLevel.LEVEL_FOUR,
+      WithdrawalLevel.LEVEL_FIVE,
     ],
   },
   owner: {

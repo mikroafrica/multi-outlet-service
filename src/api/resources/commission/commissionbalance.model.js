@@ -6,11 +6,10 @@ const schema = {
   amount: Number,
   type: {
     type: String,
-    default: CommissionType.ONBOARDING,
     enum: [
       CommissionType.ONBOARDING,
-      CommissionType.THRIFT_ONBOARDING,
-      CommissionType.TRANSACTION,
+      CommissionType.TRANSFER,
+      CommissionType.WITHDRAWAL,
     ],
   },
   owner: {

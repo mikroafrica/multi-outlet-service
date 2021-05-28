@@ -29,13 +29,11 @@ export const createCommission = async ({ params, ownerId }) => {
 
   try {
     const withdrawalLevel = WithdrawalLevel[params.withdrawalLevel];
-    const transactionType = TransactionType[params.transactionType];
     const commissionType = CommissionType[params.commissionType];
     if (!commissionType) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
-        message:
-          "Invalid commission type supplied. Please supply a valid commission type",
+        message: "Please supply a valid commission type.",
       });
     }
 
@@ -44,24 +42,13 @@ export const createCommission = async ({ params, ownerId }) => {
       $or: [
         {
           $and: [
+            { owner: ownerId },
             { type: commissionType },
-            { transactions: transactionType },
-            { withdrawals: withdrawalLevel },
+            { level: withdrawalLevel },
           ],
         },
         {
-          $and: [
-            { type: commissionType },
-            { transactions: transactionType },
-            { withdrawals: "na" },
-          ],
-        },
-        {
-          $and: [
-            { type: commissionType },
-            { transactions: "nil" },
-            { withdrawals: "na" },
-          ],
+          $and: [{ owner: ownerId }, { type: commissionType }, { level: null }],
         },
       ],
     });
@@ -78,23 +65,16 @@ export const createCommission = async ({ params, ownerId }) => {
           $or: [
             {
               $and: [
+                { owner: ownerId },
                 { type: commissionType },
-                { transactions: transactionType },
-                { withdrawals: withdrawalLevel },
+                { level: withdrawalLevel },
               ],
             },
             {
               $and: [
+                { owner: ownerId },
                 { type: commissionType },
-                { transactions: transactionType },
-                { withdrawals: "na" },
-              ],
-            },
-            {
-              $and: [
-                { type: commissionType },
-                { transactions: "nil" },
-                { withdrawals: "na" },
+                { level: null },
               ],
             },
           ],
@@ -104,7 +84,10 @@ export const createCommission = async ({ params, ownerId }) => {
         },
         { new: true }
       );
-      return updatedCommission;
+      return Promise.resolve({
+        statusCode: OK,
+        data: updatedCommission,
+      });
     }
 
     const saveNewCommission = new Commission({
@@ -112,13 +95,12 @@ export const createCommission = async ({ params, ownerId }) => {
       multiplier: params.multiplier,
       owner: ownerId,
       type: commissionType,
-      transactions: transactionType,
-      withdrawals: withdrawalLevel,
+      level: withdrawalLevel,
     });
 
     await saveNewCommission.save();
 
-    logger.info(`commission created as ${commission}`);
+    logger.info(`Commission created as ${saveNewCommission}`);
 
     return Promise.resolve({
       statusCode: OK,
@@ -140,14 +122,20 @@ export const createCommission = async ({ params, ownerId }) => {
 
 export const getOwnerApprovalStatus = async ({ userId }) => {
   try {
-    // check for partner approval if he has commissions already set
-    const owner = await Owner.find({ userId });
+    // check for owner approval status if commissions has been set for the owner
+    const owner = await Owner.findOne({ userId });
+    console.log("owner", owner);
+    if (!owner) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Owner could not be found.",
+      });
+    }
     let returnedApprovalStatus;
     if (owner.approval === Approval.APPROVED) {
       returnedApprovalStatus = Approval.APPROVED;
     } else {
       const ownerCommission = await Commission.find({ owner: userId });
-
       if (ownerCommission && ownerCommission.length > 0) {
         owner.approval = Approval.APPROVED;
         await owner.save();
@@ -198,7 +186,7 @@ export const getOwnerCommissionSettings = async ({ ownerId }) => {
     if (!commissionSettings) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
-        message: "Commission rule is yet to be set",
+        message: "Commission rule not yet set for owner.",
       });
     }
 
@@ -258,21 +246,18 @@ const validateCommissionSchema = ({ params }) => {
       commissionType: Joi.string()
         .valid([
           CommissionType.ONBOARDING,
-          CommissionType.THRIFT_ONBOARDING,
-          CommissionType.TRANSACTION,
+          CommissionType.TRANSFER,
+          CommissionType.WITHDRAWAL,
         ])
         .required(),
-      transactionType: Joi.string()
-        .valid(TransactionType.TRANSFERS, TransactionType.WITHDRAWALS)
-        .optional(),
       withdrawalLevel: Joi.string()
-        .valid(
-          WithdrawalLevel.LEVEL1,
-          WithdrawalLevel.LEVEL2,
-          WithdrawalLevel.LEVEL3,
-          WithdrawalLevel.LEVEL4,
-          WithdrawalLevel.LEVEL5
-        )
+        .valid([
+          WithdrawalLevel.LEVEL_ONE,
+          WithdrawalLevel.LEVEL_TWO,
+          WithdrawalLevel.LEVEL_THREE,
+          WithdrawalLevel.LEVEL_FOUR,
+          WithdrawalLevel.LEVEL_FIVE,
+        ])
         .optional(),
     })
     .unknown(true);

@@ -129,7 +129,7 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
   try {
     // Retrieve outlet's dtails from consumer service
     const userDetails = await ConsumerService.getUserDetails(params.outletId);
-
+    //
     const userDetailsData = userDetails.data;
     const userData = userDetailsData.data;
     const outletUserId = userDetailsData.data.id;
@@ -143,7 +143,7 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
 
     // check if outlet is already existing.
     const existingOutlet = await Outlet.findOne({
-      outletId: outletUserId,
+      userId: outletUserId,
     });
 
     if (existingOutlet) {
@@ -187,8 +187,8 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
   const timeCreated = userDetails.data.data.timeCreated;
 
   const dateFrom = timeCreated;
-  const dateTo = timeCreated + 2592000000;
-  // const dateTo = 1620770487650;
+  // const dateTo = timeCreated + 2592000000;
+  const dateTo = 1620770487650;
 
   const params = {
     userId: outletUserId,
@@ -225,7 +225,12 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
     owner: ownerId,
   });
 
-  logger.info(`Print onboarding commission as ${onboardingCommission}`);
+  logger.info(
+    `Print onboarding commission setting as ${JSON.stringify(
+      onboardingCommission
+    )}`
+  );
+
   if (
     onboardingCommission &&
     totalTransactionAmount >= onboardingCommission.condition
@@ -233,7 +238,13 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
     const commissionBalance = await CommissionBalance.findOne({
       owner: ownerId,
       type: "ONBOARDING",
-    }).lean();
+    });
+
+    logger.info(
+      `Get owner onboarding commission balance as ${JSON.stringify(
+        commissionBalance
+      )}`
+    );
 
     if (commissionBalance) {
       commissionBalance.amount =
@@ -244,11 +255,12 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
       const commissionBalance = await CommissionBalance.create({
         amount: onboardingCommission.multiplier * totalTransactionAmount,
         owner: ownerId,
+        type: "ONBOARDING",
       });
     }
   }
 
-  //    THRIFT_ONBOARDING COMMISSIONS to be calculated when thrift users onboarded data is available
+  //   TODO: THRIFT_ONBOARDING COMMISSIONS to be calculated when thrift users onboarded data is available
   //   if PARTNER has not been credited with thrift onboarding commission
   //     find thrift users onboarded by user and check if the users meet the contract terms
   //         if met
@@ -265,12 +277,15 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
 
   //   if transfer exists
   const transferCommission = await Commission.findOne({
-    type: "TRANSACTION",
+    type: "TRANSFER",
     owner: ownerId,
-    transactions: "transfers",
   });
 
-  logger.info(`Get the transfer commission condition as ${transferCommission}`);
+  logger.info(
+    `Get owner transfer commission settings as ${JSON.stringify(
+      transferCommission
+    )}`
+  );
 
   if (filteredTransfer.length > 0) {
     const commissionOnTransfers =
@@ -278,7 +293,7 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
 
     const commissionBalance = await CommissionBalance.findOne({
       owner: ownerId,
-      type: "TRANSACTION",
+      type: "TRANSFER",
     });
 
     if (commissionBalance) {
@@ -288,14 +303,14 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
       await commissionBalance.save();
 
       logger.info(
-        `Show owners commisision balance as ${commissionBalance.amount}`
+        `Get owners transfer commisision balance as ${commissionBalance.amount}`
       );
     } else {
       //  create a commissionBalance with amount === creditAmount
       const creditAmount = new CommissionBalance({
         amount: transferCommission.multiplier * filteredTransfer.length,
         owner: ownerId,
-        type: "TRANSACTION",
+        type: "TRANSFER",
       });
       await creditAmount.save();
     }
@@ -320,24 +335,30 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
     );
 
     const withdrawalCommission = await Commission.find({
-      transactions: "withdrawals",
+      type: "WITHDRAWAL",
       owner: ownerId,
-    }).sort({ withdrawals: 1 });
+    });
+
+    logger.info(
+      `Get the withdrawal commission setting as ${JSON.stringify(
+        withdrawalCommission
+      )}`
+    );
 
     let condition1;
     let condition2;
     let condition3;
     let condition4;
     let condition5;
-    if (withdrawalCommission[0].withdrawals === "level1") {
+    if (withdrawalCommission[0].level === "level_one") {
       condition1 = withdrawalCommission[0].condition;
-    } else if (withdrawalCommission[1].withdrawals === "level2") {
+    } else if (withdrawalCommission[1].level === "level_two") {
       condition2 = withdrawalCommission[1].condition;
-    } else if (withdrawalCommission[2].withdrawals === "level3") {
+    } else if (withdrawalCommission[2].level === "level_three") {
       condition3 = withdrawalCommission[2].condition;
-    } else if (withdrawalCommission[3].withdrawals === "level4") {
+    } else if (withdrawalCommission[3].level === "level_four") {
       condition4 = withdrawalCommission[3].condition;
-    } else if (withdrawalCommission[4].withdrawals === "level5") {
+    } else if (withdrawalCommission[4].level === "level_five") {
       condition5 = withdrawalCommission[4].condition;
     }
 
@@ -368,7 +389,7 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
 
     const commissionBalance = await CommissionBalance.findOne({
       owner: ownerId,
-      type: "TRANSACTION",
+      type: "WITHDRAWAL",
     });
 
     if (commissionBalance) {
@@ -377,12 +398,11 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
       await commissionBalance.save();
     } else {
       //  create a commissionBalance with amount === creditAmount
-      const newCreditAmount = new CommissionBalance({
+      const newCreditAmount = await CommissionBalance.create({
         amount: creditAmount,
         owner: ownerId,
-        type: "TRANSACTION",
+        type: "WITHDRAWAL",
       });
-      await newCreditAmount.save();
     }
   }
 };
@@ -651,11 +671,6 @@ const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
       walletId,
     });
     return newOutletMapping.save();
-  } else {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Outlets cannot be added to owner.",
-    });
   }
 };
 

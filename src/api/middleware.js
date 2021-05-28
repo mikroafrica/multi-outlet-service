@@ -75,14 +75,14 @@ const allowRoutes = (req) => {
     "email-verification",
     "reset-password-request",
     "users",
-    "/setCommission/:id",
-    "user/:id",
+    "/set-commission/:id",
+    "approval-status/:id",
     "link-outlet/:id",
     "/:id",
     "commission-balance/:id",
     "commission-setting/:id",
     "update-commission/:id/:commissionId",
-    "partner/:id",
+    "user/:id",
     ":id",
   ];
   for (let i = 0; i < routes.length; i++) {

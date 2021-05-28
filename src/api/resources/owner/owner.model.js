@@ -4,7 +4,6 @@ import { UserType, Approval } from "./user.type";
 
 const schema = {
   userId: String,
-  outletId: String,
   walletId: String,
   noOfOutlets: String,
   userType: {

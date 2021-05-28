@@ -22,47 +22,36 @@ describe("Commission service Tests", function () {
     const ownerId = "5ff84b6929be4225a084874a";
     const userId = "vhvuyi9";
     const commissionType = "ONBOARDING";
-    const transactions = "TRANSFERS";
-    const withdrawals = "LEVEL1";
-    const withdrawalLevel = "LEVEL1";
 
     const params = {
       condition: 1234,
       multiplier: 5,
+      commissionType: "ONBOARDING",
     };
 
     const existingCommission = sinon.stub(Commission, "findOne").resolves({
       type: commissionType,
-      transactions,
-      withdrawals,
+      level: null,
     });
 
     const findOneAndUpdateCommission = sinon
       .stub(Commission, "findOneAndUpdate")
       .resolves({
         type: commissionType,
-        transactions,
-        withdrawals,
         condition: params.condition,
         multiplier: params.multiplier,
       });
 
-    // const commission = new Commission();
     sinon.stub(Commission.prototype, "save").resolves({
       condition: params.condition,
       multiplier: params.multiplier,
       owner: ownerId,
       type: commissionType,
-      transactions: "TRANSFERS",
-      withdrawals: withdrawalLevel,
     });
 
     const response = await CommissionService.createCommission({
       params,
       ownerId,
-      transaction: "transfers",
-      commissiontype: "ONBOARDING",
-      withdrawallevel: "LEVEL2",
     });
 
     // expect(response.statusCode).equals(OK);
@@ -81,7 +70,7 @@ describe("Commission service Tests", function () {
       .stub(CommissionBalance, "find")
       .resolves({ owner: userId });
 
-    const response = await CommissionService.getPartnerCommissionBalance({
+    const response = await CommissionService.getOwnerCommissionBalance({
       userId,
     });
 
@@ -101,7 +90,7 @@ describe("Commission service Tests", function () {
       .stub(Commission, "find")
       .resolves({ owner: userId });
 
-    const response = await CommissionService.getPartnerApprovalStatus({
+    const response = await CommissionService.getOwnerApprovalStatus({
       userId,
     });
 
@@ -114,14 +103,14 @@ describe("Commission service Tests", function () {
     sinon.assert.calledOnce(partnerCommission);
   });
 
-  it("should successfully get partner commission settings", async function () {
+  it("should successfully get owner commission settings", async function () {
     const userId = "5ff84b6929be4225a084874a";
 
     const commissionSettings = sinon
       .stub(Commission, "find")
       .resolves({ owner: userId });
 
-    const response = await CommissionService.getPartnerCommissionSettings({
+    const response = await CommissionService.getOwnerCommissionSettings({
       userId,
     });
 
@@ -132,7 +121,7 @@ describe("Commission service Tests", function () {
     sinon.assert.calledOnce(commissionSettings);
   });
 
-  it("should successfully update partner commission settings", async function () {
+  it("should successfully update owner commission settings", async function () {
     const userId = "5ff84b6929be4225a084874a";
 
     const params = {
@@ -149,7 +138,7 @@ describe("Commission service Tests", function () {
         multiplier: params.multiplier,
       });
 
-    const response = await CommissionService.updatePartnerCommissionSettings({
+    const response = await CommissionService.updateOwnerCommissionSettings({
       params,
       userId,
       ownerId: userId,

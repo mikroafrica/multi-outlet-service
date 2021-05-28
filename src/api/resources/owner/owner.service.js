@@ -499,6 +499,9 @@ export const updateUser = async ({ params, ownerId }) => {
 export const getUsers = async ({ usertype, page, limit }) => {
   try {
     const userType = UserType[usertype];
+    console.log("usertype", usertype);
+    console.log("userType", userType);
+
     if (!userType) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -545,9 +548,13 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
     const ownerDetails = await ConsumerService.getUserDetails(ownerId);
     const ownerDetailsData = ownerDetails.data.data;
 
-    // Find owner and extract data
+    logger.info(
+      `Return owner details data as ${JSON.stringify(ownerDetailsData)}`
+    );
+
+    // Find owner and extract data saved during login
     const owner = await Owner.findOne({ userId: ownerId });
-    if (!params) {
+    if (!owner) {
       return Promise.reject({
         statusCode: NOT_FOUND,
         message: "Could not find owner.",
