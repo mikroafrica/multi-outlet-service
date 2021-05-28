@@ -21,23 +21,23 @@ describe("Commission service Tests", function () {
   it("should create commission settings for partners when valid commision parameters are supplied", async function () {
     const ownerId = "5ff84b6929be4225a084874a";
     const userId = "vhvuyi9";
-    const commissionType = "ONBOARDING";
+    const type = "ONBOARDING";
 
     const params = {
       condition: 1234,
       multiplier: 5,
-      commissionType: "ONBOARDING",
+      type: "ONBOARDING",
     };
 
     const existingCommission = sinon.stub(Commission, "findOne").resolves({
-      type: commissionType,
+      type,
       level: null,
     });
 
     const findOneAndUpdateCommission = sinon
       .stub(Commission, "findOneAndUpdate")
       .resolves({
-        type: commissionType,
+        type,
         condition: params.condition,
         multiplier: params.multiplier,
       });
@@ -46,7 +46,7 @@ describe("Commission service Tests", function () {
       condition: params.condition,
       multiplier: params.multiplier,
       owner: ownerId,
-      type: commissionType,
+      type,
     });
 
     const response = await CommissionService.createCommission({

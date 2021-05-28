@@ -1,10 +1,6 @@
 import { BAD_REQUEST, OK } from "../../modules/status";
 import Joi from "joi";
-import {
-  CommissionType,
-  TransactionType,
-  WithdrawalLevel,
-} from "./commission.type";
+import { Type, Level } from "./commission.type";
 import { Commission } from "./commission.model";
 import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
@@ -28,9 +24,10 @@ export const createCommission = async ({ params, ownerId }) => {
   }
 
   try {
-    const withdrawalLevel = WithdrawalLevel[params.withdrawalLevel];
-    const commissionType = CommissionType[params.commissionType];
-    if (!commissionType) {
+    const level = Level[params.level];
+    const type = Type[params.type];
+
+    if (!type) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
         message: "Please supply a valid commission type.",
@@ -41,14 +38,10 @@ export const createCommission = async ({ params, ownerId }) => {
     const existingCommissionSettings = await Commission.findOne({
       $or: [
         {
-          $and: [
-            { owner: ownerId },
-            { type: commissionType },
-            { level: withdrawalLevel },
-          ],
+          $and: [{ owner: ownerId }, { type }, { level }],
         },
         {
-          $and: [{ owner: ownerId }, { type: commissionType }, { level: null }],
+          $and: [{ owner: ownerId }, { type }, { level: null }],
         },
       ],
     });
@@ -64,18 +57,10 @@ export const createCommission = async ({ params, ownerId }) => {
         {
           $or: [
             {
-              $and: [
-                { owner: ownerId },
-                { type: commissionType },
-                { level: withdrawalLevel },
-              ],
+              $and: [{ owner: ownerId }, { type }, { level }],
             },
             {
-              $and: [
-                { owner: ownerId },
-                { type: commissionType },
-                { level: null },
-              ],
+              $and: [{ owner: ownerId }, { type }, { level: null }],
             },
           ],
         },
@@ -94,8 +79,8 @@ export const createCommission = async ({ params, ownerId }) => {
       condition: params.condition,
       multiplier: params.multiplier,
       owner: ownerId,
-      type: commissionType,
-      level: withdrawalLevel,
+      type,
+      level,
     });
 
     await saveNewCommission.save();
@@ -243,20 +228,16 @@ const validateCommissionSchema = ({ params }) => {
     .keys({
       condition: Joi.number().required(),
       multiplier: Joi.number().required(),
-      commissionType: Joi.string()
-        .valid([
-          CommissionType.ONBOARDING,
-          CommissionType.TRANSFER,
-          CommissionType.WITHDRAWAL,
-        ])
+      type: Joi.string()
+        .valid([Type.ONBOARDING, Type.TRANSFER, Type.WITHDRAWAL])
         .required(),
-      withdrawalLevel: Joi.string()
+      level: Joi.string()
         .valid([
-          WithdrawalLevel.LEVEL_ONE,
-          WithdrawalLevel.LEVEL_TWO,
-          WithdrawalLevel.LEVEL_THREE,
-          WithdrawalLevel.LEVEL_FOUR,
-          WithdrawalLevel.LEVEL_FIVE,
+          Level.LEVEL_ONE,
+          Level.LEVEL_TWO,
+          Level.LEVEL_THREE,
+          Level.LEVEL_FOUR,
+          Level.LEVEL_FIVE,
         ])
         .optional(),
     })

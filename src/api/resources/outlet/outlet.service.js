@@ -7,7 +7,7 @@ import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
 import { CommissionBalance } from "../commission/commissionbalance.model.js";
 import { Owner } from "../owner/owner.model.js";
-import { WithdrawalLevel } from "../commission/commission.type";
+import { Level } from "../commission/commission.type";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";

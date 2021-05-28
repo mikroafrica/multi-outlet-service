@@ -36,7 +36,6 @@ export const ownerApprovalStatus = (req, res) => {
 
 export const ownerCommissionBalance = (req, res) => {
   const userId = req.params.id;
-  // const commissiontype = req.query.commissiontype;
 
   getOwnerCommissionBalance({ userId })
     .then(({ statusCode, data }) =>
@@ -48,7 +47,6 @@ export const ownerCommissionBalance = (req, res) => {
 };
 
 export const ownerCommissionSettings = (req, res) => {
-  // const commissiontype = req.query.commissiontype;
   const ownerId = req.params.id;
 
   getOwnerCommissionSettings({ ownerId })

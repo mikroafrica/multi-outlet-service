@@ -1,10 +1,10 @@
-export const CommissionType = {
+export const Type = {
   ONBOARDING: "ONBOARDING",
   TRANSFER: "TRANSFER",
   WITHDRAWAL: "WITHDRAWAL",
 };
 
-export const WithdrawalLevel = {
+export const Level = {
   LEVEL_ONE: "level_one",
   LEVEL_TWO: "level_two",
   LEVEL_THREE: "level_three",

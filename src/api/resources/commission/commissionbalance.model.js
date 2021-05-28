@@ -1,16 +1,12 @@
 import mongoose from "mongoose";
-import { CommissionType } from "./commission.type";
+import { Type } from "./commission.type";
 import { Owner } from "../owner/owner.model";
 
 const schema = {
   amount: Number,
   type: {
     type: String,
-    enum: [
-      CommissionType.ONBOARDING,
-      CommissionType.TRANSFER,
-      CommissionType.WITHDRAWAL,
-    ],
+    enum: [Type.ONBOARDING, Type.TRANSFER, Type.WITHDRAWAL],
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
