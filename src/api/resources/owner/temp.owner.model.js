@@ -1,9 +1,14 @@
 import mongoose from "mongoose";
+import { UserType } from "./user.type";
 
 const schema = {
   userId: String,
   phoneNumber: String,
   noOfOutlets: String,
+  userType: {
+    type: String,
+    enum: [UserType.OUTLET_OWNER, UserType.PARTNER],
+  },
 };
 
 const tempOwnerSchema = new mongoose.Schema(schema, { timestamps: true });

@@ -13,7 +13,6 @@ const schema = {
   },
   approval: {
     type: String,
-    default: Approval.PENDING,
     enum: [Approval.APPROVED, Approval.PENDING],
   },
 };

@@ -187,8 +187,8 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
   const timeCreated = userDetails.data.data.timeCreated;
 
   const dateFrom = timeCreated;
-  // const dateTo = timeCreated + 2592000000;
-  const dateTo = 1620770487650;
+  const dateTo = timeCreated + 2592000000;
+  // const dateTo = 1620770487650;
 
   const params = {
     userId: outletUserId,

@@ -1,6 +1,5 @@
 import {
   createCommission,
-  getOwnerApprovalStatus,
   getOwnerCommissionBalance,
   getOwnerCommissionSettings,
   updateOwnerCommissionSettings,
@@ -14,18 +13,6 @@ export const createCommissionForOwner = (req, res) => {
     params,
     ownerId,
   })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const ownerApprovalStatus = (req, res) => {
-  const userId = req.params.id;
-
-  getOwnerApprovalStatus({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

@@ -133,6 +133,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
   );
   try {
     const loginResponse = await AuthService.login(loginRequest);
+
     const loginResponseData = loginResponse.data;
     const userId = loginResponseData.data.userId;
 
@@ -165,6 +166,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
 
           if (owner.userType === UserType.OUTLET_OWNER) {
             owner.approval = Approval.APPROVED;
+            await owner.save();
           } else {
             owner.approval = Approval.PENDING;
             await owner.save();
@@ -499,8 +501,6 @@ export const updateUser = async ({ params, ownerId }) => {
 export const getUsers = async ({ usertype, page, limit }) => {
   try {
     const userType = UserType[usertype];
-    console.log("usertype", usertype);
-    console.log("userType", userType);
 
     if (!userType) {
       return Promise.reject({

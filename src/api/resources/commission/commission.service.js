@@ -87,6 +87,13 @@ export const createCommission = async ({ params, ownerId }) => {
 
     logger.info(`Commission created as ${saveNewCommission}`);
 
+    // Find owner and set approval status to APPROVED since commission has been set for the owner
+    const owner = await Owner.findOne({ userId: ownerId });
+    if (owner.approval === Approval.PENDING) {
+      owner.approval = Approval.APPROVED;
+      await owner.save();
+    }
+
     return Promise.resolve({
       statusCode: OK,
       data: saveNewCommission,
@@ -101,43 +108,6 @@ export const createCommission = async ({ params, ownerId }) => {
     return Promise.reject({
       statusCode: BAD_REQUEST,
       message: err.message || "Could not create commission. Please try again",
-    });
-  }
-};
-
-export const getOwnerApprovalStatus = async ({ userId }) => {
-  try {
-    // check for owner approval status if commissions has been set for the owner
-    const owner = await Owner.findOne({ userId });
-    console.log("owner", owner);
-    if (!owner) {
-      return Promise.reject({
-        statusCode: NOT_FOUND,
-        message: "Owner could not be found.",
-      });
-    }
-    let returnedApprovalStatus;
-    if (owner.approval === Approval.APPROVED) {
-      returnedApprovalStatus = Approval.APPROVED;
-    } else {
-      const ownerCommission = await Commission.find({ owner: userId });
-      if (ownerCommission && ownerCommission.length > 0) {
-        owner.approval = Approval.APPROVED;
-        await owner.save();
-        returnedApprovalStatus = Approval.APPROVED;
-      } else {
-        returnedApprovalStatus = Approval.PENDING;
-      }
-    }
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: returnedApprovalStatus,
-    });
-  } catch (e) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Could not confirm partner approval status",
     });
   }
 };
