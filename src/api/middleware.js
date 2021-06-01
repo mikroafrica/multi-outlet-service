@@ -15,6 +15,12 @@ const checkAccess = (name: string, password: string): boolean => {
 };
 
 export const secureRoute = (req, res, next) => {
+  const path = req.route.path;
+  const method = req.method;
+  if (Object.is(method, "GET") && path === "/") {
+    return next();
+  }
+
   const credentials = basicAuth(req);
 
   // check against account credentials stored
@@ -61,11 +67,6 @@ export const secureRoute = (req, res, next) => {
 
 const allowRoutes = (req) => {
   const path = req.route.path;
-  const method = req.method;
-
-  if (Object.is(method, "GET") && path === "/") {
-    return true;
-  }
 
   const routes = [
     "login",
