@@ -15,9 +15,7 @@ const checkAccess = (name: string, password: string): boolean => {
 };
 
 export const secureRoute = (req, res, next) => {
-  const path = req.route.path;
-  const method = req.method;
-  if (Object.is(method, "GET") && path === "/") {
+  if (allowRoutesByMikroSystem(req)) {
     return next();
   }
 
@@ -69,14 +67,6 @@ const allowRoutes = (req) => {
   const path = req.route.path;
 
   const routes = [
-    "login",
-    "signup",
-    "metrics",
-    "reset-password",
-    "email-validation",
-    "email-verification",
-    "reset-password-request",
-    "users",
     "/set-commission/:id",
     "approval-status/:id",
     "link-outlet/:id",
@@ -86,6 +76,31 @@ const allowRoutes = (req) => {
     "update-commission/:id/:commissionId",
     "user/:id",
     ":id",
+  ];
+  for (let i = 0; i < routes.length; i++) {
+    if (path.includes(routes[i])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const allowRoutesByMikroSystem = (req) => {
+  const path = req.route.path;
+  const method = req.method;
+
+  if (Object.is(method, "GET") && path === "/") {
+    return true;
+  }
+
+  const routes = [
+    "login",
+    "signup",
+    "metrics",
+    "reset-password",
+    "email-validation",
+    "email-verification",
+    "reset-password-request",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {
