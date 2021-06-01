@@ -35,6 +35,17 @@ export const getUserDetails = async (userId) => {
   return await get({ client, path });
 };
 
+export const getUserByPhoneNumber = async (phoneNumber) => {
+  const client = restifyRequest();
+  const path = {
+    path: `/user/${phoneNumber}/`,
+    query: {
+      option: "phone",
+    },
+  };
+  return await get({ client, path });
+};
+
 export const requestVerificationEmail = (params) => {
   const client = restifyRequest();
   const path = "/user/email-verification";

@@ -47,11 +47,12 @@
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
     "mocha": "^6.2.3",
-    "prettier": "2.1.2",
+    "prettier": "^2.1.2",
     "sinon": "^7.5.0",
     "supertest": "^4.0.2"
   },
   "dependencies": {
+    "@slack/web-api": "^6.1.0",
     "async": "^3.2.0",
     "basic-auth": "^2.0.1",
     "dotenv": "^8.2.0",
@@ -60,13 +61,16 @@
     "mongoose": "^5.9.17",
     "mongoose-paginate": "^5.0.3",
     "nock": "^13.0.5",
+    "prom-client": "^13.1.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
+    "response-time": "^2.3.2",
     "restify": "^8.5.1",
     "restify-clients": "^2.5.2",
     "restify-cors-middleware": "^1.1.1",
     "tsscmp": "^1.0.6",
     "uuid": "^8.3.2",
+    "uuidv4": "^6.2.7",
     "winston": "^3.2.1"
   }
 }

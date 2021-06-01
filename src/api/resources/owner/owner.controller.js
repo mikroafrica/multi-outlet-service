@@ -8,7 +8,11 @@ import {
   resetPassword,
   updateUser,
   getUser,
+  getUsers,
+  // generateReferralCodeForUsers,
+  getOwnerWithOutlets,
 } from "./owner.service.js";
+import { getOutlets } from "../outlet/outlet.service";
 
 export const signup = (req, res) => {
   const params = req.body;
@@ -111,6 +115,36 @@ export const fetchOwnerDetails = (req, res) => {
   const ownerId = req.user.userId;
 
   getUser({ ownerId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const fetchUsersByType = (req, res) => {
+  const usertype = req.query.usertype;
+
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  getUsers({ usertype, page, limit })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const fetchOwnerById = (req, res) => {
+  const ownerId = req.params.id;
+
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  getOwnerWithOutlets({ ownerId, page, limit })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

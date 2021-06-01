@@ -1,14 +1,17 @@
 import Joi from "joi";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as AuthService from "../../modules/auth-service.js";
-import { BAD_REQUEST, OK } from "../../modules/status.js";
+import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
-import { UserType } from "./user.type.js";
-import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
+import { UserRole } from "./user.role.js";
+import { CONFLICT } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
 import { TempOwner } from "./temp.owner.model";
+import { UserType } from "./user.type";
+import { Outlet } from "../outlet/outlet.model";
+import { fetchOutletDetails } from "../outlet/outlet.service";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -46,8 +49,10 @@ export const signupMultiOutletOwner = async (params) => {
           userId,
           phoneNumber: params.phoneNumber,
           noOfOutlets: params.noOfOutlets,
+          userType: params.userType,
         });
         await tempOwner.save();
+
         return Promise.resolve({
           statusCode: OK,
           data: outletOwnerData.data,
@@ -85,7 +90,7 @@ const authServiceSignUpParams = (params, userId) => {
     username: params.email,
     userId: userId,
     password: params.password,
-    role: UserType.ADMIN,
+    role: UserRole.ADMIN,
   };
 };
 
@@ -122,6 +127,7 @@ export const loginMultiOutletOwner = async ({ params }) => {
   );
   try {
     const loginResponse = await AuthService.login(loginRequest);
+
     const loginResponseData = loginResponse.data;
     const userId = loginResponseData.data.userId;
 
@@ -147,9 +153,18 @@ export const loginMultiOutletOwner = async ({ params }) => {
             userId,
             phoneNumber: tempOwner ? tempOwner.phoneNumber : "",
             noOfOutlets: tempOwner ? tempOwner.noOfOutlets : "",
+            userType: tempOwner ? tempOwner.userType : "",
           });
           await createdOwner.save();
           owner = createdOwner;
+
+          if (owner.userType === UserType.OUTLET_OWNER) {
+            owner.approval = Approval.APPROVED;
+            await owner.save();
+          } else {
+            owner.approval = Approval.PENDING;
+            await owner.save();
+          }
         } else {
           return Promise.reject({
             statusCode: BAD_REQUEST,
@@ -385,6 +400,24 @@ export const changePassword = async ({ params, ownerId }) => {
   }
 };
 
+export const getUser = async ({ ownerId }) => {
+  try {
+    const userDetails = await ConsumerService.getUserDetails(ownerId);
+
+    const userDetailsData = userDetails.data;
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: userDetailsData.data,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch owner details. Please try again",
+    });
+  }
+};
+
 export const updateUser = async ({ params, ownerId }) => {
   if (!params) {
     return Promise.reject({
@@ -459,20 +492,102 @@ export const updateUser = async ({ params, ownerId }) => {
   }
 };
 
-export const getUser = async ({ ownerId }) => {
+export const getUsers = async ({ usertype, page, limit }) => {
   try {
-    const userDetails = await ConsumerService.getUserDetails(ownerId);
+    const userType = UserType[usertype];
 
-    const userDetailsData = userDetails.data;
+    if (!userType) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Invalid user type supplied. Please supply a valid user type",
+      });
+    }
+
+    let filter = { userType: usertype };
+
+    const owners = await Owner.paginate(filter, {
+      page,
+      limit,
+      sort: { createdAt: -1 },
+    });
 
     return Promise.resolve({
       statusCode: OK,
-      data: userDetailsData.data,
+      data: {
+        page: owners.page,
+        pages: owners.pages,
+        limit: owners.limit,
+        total: owners.total,
+        list: owners.docs,
+      },
     });
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not fetch owner details. Please try again",
+      message: "Could not fetch users by type. Please try again",
+    });
+  }
+};
+
+export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
+  try {
+    const outlets = await Outlet.paginate(
+      {
+        ownerId,
+      },
+      { page, limit, sort: { createdAt: -1 } }
+    );
+
+    // Retrieve partner's details from the consumer service
+    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+    const ownerDetailsData = ownerDetails.data.data;
+
+    logger.info(
+      `Return owner details data as ${JSON.stringify(ownerDetailsData)}`
+    );
+
+    // Find owner and extract data saved during login
+    const owner = await Owner.findOne({ userId: ownerId });
+    if (!owner) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Could not find owner.",
+      });
+    }
+
+    let ownerData = [];
+    ownerData.push({
+      userType: owner.userType,
+      approval: owner.approval,
+      phoneNumber: ownerDetailsData.phoneNumber,
+      firstName: ownerDetailsData.firstName,
+      lastName: ownerDetailsData.lastName,
+      dateOfBirth: ownerDetailsData.dateOfBirth,
+      businessName: ownerDetailsData.businessName,
+      businessType: ownerDetailsData.businessType,
+      email: ownerDetailsData.email,
+    });
+
+    // Use the fetchOutletDetails method to fetch the details of users linked to partner
+    const outletDetails = await fetchOutletDetails(outlets.docs);
+
+    logger.info(`Returning user details as ${JSON.stringify(outletDetails)}`);
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: {
+        page: outlets.page,
+        pages: outlets.pages,
+        limit: outlets.limit,
+        total: outlets.total,
+        ownerData,
+        list: outletDetails,
+      },
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not fetch partner",
     });
   }
 };
@@ -488,6 +603,9 @@ const validateSignupParamsSchema = (params) => {
       gender: Joi.string().required(),
       noOfOutlets: Joi.string().required(),
       profileImageId: Joi.string(),
+      userType: Joi.string()
+        .valid(UserType.OUTLET_OWNER, UserType.PARTNER)
+        .required(),
     })
     .unknown(true);
 

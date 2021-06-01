@@ -5,6 +5,7 @@ import sinon from "sinon";
 import chaiAsPromised from "chai-as-promised";
 import * as OwnerService from "../../../src/api/resources/owner/owner.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
+import { Commission } from "../../../src/api/resources/commission/commission.model";
 import {
   BAD_REQUEST,
   CONFLICT,
@@ -13,6 +14,9 @@ import {
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
+import { CommissionBalance } from "../../../src/api/resources/commission/commissionbalance.model";
+import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
+import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -591,5 +595,25 @@ describe("Owner service Tests", function () {
       expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
     }
+  });
+
+  it("should fetch users when a valid usertype is supplied", async function () {
+    const usertype = "OUTLET_OWNER";
+    const userType = "OUTLET_OWNER";
+    const filter = { userType: usertype };
+    const page = 1;
+    const limit = 2;
+
+    const findOwners = sinon
+      .stub(Owner, "paginate")
+      .resolves({ filter, page, limit });
+
+    const response = await OwnerService.getUsers({ usertype, page, limit });
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+
+    findOwners.restore();
+    sinon.assert.calledOnce(findOwners);
   });
 });

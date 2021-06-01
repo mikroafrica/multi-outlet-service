@@ -8,6 +8,8 @@ import {
   resetPasswordRequest,
   updateUserProfile,
   fetchOwnerDetails,
+  fetchUsersByType,
+  fetchOwnerById,
 } from "./owner.controller";
 
 const auth = ({ server, subBase }) => {
@@ -20,6 +22,8 @@ const auth = ({ server, subBase }) => {
   server.put(`${subBase}/change-password`, changePasswordRequest);
   server.put(`${subBase}/update-profile`, updateUserProfile);
   server.get(`${subBase}/details`, fetchOwnerDetails);
+  server.get(`${subBase}/users`, fetchUsersByType);
+  server.get(`${subBase}/user/:id`, fetchOwnerById);
 };
 
 export default auth;

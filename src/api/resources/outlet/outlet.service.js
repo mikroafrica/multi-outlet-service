@@ -2,13 +2,18 @@ import Joi from "joi";
 import async from "async";
 import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
+import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
+import { CommissionBalance } from "../commission/commissionbalance.model.js";
+import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
+import { Commission } from "../commission/commission.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
+import { UserType } from "../owner/user.type";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -61,6 +66,8 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
     });
+    logger.info(`Linking ${JSON.stringify(outletUserId)}`);
+
     if (existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -68,9 +75,6 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
       });
     }
 
-    logger.info(
-      `Sending verification OTP to ${JSON.stringify(params.phoneNumber)}`
-    );
     const otpResponse = await sendVerificationOtp({
       phoneNumber: params.phoneNumber,
     });
@@ -96,6 +100,308 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
       statusCode: BAD_REQUEST,
       message: err.message || "Could not link outlet. Please try again",
     });
+  }
+};
+
+export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
+
+  const schema = Joi.object().keys({
+    outletId: Joi.string().required(),
+  });
+
+  const validateSchema = Joi.validate(params, schema);
+
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  try {
+    // Retrieve outlet's dtails from consumer service
+    const userDetails = await ConsumerService.getUserDetails(params.outletId);
+    //
+    const userDetailsData = userDetails.data;
+    const userData = userDetailsData.data;
+    const outletUserId = userDetailsData.data.id;
+    const walletId = userDetailsData.data.store[0].wallet[0].id;
+
+    logger.info(
+      `Retrieving user details from consumer service as ${JSON.stringify(
+        userDetails
+      )}`
+    );
+
+    // check if outlet is already existing.
+    const existingOutlet = await Outlet.findOne({
+      userId: outletUserId,
+    });
+
+    if (existingOutlet) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Outlet has been added previously",
+      });
+    }
+
+    const newOutletMapping = await saveOutletWithOwner({
+      outletUserId,
+      ownerId,
+      walletId,
+    });
+
+    await addCommissionToOwner({
+      userDetails,
+      outletUserId,
+      ownerId,
+    });
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: newOutletMapping,
+    });
+  } catch (err) {
+    logger.error(
+      `An error occurred while trying to link outlet: ${JSON.stringify(err)}`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: err.message || "Could not link outlet. Please try again",
+    });
+  }
+};
+
+const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
+  // fetch user transaction details from the transaction service
+
+  const timeCreated = userDetails.data.data.timeCreated;
+
+  const dateFrom = timeCreated;
+  const dateTo = timeCreated + 2592000000;
+  // const dateTo = 1620770487650;
+
+  const params = {
+    userId: outletUserId,
+    dateFrom,
+    dateTo,
+  };
+  const outletTransactions = await TransactionService.transactionsCategorySummary(
+    params
+  );
+
+  const outletTransactionData = outletTransactions.data.data;
+
+  // filter transaction details to return transactions made within the first 30 days
+
+  // apply logic commission based on the filtered transactions
+  //   if filtered transaction sum >= minimum amount
+  //        credit partner 0.03% of transaction sum
+
+  const totalTransactionAmount = outletTransactionData.reduce(
+    (acc, transaction) => {
+      if (transaction.successfulAmount) {
+        return acc + transaction.successfulAmount;
+      }
+      return acc;
+    },
+    0
+  );
+  logger.info(
+    `Total transaction amount for the first 30 of getting an outlet estimated as ${totalTransactionAmount}`
+  );
+
+  const onboardingCommission = await Commission.findOne({
+    type: "ONBOARDING",
+    owner: ownerId,
+  });
+
+  logger.info(
+    `Print onboarding commission setting as ${JSON.stringify(
+      onboardingCommission
+    )}`
+  );
+
+  if (
+    onboardingCommission &&
+    totalTransactionAmount >= onboardingCommission.condition
+  ) {
+    const commissionBalance = await CommissionBalance.findOne({
+      owner: ownerId,
+      type: "ONBOARDING",
+    });
+
+    logger.info(
+      `Get owner onboarding commission balance as ${JSON.stringify(
+        commissionBalance
+      )}`
+    );
+
+    if (commissionBalance) {
+      commissionBalance.amount =
+        commissionBalance.amount +
+        onboardingCommission.multiplier * totalTransactionAmount;
+      await commissionBalance.save();
+    } else {
+      const commissionBalance = await CommissionBalance.create({
+        amount: onboardingCommission.multiplier * totalTransactionAmount,
+        owner: ownerId,
+        type: "ONBOARDING",
+      });
+    }
+  }
+
+  //   TODO: THRIFT_ONBOARDING COMMISSIONS to be calculated when thrift users onboarded data is available
+  //   if PARTNER has not been credited with thrift onboarding commission
+  //     find thrift users onboarded by user and check if the users meet the contract terms
+  //         if met
+  //            credit PARTNER with the commission and
+  //            set flag that the partner has been credited with thrift-onboarding commission
+
+  //    TRANSACTION COMMISSIONS
+  //   Filter transactions for every transfer (type TRANSFER) made by user
+  //   that corresponds to settings (set by admin)
+  const filteredTransfer = outletTransactionData.filter(
+    (transaction) =>
+      transaction.type === "Transfer" && transaction.successfulAmount
+  );
+
+  //   if transfer exists
+  const transferCommission = await Commission.findOne({
+    type: "TRANSFER",
+    owner: ownerId,
+  });
+
+  logger.info(
+    `Get owner transfer commission settings as ${JSON.stringify(
+      transferCommission
+    )}`
+  );
+
+  if (filteredTransfer.length > 0) {
+    const commissionOnTransfers =
+      filteredTransfer.length * transferCommission.multiplier;
+
+    const commissionBalance = await CommissionBalance.findOne({
+      owner: ownerId,
+      type: "TRANSFER",
+    });
+
+    if (commissionBalance) {
+      // credit owner for every transfer
+      commissionBalance.amount =
+        commissionBalance.amount + commissionOnTransfers;
+      await commissionBalance.save();
+
+      logger.info(
+        `Get owners transfer commisision balance as ${commissionBalance.amount}`
+      );
+    } else {
+      //  create a commissionBalance with amount === creditAmount
+      const creditAmount = new CommissionBalance({
+        amount: transferCommission.multiplier * filteredTransfer.length,
+        owner: ownerId,
+        type: "TRANSFER",
+      });
+      await creditAmount.save();
+    }
+  }
+
+  //   Filter transactions for every transfer (type WITHDRAWAL) made by user
+  //   that corresponds to settings (set by admin)
+  const filteredTransaction = outletTransactionData.filter(
+    (transaction) =>
+      transaction.type === "Withdrawal" && transaction.successfulAmount
+  );
+  //   if TRANSACTION exists
+  if (filteredTransaction.length > 0) {
+    const totalWithdrawalAmount = filteredTransaction.reduce(
+      (acc, transaction) => {
+        if (transaction.successfulAmount) {
+          return acc + transaction.successfulAmount;
+        }
+        return acc;
+      },
+      0
+    );
+
+    const withdrawalCommission = await Commission.find({
+      type: "WITHDRAWAL",
+      owner: ownerId,
+    });
+
+    logger.info(
+      `Get the withdrawal commission setting as ${JSON.stringify(
+        withdrawalCommission
+      )}`
+    );
+
+    let condition1;
+    let condition2;
+    let condition3;
+    let condition4;
+    let condition5;
+    if (withdrawalCommission[0].level === "level_one") {
+      condition1 = withdrawalCommission[0].condition;
+    } else if (withdrawalCommission[1].level === "level_two") {
+      condition2 = withdrawalCommission[1].condition;
+    } else if (withdrawalCommission[2].level === "level_three") {
+      condition3 = withdrawalCommission[2].condition;
+    } else if (withdrawalCommission[3].level === "level_four") {
+      condition4 = withdrawalCommission[3].condition;
+    } else if (withdrawalCommission[4].level === "level_five") {
+      condition5 = withdrawalCommission[4].condition;
+    }
+
+    // calculate partner's credit amount based on the withdrawals level
+    let creditAmount;
+    if (totalWithdrawalAmount > condition1) {
+      creditAmount = withdrawalCommission[0].multiplier * totalWithdrawalAmount;
+    } else if (
+      totalWithdrawalAmount > condition2 ||
+      totalWithdrawalAmount <= condition1
+    ) {
+      creditAmount = withdrawalCommission[1].multiplier * totalWithdrawalAmount;
+    } else if (
+      totalWithdrawalAmount > condition3 ||
+      totalWithdrawalAmount <= condition2
+    ) {
+      creditAmount = withdrawalCommission[2].multiplier * totalWithdrawalAmount;
+    } else if (
+      totalWithdrawalAmount > condition4 ||
+      totalWithdrawalAmount <= condition3
+    ) {
+      creditAmount = withdrawalCommission[3].multiplier * totalWithdrawalAmount;
+    } else if (totalWithdrawalAmount <= condition5) {
+      creditAmount = withdrawalCommission[4].multiplier * totalWithdrawalAmount;
+    }
+
+    logger.info(`computed ${creditAmount}`);
+
+    const commissionBalance = await CommissionBalance.findOne({
+      owner: ownerId,
+      type: "WITHDRAWAL",
+    });
+
+    if (commissionBalance) {
+      // credit partner for every transfer
+      commissionBalance.amount = commissionBalance.amount + creditAmount;
+      await commissionBalance.save();
+    } else {
+      //  create a commissionBalance with amount === creditAmount
+      const newCreditAmount = await CommissionBalance.create({
+        amount: creditAmount,
+        owner: ownerId,
+        type: "WITHDRAWAL",
+      });
+    }
   }
 };
 
@@ -328,6 +634,44 @@ export const verifyOutletLinking = async ({ params }) => {
   }
 };
 
+const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
+  // Find owner and check if owner is a PARTNER
+  const owner = await Owner.findOne({ userId: ownerId });
+  if (!owner) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Owner does not exist. Please sign up.",
+    });
+  }
+
+  if (owner.userType === UserType.PARTNER) {
+    const outletUserDetails = await ConsumerService.getUserDetails(
+      outletUserId
+    );
+    const outletUserDetailsData = outletUserDetails.data.data;
+    const walletId = outletUserDetailsData.store[0].wallet[0].id;
+
+    if (
+      outletUserDetailsData.store.length < 1 ||
+      outletUserDetailsData.store[0].wallet.length < 1
+    ) {
+      logger.error(
+        "Could not verify outlet linking because outlet does not have a wallet"
+      );
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Could not verify outlet linking. Please try again",
+      });
+    }
+    const newOutletMapping = new Outlet({
+      userId: outletUserId,
+      ownerId,
+      walletId,
+    });
+    return newOutletMapping.save();
+  }
+};
+
 const saveNewOutletMapping = ({ ownerId, outletUserId, walletId }) => {
   const outlet = new Outlet({ ownerId, userId: outletUserId, walletId });
   return outlet.save();
@@ -339,7 +683,7 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
       {
         ownerId,
       },
-      { page, limit }
+      { page, limit, sort: { createdAt: -1 } }
     );
 
     const outletDetails = await fetchOutletDetails(outlets.docs);
@@ -367,6 +711,10 @@ export const fetchOutletDetails = async (outlets) => {
   await async.forEach(outlets, async (outlet) => {
     const response = await ConsumerService.getUserDetails(outlet.userId);
     const userDetailsData = response.data;
+
+    logger.info(
+      `Verify outlet linking with request [${JSON.stringify(userDetailsData)}]`
+    );
 
     const wallet = userDetailsData.data.store[0].wallet[0];
     const walletId = wallet.id;
