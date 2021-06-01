@@ -7,14 +7,12 @@ import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
 import { CommissionBalance } from "../commission/commissionbalance.model.js";
 import { Owner } from "../owner/owner.model.js";
-import { Level } from "../commission/commission.type";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import { Commission } from "../commission/commission.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
-import { UserRole } from "../owner/user.role";
 import { UserType } from "../owner/user.type";
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {

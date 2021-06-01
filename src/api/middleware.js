@@ -5,7 +5,7 @@ import basicAuth from "basic-auth";
 import { validateToken } from "./modules/auth-service";
 import compare from "tsscmp";
 
-const checkAccess = (name: string, password: string): Boolean => {
+const checkAccess = (name: string, password: string): boolean => {
   let valid: Boolean = true;
 
   // prevent short-cricuit and use timing-safe compare
@@ -70,6 +70,7 @@ const allowRoutes = (req) => {
   const routes = [
     "login",
     "signup",
+    "metrics",
     "reset-password",
     "email-validation",
     "email-verification",

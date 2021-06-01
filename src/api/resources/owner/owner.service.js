@@ -4,20 +4,14 @@ import * as AuthService from "../../modules/auth-service.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
 import { UserRole } from "./user.role.js";
-import { CONFLICT, UN_AUTHORISED } from "../../modules/status.js";
+import { CONFLICT } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
 import { TempOwner } from "./temp.owner.model";
-import { OutletStatus } from "../outlet/outlet.status";
-import { UserType, PartnerApproval } from "./user.type";
+import { UserType } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
-import { Verification } from "../outlet/verification.model";
-import { validatePhone } from "../../modules/util";
-import {
-  fetchOutletDetails,
-  sendVerificationOtp,
-} from "../outlet/outlet.service";
+import { fetchOutletDetails } from "../outlet/outlet.service";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {

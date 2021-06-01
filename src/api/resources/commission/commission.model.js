@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 import { Type, Level } from "./commission.type";
-import { Owner } from "../owner/owner.model";
-import { UserRole } from "../owner/user.role";
 
 const schema = {
   condition: Number,

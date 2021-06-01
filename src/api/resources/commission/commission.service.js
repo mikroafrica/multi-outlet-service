@@ -4,7 +4,7 @@ import { Type, Level } from "./commission.type";
 import { Commission } from "./commission.model";
 import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
-import { Approval, UserType } from "../owner/user.type";
+import { Approval } from "../owner/user.type";
 import { CommissionBalance } from "./commissionbalance.model";
 
 export const createCommission = async ({ params, ownerId }) => {
