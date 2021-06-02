@@ -23,66 +23,37 @@ export const secureRoute = (req, res, next) => {
 
   // check against account credentials stored
   if (!credentials || !checkAccess(credentials.name, credentials.pass)) {
-    logger.info(`Route is not authorized`);
-    return res.send(UN_AUTHORISED, {
-      status: false,
-      message: "UnAuthorized",
-    });
-  }
+    // if basic auth is not successful , use the token
+    const authHeader = req.headers.authorization;
 
-  if (allowRoutes(req)) {
-    return next();
-  }
-
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || authHeader.split(" ").length < 2) {
-    logger.error(`Token wasn't supplied`);
-    return res.send(UN_AUTHORISED, {
-      status: false,
-      message: "Authorization is required",
-    });
-  }
-
-  const token = authHeader.split(" ")[1];
-  const params = { token };
-  AuthService.validateToken(params)
-    .then((authResponse) => {
-      const authResponseData = authResponse.data;
-      req.user = authResponseData.data;
-      return next();
-    })
-    .catch((err) => {
-      logger.error(
-        `failed to validate token with error ${JSON.stringify(err)}`
-      );
-      return res.send(err.statusCode || UN_AUTHORISED, {
+    if (!authHeader || authHeader.split(" ").length < 2) {
+      logger.error(`Token wasn't supplied`);
+      return res.send(UN_AUTHORISED, {
         status: false,
-        message: err.message || "Your session has expired",
+        message: "Authorization is required",
       });
-    });
-};
-
-const allowRoutes = (req) => {
-  const path = req.route.path;
-
-  const routes = [
-    "/set-commission/:id",
-    "approval-status/:id",
-    "link-outlet/:id",
-    "/:id",
-    "commission-balance/:id",
-    "commission-setting/:id",
-    "update-commission/:id/:commissionId",
-    "user/:id",
-    ":id",
-  ];
-  for (let i = 0; i < routes.length; i++) {
-    if (path.includes(routes[i])) {
-      return true;
     }
+
+    const token = authHeader.split(" ")[1];
+    const params = { token };
+    AuthService.validateToken(params)
+      .then((authResponse) => {
+        const authResponseData = authResponse.data;
+        req.user = authResponseData.data;
+        return next();
+      })
+      .catch((err) => {
+        logger.error(
+          `failed to validate token with error ${JSON.stringify(err)}`
+        );
+        return res.send(err.statusCode || UN_AUTHORISED, {
+          status: false,
+          message: err.message || "Your session has expired",
+        });
+      });
   }
-  return false;
+
+  return next();
 };
 
 const allowRoutesByMikroSystem = (req) => {
