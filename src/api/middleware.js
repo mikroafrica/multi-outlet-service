@@ -33,7 +33,6 @@ export const secureRoute = (req, res, next) => {
         message: "Authorization is required",
       });
     }
-
     const token = authHeader.split(" ")[1];
     const params = { token };
     AuthService.validateToken(params)
