@@ -38,7 +38,7 @@ export const signupMultiOutletOwner = async (params) => {
 
   params.personalPhoneNumber = params.phoneNumber;
 
-  return ConsumerService.signup(params)
+  return ConsumerService.signup(params, params.userType)
     .then(async (outletOwner) => {
       const outletOwnerData = outletOwner.data;
       const userId = await outletOwnerData.data.id;
