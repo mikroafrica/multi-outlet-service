@@ -6,6 +6,7 @@ import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
 import { Approval } from "../owner/user.type";
 import { CommissionBalance } from "./commissionbalance.model";
+import { TransferCommission } from "./transfer-commission.model";
 
 export const createCommission = async ({ params, ownerId }) => {
   if (!params) {
@@ -189,6 +190,30 @@ export const updateOwnerCommissionSettings = async ({
     return Promise.reject({
       statusCode: BAD_REQUEST,
       message: "Could not update commission setting for partner",
+    });
+  }
+};
+
+export const getOwnerTransferCommissions = async ({ ownerId }) => {
+  try {
+    const transferCommissions = await TransferCommission.find({
+      owner: ownerId,
+    });
+    if (!transferCommissions) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Commission not found.",
+      });
+    }
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: transferCommissions,
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Could not  commission breakdown for owner.",
     });
   }
 };
