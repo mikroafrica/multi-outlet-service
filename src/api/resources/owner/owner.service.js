@@ -601,7 +601,7 @@ const validateSignupParamsSchema = (params) => {
       phoneNumber: Joi.string().required(),
       password: Joi.string().required(),
       gender: Joi.string().required(),
-      noOfOutlets: Joi.string().required(),
+      noOfOutlets: Joi.string(),
       profileImageId: Joi.string(),
       userType: Joi.string()
         .valid(UserType.OUTLET_OWNER, UserType.PARTNER)
