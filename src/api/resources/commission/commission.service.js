@@ -8,7 +8,7 @@ import { Approval } from "../owner/user.type";
 import { CommissionBalance } from "./commissionbalance.model";
 import { TransferCommission } from "./transfer-commission.model";
 
-export const createCommission = async ({ params, ownerId }) => {
+export const createCommission = async ({ params }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -39,10 +39,10 @@ export const createCommission = async ({ params, ownerId }) => {
     const existingCommissionSettings = await Commission.findOne({
       $or: [
         {
-          $and: [{ owner: ownerId }, { type }, { level }],
+          $and: [{ owner: params.ownerId }, { type }, { level }],
         },
         {
-          $and: [{ owner: ownerId }, { type }, { level: null }],
+          $and: [{ owner: params.ownerId }, { type }, { level: null }],
         },
       ],
     });
@@ -58,10 +58,10 @@ export const createCommission = async ({ params, ownerId }) => {
         {
           $or: [
             {
-              $and: [{ owner: ownerId }, { type }, { level }],
+              $and: [{ owner: params.ownerId }, { type }, { level }],
             },
             {
-              $and: [{ owner: ownerId }, { type }, { level: null }],
+              $and: [{ owner: params.ownerId }, { type }, { level: null }],
             },
           ],
         },
@@ -113,10 +113,10 @@ export const createCommission = async ({ params, ownerId }) => {
   }
 };
 
-export const getOwnerCommissionBalance = async ({ userId }) => {
+export const getOwnerCommissionBalance = async ({ ownerId }) => {
   try {
     // check for if the partner has commissions already set
-    const ownerCommission = await CommissionBalance.find({ owner: userId });
+    const ownerCommission = await CommissionBalance.find({ owner: ownerId });
     if (!ownerCommission) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -158,11 +158,7 @@ export const getOwnerCommissionSettings = async ({ ownerId }) => {
   }
 };
 
-export const updateOwnerCommissionSettings = async ({
-  params,
-  commissionId,
-  ownerId,
-}) => {
+export const updateOwnerCommissionSettings = async ({ params, id }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -173,8 +169,7 @@ export const updateOwnerCommissionSettings = async ({
   try {
     const updatedCommission = await Commission.findOneAndUpdate(
       {
-        owner: ownerId,
-        _id: commissionId,
+        _id: id,
       },
       { $set: { condition: params.condition, multiplier: params.multiplier } },
       { new: true }
@@ -213,7 +208,7 @@ export const getOwnerTransferCommissions = async ({ ownerId }) => {
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not  commission breakdown for owner.",
+      message: "Could not fetch commission breakdown for owner.",
     });
   }
 };
@@ -222,6 +217,7 @@ const validateCommissionSchema = ({ params }) => {
   const schema = Joi.object()
     .keys({
       condition: Joi.number().required(),
+      ownerId: Joi.string().required(),
       multiplier: Joi.number().required(),
       type: Joi.string()
         .valid([Type.ONBOARDING, Type.TRANSFER, Type.WITHDRAWAL])

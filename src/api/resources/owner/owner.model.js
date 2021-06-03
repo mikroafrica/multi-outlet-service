@@ -6,6 +6,7 @@ const schema = {
   userId: String,
   walletId: String,
   noOfOutlets: String,
+  phoneNumber: String,
   userType: {
     type: String,
     default: UserType.OUTLET_OWNER,
