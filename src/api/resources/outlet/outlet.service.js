@@ -146,6 +146,8 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
       userId: outletUserId,
     });
 
+    logger.error("Error log for test");
+
     if (existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,

@@ -201,6 +201,10 @@ export const getOwnerTransferCommissions = async ({ ownerId }) => {
       });
     }
 
+    logger.info(
+      `Owner updated commission ${JSON.stringify(transferCommissions)}`
+    );
+
     return Promise.resolve({
       statusCode: OK,
       data: transferCommissions,
