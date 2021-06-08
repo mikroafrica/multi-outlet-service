@@ -6,7 +6,9 @@ import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
 import { CommissionBalance } from "../commission/commissionbalance.model.js";
+import { TransferCommission } from "../commission/transfer-commission.model.js";
 import { Owner } from "../owner/owner.model.js";
+import { Level, Type } from "../commission/commission.type";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
@@ -144,6 +146,8 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
       userId: outletUserId,
     });
 
+    logger.error("Error log for test");
+
     if (existingOutlet) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -203,7 +207,7 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
 
   // apply logic commission based on the filtered transactions
   //   if filtered transaction sum >= minimum amount
-  //        credit partner 0.03% of transaction sum
+  //        credit partner with commission multipler * transaction sum
 
   const totalTransactionAmount = outletTransactionData.reduce(
     (acc, transaction) => {
@@ -215,7 +219,7 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
     0
   );
   logger.info(
-    `Total transaction amount for the first 30 of getting an outlet estimated as ${totalTransactionAmount}`
+    `Total transaction amount for the first 30 of getting an outlet is calculated as ${totalTransactionAmount}`
   );
 
   const onboardingCommission = await Commission.findOne({
@@ -268,7 +272,19 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
   //    TRANSACTION COMMISSIONS
   //   Filter transactions for every transfer (type TRANSFER) made by user
   //   that corresponds to settings (set by admin)
-  const filteredTransfer = outletTransactionData.filter(
+
+  const requests = {
+    userId: outletUserId,
+    dateFrom,
+    dateTo: Date.now(),
+  };
+
+  const outletTransactionSummary = await TransactionService.transactionsCategorySummary(
+    requests
+  );
+  const outletTransactionSummaryData = outletTransactionSummary.data.data;
+
+  const filteredTransfer = outletTransactionSummaryData.filter(
     (transaction) =>
       transaction.type === "Transfer" && transaction.successfulAmount
   );
@@ -286,8 +302,15 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
   );
 
   if (filteredTransfer.length > 0) {
+    const totalTransferAmount = filteredTransfer.reduce((acc, transaction) => {
+      if (transaction.successfulAmount) {
+        return acc + transaction.successfulAmount;
+      }
+      return acc;
+    }, 0);
+
     const commissionOnTransfers =
-      filteredTransfer.length * transferCommission.multiplier;
+      totalTransferAmount * transferCommission.multiplier;
 
     const commissionBalance = await CommissionBalance.findOne({
       owner: ownerId,
@@ -314,13 +337,56 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
     }
   }
 
-  //   Filter transactions for every transfer (type WITHDRAWAL) made by user
+  //  Transfer transaction breakdown for the outlet under a user
+  const request = {
+    userId: outletUserId,
+  };
+
+  // Fetch transactions by outlet from the transactions service
+  const transactionsByOutlet = await TransactionService.fetchTransactions(
+    request
+  );
+  const transactionsByOutletData = transactionsByOutlet.data.data.list;
+
+  const filteredTransferTransaction = transactionsByOutletData.filter(
+    (tansaction) =>
+      tansaction.transactionType === "transfer" &&
+      tansaction.transactionStatus === "successful"
+  );
+
+  //   Calculate commission for each successful transfer by users under a partner
+  if (filteredTransferTransaction.length > 0) {
+    await async.forEach(filteredTransferTransaction, async (transfer) => {
+      const commissionOnEachTransfer =
+        transferCommission.multiplier * transfer.amount;
+
+      //  check if transfer commission had been previously saved
+      const transferCommissionBalance = await TransferCommission.findOne({
+        timeCreated: transfer.timeCreated,
+      });
+
+      if (!transferCommissionBalance) {
+        const commissionOnSingleTransfer = new TransferCommission({
+          owner: ownerId,
+          userId: outletUserId,
+          transferAmount: transfer.amount,
+          commissionOnTransfer: commissionOnEachTransfer,
+          type: Type.TRANSFER,
+          timeCreated: transfer.timeCreated,
+        });
+        await commissionOnSingleTransfer.save();
+      }
+    });
+  }
+
+  //   Filter transactions for every transaction (type WITHDRAWAL) made by user
   //   that corresponds to settings (set by admin)
-  const filteredTransaction = outletTransactionData.filter(
+  const filteredTransaction = outletTransactionSummaryData.filter(
     (transaction) =>
       transaction.type === "Withdrawal" && transaction.successfulAmount
   );
-  //   if TRANSACTION exists
+
+  //   if withdrawal TRANSACTION exists
   if (filteredTransaction.length > 0) {
     const totalWithdrawalAmount = filteredTransaction.reduce(
       (acc, transaction) => {
@@ -383,7 +449,7 @@ const addCommissionToOwner = async ({ userDetails, outletUserId, ownerId }) => {
       creditAmount = withdrawalCommission[4].multiplier * totalWithdrawalAmount;
     }
 
-    logger.info(`computed ${creditAmount}`);
+    logger.info(`Computed credit amount ${creditAmount}`);
 
     const commissionBalance = await CommissionBalance.findOne({
       owner: ownerId,

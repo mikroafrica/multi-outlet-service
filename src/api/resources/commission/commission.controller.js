@@ -3,15 +3,15 @@ import {
   getOwnerCommissionBalance,
   getOwnerCommissionSettings,
   updateOwnerCommissionSettings,
+  getOwnerTransferCommissions,
 } from "./commission.service";
 
 export const createCommissionForOwner = (req, res) => {
   const params = req.body;
-  const ownerId = req.params.id;
+  // const ownerId = req.params.id;
 
   createCommission({
     params,
-    ownerId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
@@ -22,9 +22,9 @@ export const createCommissionForOwner = (req, res) => {
 };
 
 export const ownerCommissionBalance = (req, res) => {
-  const userId = req.params.id;
+  const ownerId = req.params.ownerId;
 
-  getOwnerCommissionBalance({ userId })
+  getOwnerCommissionBalance({ ownerId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -34,7 +34,7 @@ export const ownerCommissionBalance = (req, res) => {
 };
 
 export const ownerCommissionSettings = (req, res) => {
-  const ownerId = req.params.id;
+  const ownerId = req.params.ownerId;
 
   getOwnerCommissionSettings({ ownerId })
     .then(({ statusCode, data }) =>
@@ -47,10 +47,21 @@ export const ownerCommissionSettings = (req, res) => {
 
 export const updateCommissionSetting = (req, res) => {
   const params = req.body;
-  const ownerId = req.params.id;
-  const commissionId = req.params.commissionId;
+  const id = req.params.id;
 
-  updateOwnerCommissionSettings({ params, commissionId, ownerId })
+  updateOwnerCommissionSettings({ params, id })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const fetchOwnerTransferCommissions = (req, res) => {
+  const ownerId = req.params.ownerId;
+
+  getOwnerTransferCommissions({ ownerId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

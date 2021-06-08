@@ -3,16 +3,15 @@ import {
   ownerCommissionBalance,
   ownerCommissionSettings,
   updateCommissionSetting,
+  fetchOwnerTransferCommissions,
 } from "./commission.controller";
 
 const commission = ({ server, subBase }) => {
-  server.post(`${subBase}/set-commission/:id`, createCommissionForOwner);
-  server.get(`${subBase}/commission-balance/:id`, ownerCommissionBalance);
-  server.get(`${subBase}/commission-setting/:id`, ownerCommissionSettings);
-  server.put(
-    `${subBase}/update-commission/:id/:commissionId`,
-    updateCommissionSetting
-  );
+  server.post(`${subBase}`, createCommissionForOwner);
+  server.get(`${subBase}/:ownerId/balance`, ownerCommissionBalance);
+  server.get(`${subBase}/:ownerId/settings`, ownerCommissionSettings);
+  server.get(`${subBase}/:ownerId/transfers`, fetchOwnerTransferCommissions);
+  server.put(`${subBase}/:id`, updateCommissionSetting);
 };
 
 export default commission;

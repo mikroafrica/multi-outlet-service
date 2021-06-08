@@ -9,7 +9,7 @@ import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
 import { Owner } from "./owner.model";
 import { TempOwner } from "./temp.owner.model";
-import { UserType } from "./user.type";
+import { UserType, Approval } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 
