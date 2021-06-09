@@ -9,6 +9,8 @@ import transaction from "./api/resources/transaction";
 import outlet from "./api/resources/outlet";
 import transfer from "./api/resources/transfer";
 import media from "./api/resources/media";
+import commission from "./api/resources/commission";
+import health from "./api/health";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -37,11 +39,13 @@ dotenv.config();
 
 connect();
 
+health({ server, subBase: "" });
 auth({ server: server, subBase: "/auth" });
 outlet({ server: server, subBase: "/outlet" });
 wallet({ server: server, subBase: "/wallet" });
 transaction({ server: server, subBase: "/transaction" });
 transfer({ server: server, subBase: "/transfer" });
 media({ server: server, subBase: "/media" });
+commission({ server: server, subBase: "/commission" });
 
 export default server;

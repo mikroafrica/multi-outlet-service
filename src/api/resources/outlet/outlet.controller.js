@@ -1,5 +1,6 @@
 import {
   linkOwnerToOutlet,
+  linkOutletWithoutVerification,
   verifyOutletLinking,
   getOutlets,
   unlinkOutletFromOwner,
@@ -12,6 +13,19 @@ export const linkOutlet = (req, res) => {
   const ownerId = req.user.userId;
 
   linkOwnerToOutlet({ params, ownerId })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const linkOutletToOwner = (req, res) => {
+  const params = req.body;
+  const ownerId = req.params.id;
+
+  linkOutletWithoutVerification({ params, ownerId })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

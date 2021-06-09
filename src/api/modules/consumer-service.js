@@ -15,9 +15,9 @@ const restifyRequest = function () {
   return restifyClient;
 };
 
-export const signup = (params) => {
+export const signup = (params, userType) => {
   const client = restifyRequest();
-  const path = "/user/create/OUTLET_OWNER";
+  const path = `/user/create/${userType}`;
 
   return post({ client, path, params });
 };
@@ -32,6 +32,17 @@ export const deleteUserAccount = (userId) => {
 export const getUserDetails = async (userId) => {
   const client = restifyRequest();
   const path = `/user/${userId}/details`;
+  return await get({ client, path });
+};
+
+export const getUserByPhoneNumber = async (phoneNumber) => {
+  const client = restifyRequest();
+  const path = {
+    path: `/user/${phoneNumber}/`,
+    query: {
+      option: "phone",
+    },
+  };
   return await get({ client, path });
 };
 

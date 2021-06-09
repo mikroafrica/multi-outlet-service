@@ -16,4 +16,12 @@ const schema = {
 const outletSchema = new mongoose.Schema(schema, { timestamps: true });
 outletSchema.plugin(mongoosePaginate);
 
+outletSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+  },
+});
+
 export const Outlet = mongoose.model("outlet", outletSchema);

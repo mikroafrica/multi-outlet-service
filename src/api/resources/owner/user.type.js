@@ -1,11 +1,9 @@
 export const UserType = {
-  ADMIN: "admin",
-  MANAGER: "manager",
-  SALES: "sales",
+  OUTLET_OWNER: "OUTLET_OWNER",
+  PARTNER: "OUTLET_PARTNER",
 };
 
-export const UserStatus = {
-  ACTIVE: "ACTIVE",
-  INACTIVE: "INACTIVE",
-  BLOCKED: "BLOCKED",
+export const Approval = {
+  APPROVED: "APPROVED",
+  PENDING: "PENDING",
 };
