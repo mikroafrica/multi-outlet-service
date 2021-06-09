@@ -1,1 +1,1 @@
-describe("Mikro test", () => {});
+describe("Mikro test.", () => {});
