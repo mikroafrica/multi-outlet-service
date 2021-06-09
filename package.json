@@ -1,7 +1,7 @@
 {
   "name": "mikro-multi-outlet-service",
   "version": "1.0.0",
-  "description": "Multi-outlet-service provides outlet owners the ability to manage their outlets from a central location",
+  "description": "Multi-outlet-service provide outlet owners the ability to manage their outlets from a central location",
   "main": "lib/index.js",
   "scripts": {
     "test": "flow check && mocha -r @babel/register tests tests/unit/*",
