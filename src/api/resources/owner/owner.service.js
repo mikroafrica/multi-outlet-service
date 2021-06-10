@@ -585,8 +585,11 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
       },
     });
   } catch (e) {
+    logger.error(
+      `::: failed to fetch partner with error [${JSON.stringify(e)}] ::: `
+    );
     return Promise.reject({
-      statusCode: BAD_REQUEST,
+      statusCode: NOT_FOUND,
       message: "Could not fetch partner",
     });
   }
