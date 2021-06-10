@@ -2,7 +2,6 @@ import { UN_AUTHORISED } from "./modules/status.js";
 import * as AuthService from "../api/modules/auth-service.js";
 import logger from "../logger.js";
 import basicAuth from "basic-auth";
-import { validateToken } from "./modules/auth-service";
 import compare from "tsscmp";
 
 const checkAccess = (name: string, password: string): boolean => {
@@ -67,6 +66,7 @@ const allowRoutesByMikroSystem = (req) => {
     "login",
     "signup",
     "metrics",
+    "auth/users",
     "auth/user/:id",
     "reset-password",
     "email-validation",

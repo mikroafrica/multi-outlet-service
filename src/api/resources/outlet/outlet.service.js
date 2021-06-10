@@ -132,8 +132,8 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
     //
     const userDetailsData = userDetails.data;
     const userData = userDetailsData.data;
-    const outletUserId = userDetailsData.data.id;
-    const walletId = userDetailsData.data.store[0].wallet[0].id;
+    const outletUserId = userData.id;
+    const walletId = userData.store[0].wallet[0].id;
 
     logger.info(
       `Retrieving user details from consumer service as ${JSON.stringify(
@@ -145,8 +145,6 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
     });
-
-    logger.error("Error log for test");
 
     if (existingOutlet) {
       return Promise.reject({
