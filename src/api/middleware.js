@@ -49,6 +49,10 @@ export const secureRoute = (req, res, next) => {
           message: err.message || "Your session has expired",
         });
       });
+    return res.send(UN_AUTHORISED, {
+      status: false,
+      message: "Authorization is required",
+    });
   }
 
   return next();
