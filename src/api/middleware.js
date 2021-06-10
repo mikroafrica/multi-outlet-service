@@ -67,10 +67,12 @@ const allowRoutesByMikroSystem = (req) => {
     "login",
     "signup",
     "metrics",
+    "auth/user/:id",
     "reset-password",
     "email-validation",
     "email-verification",
     "reset-password-request",
+    "outlet/link-outlet/:id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {

@@ -4,8 +4,6 @@ import {
   unlinkOutlet,
   verifyLinkedOutlet,
   fetchOutlets,
-  suspendOutletUser,
-  unSuspendOutletUser,
   switchOutletStatus,
   fetchOutletById,
 } from "./outlet.controller";
