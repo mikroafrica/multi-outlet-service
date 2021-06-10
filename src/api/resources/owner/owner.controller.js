@@ -9,10 +9,8 @@ import {
   updateUser,
   getUser,
   getUsers,
-  // generateReferralCodeForUsers,
   getOwnerWithOutlets,
 } from "./owner.service.js";
-import { getOutlets } from "../outlet/outlet.service";
 
 export const signup = (req, res) => {
   const params = req.body;

@@ -2,7 +2,6 @@ import { UN_AUTHORISED } from "./modules/status.js";
 import * as AuthService from "../api/modules/auth-service.js";
 import logger from "../logger.js";
 import basicAuth from "basic-auth";
-import { validateToken } from "./modules/auth-service";
 import compare from "tsscmp";
 
 const checkAccess = (name: string, password: string): boolean => {
@@ -50,6 +49,10 @@ export const secureRoute = (req, res, next) => {
           message: err.message || "Your session has expired",
         });
       });
+    return res.send(UN_AUTHORISED, {
+      status: false,
+      message: "Authorization is required",
+    });
   }
 
   return next();
@@ -67,10 +70,13 @@ const allowRoutesByMikroSystem = (req) => {
     "login",
     "signup",
     "metrics",
+    "auth/users",
+    "auth/user/:id",
     "reset-password",
     "email-validation",
     "email-verification",
     "reset-password-request",
+    "outlet/link-outlet/:id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {
