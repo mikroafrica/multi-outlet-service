@@ -59,6 +59,19 @@ export const unlinkOutlet = (req, res) => {
     });
 };
 
+export const unlinkSavedOutlet = (req, res) => {
+  const ownerId = req.params.userId;
+  const outletUserId = req.params.id;
+
+  unlinkOutletFromOwner({ ownerId, outletUserId })
+    .then(({ statusCode }) => {
+      res.send(statusCode, { status: true });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
 export const switchOutletStatus = (req, res) => {
   const outletUserId = req.params.id;
   const ownerId = req.user.userId;

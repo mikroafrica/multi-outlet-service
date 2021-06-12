@@ -494,7 +494,9 @@ export const updateUser = async ({ params, ownerId }) => {
 
 export const getUsers = async ({ usertype, page, limit }) => {
   try {
+    console.log("usertype", usertype);
     const userType = UserType[usertype];
+    console.log("userType", userType);
 
     if (!userType) {
       return Promise.reject({
@@ -503,13 +505,40 @@ export const getUsers = async ({ usertype, page, limit }) => {
       });
     }
 
-    let filter = { userType: usertype };
+    let filter = { userType };
 
     const owners = await Owner.paginate(filter, {
       page,
       limit,
       sort: { createdAt: -1 },
     });
+
+    logger.info(`owners details retrievwed as ${JSON.stringify(owners)}`);
+
+    const outletDetails = await fetchOutletDetails(owners.docs);
+
+    let ownerDetails = [];
+    let users = owners.docs;
+    for (let i = 0; i < outletDetails.length; i++) {
+      for (let j = 0; j < users.length; j++) {
+        if (users[i].userId === outletDetails[j].id) {
+          const user = users[i];
+          const firstName = outletDetails[j].firstName;
+          const lastName = outletDetails[j].lastName;
+          const email = outletDetails[j].email;
+          const businessType = outletDetails[j].businessType;
+          ownerDetails.push({
+            user,
+            firstName,
+            lastName,
+            email,
+            businessType,
+          });
+        }
+      }
+    }
+
+    logger.info(`owners details retrievwed as ${JSON.stringify(ownerDetails)}`);
 
     return Promise.resolve({
       statusCode: OK,
@@ -518,7 +547,7 @@ export const getUsers = async ({ usertype, page, limit }) => {
         pages: owners.pages,
         limit: owners.limit,
         total: owners.total,
-        list: owners.docs,
+        list: ownerDetails,
       },
     });
   } catch (e) {

@@ -2,6 +2,7 @@ import {
   linkOutlet,
   linkOutletToOwner,
   unlinkOutlet,
+  unlinkSavedOutlet,
   verifyLinkedOutlet,
   fetchOutlets,
   switchOutletStatus,
@@ -13,6 +14,7 @@ const outlet = ({ server, subBase }) => {
   server.post(`${subBase}/link-outlet/:id`, linkOutletToOwner);
   server.post(`${subBase}/verify`, verifyLinkedOutlet);
   server.put(`${subBase}/:id/unlink`, unlinkOutlet);
+  server.put(`${subBase}/:userId/:id/unlink`, unlinkSavedOutlet);
   server.put(`${subBase}/:id/:status`, switchOutletStatus);
   server.get(`${subBase}`, fetchOutlets);
   server.get(`${subBase}/:id`, fetchOutletById);
