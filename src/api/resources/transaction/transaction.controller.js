@@ -39,8 +39,8 @@ export const fetchTransactionSummary = (req, res) => {
 
   const dateFrom = req.query.dateFrom;
   const dateTo = req.query.dateTo;
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
 
   getTransactionsSummary({
     ownerId,

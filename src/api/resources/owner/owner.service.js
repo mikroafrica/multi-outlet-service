@@ -12,6 +12,7 @@ import { TempOwner } from "./temp.owner.model";
 import { UserType, Approval } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
+import { validatePhone } from "../../modules/util";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -494,9 +495,7 @@ export const updateUser = async ({ params, ownerId }) => {
 
 export const getUsers = async ({ usertype, page, limit }) => {
   try {
-    console.log("usertype", usertype);
     const userType = UserType[usertype];
-    console.log("userType", userType);
 
     if (!userType) {
       return Promise.reject({

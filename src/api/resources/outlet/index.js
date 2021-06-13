@@ -16,7 +16,7 @@ const outlet = ({ server, subBase }) => {
   server.put(`${subBase}/:id/unlink`, unlinkOutlet);
   server.put(`${subBase}/:userId/:id/unlink`, unlinkSavedOutlet);
   server.put(`${subBase}/:id/:status`, switchOutletStatus);
-  server.get(`${subBase}`, fetchOutlets);
+  server.get(`${subBase}/outlets`, fetchOutlets);
   server.get(`${subBase}/:id`, fetchOutletById);
 };
 
