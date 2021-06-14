@@ -10,7 +10,6 @@ import {
   getUser,
   getUsers,
   getUserTickets,
-  // generateReferralCodeForUsers,
   getOwnerWithOutlets,
 } from "./owner.service.js";
 import { getOutlets } from "../outlet/outlet.service";
