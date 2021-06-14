@@ -142,18 +142,16 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
     );
 
     // check if outlet is already existing.
-    // const existingOutlet = await Outlet.findOne({
-    //   userId: outletUserId,
-    // });
-    //
-    // logger.error("Error log for test");
-    //
-    // if (existingOutlet) {
-    //   return Promise.reject({
-    //     statusCode: BAD_REQUEST,
-    //     message: "Outlet has been added previously",
-    //   });
-    // }
+    const existingOutlet = await Outlet.findOne({
+      userId: outletUserId,
+    });
+
+    if (existingOutlet) {
+      return Promise.reject({
+        statusCode: BAD_REQUEST,
+        message: "Outlet has been added previously",
+      });
+    }
 
     const newOutletMapping = await saveOutletWithOwner({
       outletUserId,
