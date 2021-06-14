@@ -8,10 +8,11 @@ import {
 
 export const createCommissionForOwner = (req, res) => {
   const params = req.body;
-  // const ownerId = req.params.id;
+  const ownerId = req.params.ownerId;
 
   createCommission({
     params,
+    ownerId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
