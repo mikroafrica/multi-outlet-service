@@ -9,8 +9,8 @@ import {
   updateUser,
   getUser,
   getUsers,
-  getUserTickets,
   getOwnerWithOutlets,
+  getUserTickets,
 } from "./owner.service.js";
 import { getOutlets } from "../outlet/outlet.service";
 
