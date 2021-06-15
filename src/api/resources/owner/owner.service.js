@@ -693,7 +693,9 @@ const fetchTicketsForUsers = async (
 
     const ticketData = responseData.data.data.list;
 
-    outletTickets.push({ ...ticketData, user: userId });
+    if (ticketData.length > 0) {
+      outletTickets.push({ userId: userId, ticketData });
+    }
 
     logger.info(`Fetching users tickets as [${JSON.stringify(ticketData)}]`);
   });
