@@ -10,6 +10,7 @@ import {
   getUser,
   getUsers,
   getOwnerWithOutlets,
+  getUserTickets,
 } from "./owner.service.js";
 
 export const signup = (req, res) => {
@@ -143,6 +144,22 @@ export const fetchOwnerById = (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
 
   getOwnerWithOutlets({ ownerId, page, limit })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const fetchTicketsforUsers = (req, res) => {
+  const ownerId = req.params.ownerId;
+
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const { dateTo, dateFrom, status, category } = req.query;
+
+  getUserTickets({ ownerId, page, limit, dateTo, dateFrom, status, category })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

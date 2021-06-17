@@ -1,6 +1,7 @@
 import Joi from "joi";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as AuthService from "../../modules/auth-service.js";
+import { getTickets } from "../../modules/internal-tool-service.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
 import { UserRole } from "./user.role.js";
@@ -12,6 +13,8 @@ import { TempOwner } from "./temp.owner.model";
 import { UserType, Approval } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
+import async from "async";
+import * as WalletService from "../../modules/wallet-service";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -622,6 +625,113 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
       message: "Could not fetch partner",
     });
   }
+};
+
+export const getUserTickets = async ({
+  ownerId,
+  page,
+  limit,
+  dateTo,
+  dateFrom,
+  status,
+  category,
+}) => {
+  try {
+    const outlets = await Outlet.paginate(
+      {
+        ownerId,
+      },
+      { page, limit, sort: { createdAt: -1 } }
+    );
+
+    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
+    const ownerDetailsData = ownerDetails.data.data;
+
+    logger.info(
+      `Return owner details data as ${JSON.stringify(ownerDetailsData)}`
+    );
+
+    // Find owner and extract data saved during login
+    const owner = await Owner.findOne({ userId: ownerId });
+    if (!owner) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Could not find owner.",
+      });
+    }
+
+    let ownerData = [];
+    ownerData.push({
+      userType: owner.userType,
+      approval: owner.approval,
+      phoneNumber: ownerDetailsData.phoneNumber,
+      firstName: ownerDetailsData.firstName,
+      lastName: ownerDetailsData.lastName,
+      dateOfBirth: ownerDetailsData.dateOfBirth,
+    });
+
+    let users = outlets.docs;
+    const ticketData = await fetchTicketsForUsers(
+      users,
+      page,
+      limit,
+      dateFrom,
+      dateTo,
+      status,
+      category
+    );
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: {
+        page: outlets.page,
+        pages: outlets.pages,
+        limit: outlets.limit,
+        total: outlets.total,
+        ownerData,
+        list: ticketData,
+      },
+    });
+  } catch (e) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Tickets could not be fetched for users.",
+    });
+  }
+};
+
+const fetchTicketsForUsers = async (
+  outlets,
+  page,
+  limit,
+  dateFrom,
+  dateTo,
+  status,
+  category
+) => {
+  let outletTickets = [];
+  await async.forEach(outlets, async (outlet) => {
+    const userId = outlet.userId;
+
+    const responseData = await getTickets({
+      userId,
+      page,
+      limit,
+      dateFrom,
+      dateTo,
+      status,
+      category,
+    });
+
+    const ticketData = responseData.data.data.list;
+
+    if (ticketData.length > 0) {
+      outletTickets.push({ userId: userId, ticketData });
+    }
+
+    logger.info(`Fetching users tickets as [${JSON.stringify(ticketData)}]`);
+  });
+  return outletTickets;
 };
 
 const validateSignupParamsSchema = (params) => {
