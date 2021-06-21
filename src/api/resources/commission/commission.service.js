@@ -37,14 +37,9 @@ export const createCommission = async ({ params }) => {
 
     //update commission setting if already existing
     const existingCommissionSettings = await Commission.findOne({
-      $or: [
-        {
-          $and: [{ owner: params.ownerId }, { type }, { level }],
-        },
-        {
-          $and: [{ owner: params.ownerId }, { type }, { level: null }],
-        },
-      ],
+      owner: params.ownerId,
+      type,
+      level,
     });
 
     logger.info(
@@ -56,14 +51,9 @@ export const createCommission = async ({ params }) => {
     if (existingCommissionSettings) {
       const updatedCommission = await Commission.findOneAndUpdate(
         {
-          $or: [
-            {
-              $and: [{ owner: params.ownerId }, { type }, { level }],
-            },
-            {
-              $and: [{ owner: params.ownerId }, { type }, { level: null }],
-            },
-          ],
+          owner: params.ownerId,
+          type,
+          level,
         },
         {
           $set: { condition: params.condition, multiplier: params.multiplier },
@@ -79,7 +69,7 @@ export const createCommission = async ({ params }) => {
     const saveNewCommission = new Commission({
       condition: params.condition,
       multiplier: params.multiplier,
-      owner: ownerId,
+      owner: params.ownerId,
       type,
       level,
     });
@@ -89,7 +79,7 @@ export const createCommission = async ({ params }) => {
     logger.info(`Commission created as ${saveNewCommission}`);
 
     // Find owner and set approval status to APPROVED since commission has been set for the owner
-    const owner = await Owner.findOne({ userId: ownerId });
+    const owner = await Owner.findOne({ userId: params.ownerId });
     if (owner.approval === Approval.PENDING) {
       owner.approval = Approval.APPROVED;
       await owner.save();
@@ -234,7 +224,7 @@ const validateCommissionSchema = ({ params }) => {
           Level.LEVEL_FOUR,
           Level.LEVEL_FIVE,
         ])
-        .optional(),
+        .required(),
     })
     .unknown(true);
 
