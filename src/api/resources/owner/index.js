@@ -10,6 +10,7 @@ import {
   fetchOwnerDetails,
   fetchUsersByType,
   fetchOwnerById,
+  fetchTicketsforUsers,
 } from "./owner.controller";
 
 const auth = ({ server, subBase }) => {
@@ -24,6 +25,7 @@ const auth = ({ server, subBase }) => {
   server.get(`${subBase}/details`, fetchOwnerDetails);
   server.get(`${subBase}/users`, fetchUsersByType);
   server.get(`${subBase}/user/:id`, fetchOwnerById);
+  server.get(`${subBase}/:ownerId/tickets`, fetchTicketsforUsers);
 };
 
 export default auth;
