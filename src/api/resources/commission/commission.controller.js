@@ -8,7 +8,7 @@ import {
 
 export const createCommissionForOwner = (req, res) => {
   const params = req.body;
-  const ownerId = req.params.ownerId;
+  // const ownerId = req.params.ownerId;
 
   createCommission({
     params,
