@@ -7,7 +7,7 @@ import {
 } from "./commission.controller";
 
 const commission = ({ server, subBase }) => {
-  server.post(`${subBase}/:ownerId`, createCommissionForOwner);
+  server.post(`${subBase}`, createCommissionForOwner);
   server.get(`${subBase}/:ownerId/balance`, ownerCommissionBalance);
   server.get(`${subBase}/:ownerId/settings`, ownerCommissionSettings);
   server.get(`${subBase}/:ownerId/transfers`, fetchOwnerTransferCommissions);
