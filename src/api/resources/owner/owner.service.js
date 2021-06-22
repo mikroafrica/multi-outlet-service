@@ -8,6 +8,9 @@ import { UserRole } from "./user.role.js";
 import { CONFLICT } from "../../modules/status.js";
 import { CLEAR_ACCOUNT_EVENT } from "../../events";
 import userAccountEmitter from "../../events/user-account-event.js";
+import type { NotificationModel } from "../../events/slack/slack.event";
+import emitter from "../../events/slack/slack.event";
+import { SLACK_EVENT } from "../../events/slack";
 import { Owner } from "./owner.model";
 import { TempOwner } from "./temp.owner.model";
 import { UserType, Approval } from "./user.type";
@@ -56,6 +59,8 @@ export const signupMultiOutletOwner = async (params) => {
         });
         await tempOwner.save();
 
+        sendSlackNotification({ params });
+
         return Promise.resolve({
           statusCode: OK,
           data: outletOwnerData.data,
@@ -86,6 +91,25 @@ export const signupMultiOutletOwner = async (params) => {
         message: err.message,
       });
     });
+};
+
+export const sendSlackNotification = ({ params }) => {
+  const name = params.firstName + " " + params.lastName;
+  const userType = params.userType;
+  const phoneNumber = params.phoneNumber;
+  const slack: NotificationModel = {
+    title: "New User Signup.",
+    message:
+      "`Message:` New Signup on Mikro-Multi-Outlet Dashboard\n" +
+      "`Name:` " +
+      `${name}\n` +
+      "`PhoneNumber:` " +
+      `${phoneNumber}\n` +
+      "`userType:` " +
+      `${userType}`,
+    channel: process.env.VERIFICATION_SLACK_CHANNEL,
+  };
+  emitter.emit(SLACK_EVENT, slack);
 };
 
 const authServiceSignUpParams = (params, userId) => {
