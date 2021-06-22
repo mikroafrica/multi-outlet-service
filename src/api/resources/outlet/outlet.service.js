@@ -67,6 +67,7 @@ export const linkOwnerToOutlet = async ({ params, ownerId }) => {
 
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
+      ownerId,
     });
     logger.info(`Linking ${JSON.stringify(outletUserId)}`);
 
@@ -652,8 +653,10 @@ export const verifyOutletLinking = async ({ params }) => {
 
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
+      ownerId,
       status: OutletStatus.ACTIVE,
     });
+
     if (existingOutlet) {
       return Promise.resolve({
         statusCode: OK,
