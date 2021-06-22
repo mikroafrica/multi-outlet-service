@@ -27,7 +27,6 @@ describe("Wallet service Tests", function () {
         timeCreated: 1607408981460,
       },
     };
-
     const findOneOwner = sinon.stub(Owner, "findOne").resolves({
       userId: ownerId,
       walletId,
