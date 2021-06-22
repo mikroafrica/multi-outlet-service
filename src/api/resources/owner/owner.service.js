@@ -107,7 +107,7 @@ export const sendSlackNotification = ({ params }) => {
       `${phoneNumber}\n` +
       "`userType:` " +
       `${userType}`,
-    channel: process.env.VERIFICATION_SLACK_CHANNEL,
+    channel: process.env.SLACK_USERS_CHANNEL,
   };
   emitter.emit(SLACK_EVENT, slack);
 };

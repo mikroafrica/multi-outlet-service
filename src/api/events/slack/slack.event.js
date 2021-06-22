@@ -27,13 +27,18 @@ emitter.on(SLACK_EVENT, function (model: NotificationModel) {
   };
   model.type = "SLACK";
 
-  mikroProducer(config, model, model.channel, function (response) {
-    logger.info(
-      `mikro multi-outlet sign up notification sent to [${
-        model.channel
-      }] with result [${JSON.stringify(response)}]`
-    );
-  });
+  mikroProducer(
+    config,
+    model,
+    `${model.channel}${new Date().getTime()}`,
+    function (response) {
+      logger.info(
+        `mikro multi-outlet sign up notification sent to [${
+          model.channel
+        }] with result [${JSON.stringify(response)}]`
+      );
+    }
+  );
 });
 
 emitter.on(ERROR_EVENT, function (value) {
