@@ -144,6 +144,7 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
     // check if outlet is already existing.
     const existingOutlet = await Outlet.findOne({
       userId: outletUserId,
+      ownerId,
     });
 
     if (existingOutlet) {
