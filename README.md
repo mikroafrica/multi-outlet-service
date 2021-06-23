@@ -1,4 +1,5 @@
 ### Desc
+
 Multi-outlet Service serves the multi-outlet dashboard to manage multiple outlets
 
 ### Sign up a user
