@@ -21,9 +21,6 @@
     "node",
     "js"
   ],
-  "engines": {
-    "node": "11.10.1"
-  },
   "author": "Meshileya Seun (info@meshileyaseun.dev)",
   "license": "ISC",
   "devDependencies": {
