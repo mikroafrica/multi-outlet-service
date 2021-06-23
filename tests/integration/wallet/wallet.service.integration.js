@@ -31,7 +31,6 @@ describe("Wallet service Tests", function () {
       userId: ownerId,
       walletId,
     });
-
     nock(process.env.WALLET_SERVICE_URL)
       .get(`/wallets/${walletId}`)
       .reply(OK, mockWalletResponse);
