@@ -17,7 +17,6 @@ import { UserType, Approval } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 import async from "async";
-import * as WalletService from "../../modules/wallet-service";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
