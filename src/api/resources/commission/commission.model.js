@@ -1,27 +1,50 @@
 import mongoose from "mongoose";
-import { Type, Level } from "./commission.type";
+
+export const CommissionCategory = {
+  POS_WITHDRAWAL: "POS_WITHDRAWAL",
+  ON_BOARDING: "ON_BOARDING",
+  TRANSFER: "TRANSFER",
+};
+
+export const RangeType = {
+  RANGE: "RANGE",
+  NON_RANGE: "NON_RANGE",
+};
+
+export const FeeType = {
+  FLAT_FEE: "FLAT_FEE",
+  PERCENTAGE: "PERCENTAGE",
+};
 
 const schema = {
-  condition: Number,
-  multiplier: Number,
-  type: {
+  category: {
     type: String,
-    enum: [Type.ONBOARDING, Type.TRANSFER, Type.WITHDRAWAL],
+    enum: Object.keys(CommissionCategory),
   },
-  level: {
+  feeType: {
     type: String,
-    enum: [
-      Level.LEVEL_ONE,
-      Level.LEVEL_TWO,
-      Level.LEVEL_THREE,
-      Level.LEVEL_FOUR,
-      Level.LEVEL_FIVE,
-    ],
+    enum: Object.keys(FeeType),
   },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "owner",
+  rangeType: {
+    type: String,
+    enum: Object.keys(RangeType),
   },
+
+  rangeList: [
+    {
+      serviceFee: Number,
+      feeType: {
+        type: String,
+        enum: Object.keys(FeeType),
+      },
+      rangeAmount: {
+        from: Number,
+        to: Number,
+      },
+    },
+  ],
+
+  flatServiceFee: Number,
 };
 
 const commissionSchema = new mongoose.Schema(schema, { timestamps: true });

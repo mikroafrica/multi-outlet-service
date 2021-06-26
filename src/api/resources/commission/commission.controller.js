@@ -1,17 +1,9 @@
-import {
-  createCommission,
-  getOwnerCommissionBalance,
-  getOwnerCommissionSettings,
-  updateOwnerCommissionSettings,
-  getOwnerTransferCommissions,
-} from "./commission.service";
+import { create, get, put } from "./commission.service";
 
-export const createCommissionForOwner = (req, res) => {
+export const createCommission = (req, res) => {
   const params = req.body;
 
-  createCommission({
-    params,
-  })
+  create({ params })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -20,10 +12,8 @@ export const createCommissionForOwner = (req, res) => {
     );
 };
 
-export const ownerCommissionBalance = (req, res) => {
-  const ownerId = req.params.ownerId;
-
-  getOwnerCommissionBalance({ ownerId })
+export const getCommission = (req, res) => {
+  get()
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -32,35 +22,10 @@ export const ownerCommissionBalance = (req, res) => {
     );
 };
 
-export const ownerCommissionSettings = (req, res) => {
-  const ownerId = req.params.ownerId;
-
-  getOwnerCommissionSettings({ ownerId })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const updateCommissionSetting = (req, res) => {
+export const updateCommission = (req, res) => {
   const params = req.body;
   const id = req.params.id;
-
-  updateOwnerCommissionSettings({ params, id })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const fetchOwnerTransferCommissions = (req, res) => {
-  const ownerId = req.params.ownerId;
-
-  getOwnerTransferCommissions({ ownerId })
+  put({ params, id })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

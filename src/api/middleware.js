@@ -14,24 +14,28 @@ const checkAccess = (name: string, password: string): boolean => {
 };
 
 export const secureRoute = (req, res, next) => {
-  if (allowRoutesByMikroSystem(req)) {
+  if (allowPublicRoutes(req)) {
     return next();
   }
 
-  const credentials = basicAuth(req);
+  if (allowMikroSystem(req)) {
+    const credentials = basicAuth(req);
 
-  // check against account credentials stored
-  if (!credentials || !checkAccess(credentials.name, credentials.pass)) {
-    // if basic auth is not successful , use the token
-    const authHeader = req.headers.authorization;
+    // check against account credentials stored
+    if (!credentials || !checkAccess(credentials.name, credentials.pass)) {
+      // if basic auth is not successful , use the token
+      const authHeader = req.headers.authorization;
 
-    if (!authHeader || authHeader.split(" ").length < 2) {
-      logger.error(`Token wasn't supplied`);
-      return res.send(UN_AUTHORISED, {
-        status: false,
-        message: "Authorization is required",
-      });
+      if (!authHeader || authHeader.split(" ").length < 2) {
+        return res.send(UN_AUTHORISED, {
+          status: false,
+          message: "Authorization is required",
+        });
+      }
     }
+    return next();
+  } else {
+    const authHeader = req.headers.authorization;
     const token = authHeader.split(" ")[1];
     const params = { token };
     AuthService.validateToken(params)
@@ -50,11 +54,26 @@ export const secureRoute = (req, res, next) => {
         });
       });
   }
-
-  return next();
 };
 
-const allowRoutesByMikroSystem = (req) => {
+const allowMikroSystem = (req) => {
+  const path = req.route.path;
+  const method = req.method;
+
+  if (Object.is(method, "GET") && path === "/") {
+    return true;
+  }
+
+  const routes = ["commission"];
+  for (let i = 0; i < routes.length; i++) {
+    if (path.includes(routes[i])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const allowPublicRoutes = (req) => {
   const path = req.route.path;
   const method = req.method;
 
