@@ -64,7 +64,7 @@ const allowMikroSystem = (req) => {
     return true;
   }
 
-  const routes = ["commission"];
+  const routes = ["commission", "owner"];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {
       return true;
@@ -85,13 +85,10 @@ const allowPublicRoutes = (req) => {
     "login",
     "signup",
     "metrics",
-    "auth/users",
-    "auth/user/:id",
     "reset-password",
     "email-validation",
     "email-verification",
     "reset-password-request",
-    "outlet/link-outlet/:id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {

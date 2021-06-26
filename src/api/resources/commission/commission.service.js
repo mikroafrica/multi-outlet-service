@@ -25,6 +25,18 @@ export const create = async ({ params }) => {
   }
 
   try {
+    const existingCommission = await Commission.findOne({
+      name: params.name.toLocaleLowerCase(),
+    });
+    if (existingCommission) {
+      logger.error(
+        `::: commission with name [${params.name}] already exist :::`
+      );
+      return Promise.reject({
+        statusCode: CONFLICT,
+        message: `commission with name [${params.name}] already exist`,
+      });
+    }
     const createdCommission = await Commission.create(params);
     logger.info(
       `::: commission created with response [${JSON.stringify(
@@ -107,6 +119,7 @@ export const put = async ({ params, id }) => {
 };
 
 const schemaValidation = Joi.object().keys({
+  name: Joi.string().required(),
   category: Joi.string().valid(Object.keys(CommissionCategory)).required(),
   rangeType: Joi.string().valid(Object.keys(RangeType)).required(),
   rangeList: Joi.when("rangeType", {
@@ -127,12 +140,12 @@ const schemaValidation = Joi.object().keys({
   serviceFee: Joi.when("range", {
     is: Joi.exist().valid(RangeType.NON_RANGE),
     then: Joi.number().required(),
-    otherwise: Joi.number().required(),
+    otherwise: Joi.string().allow(null, ""),
   }),
 
   feeType: Joi.when("serviceFee", {
     is: Joi.exist(),
     then: Joi.string().valid(Object.keys(FeeType)).required(),
-    otherwise: Joi.string().forbidden(),
+    otherwise: Joi.string().allow(null, ""),
   }),
 });

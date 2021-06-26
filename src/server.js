@@ -3,7 +3,7 @@ import { secureRoute } from "./api/middleware";
 import dotenv from "dotenv";
 import corsMiddleware from "restify-cors-middleware";
 import { connect } from "./db";
-import auth from "./api/resources/owner";
+import auth from "./api/resources/owner/auth";
 import wallet from "./api/resources/wallet";
 import transaction from "./api/resources/transaction";
 import outlet from "./api/resources/outlet";
@@ -11,6 +11,7 @@ import transfer from "./api/resources/transfer";
 import media from "./api/resources/media";
 import commission from "./api/resources/commission";
 import health from "./api/health";
+import owner from "./api/resources/owner";
 
 const server = restify.createServer({
   name: "mk-multi-outlet-service",
@@ -41,6 +42,7 @@ connect();
 
 health({ server, subBase: "" });
 auth({ server: server, subBase: "/auth" });
+owner({ server: server, subBase: "/owner" });
 outlet({ server: server, subBase: "/outlet" });
 wallet({ server: server, subBase: "/wallet" });
 transaction({ server: server, subBase: "/transaction" });

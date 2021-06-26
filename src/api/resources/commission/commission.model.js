@@ -17,6 +17,11 @@ export const FeeType = {
 };
 
 const schema = {
+  name: {
+    unique: true,
+    type: String,
+    index: true,
+  },
   category: {
     type: String,
     enum: Object.keys(CommissionCategory),

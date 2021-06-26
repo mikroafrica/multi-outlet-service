@@ -13,7 +13,7 @@ import emitter from "../../events/slack/slack.event";
 import { SLACK_EVENT } from "../../events/slack";
 import { Owner } from "./owner.model";
 import { TempOwner } from "./temp.owner.model";
-import { UserType, Approval } from "./user.type";
+import { UserType, Approval, CommissionStatus } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 import async from "async";
@@ -520,9 +520,7 @@ export const updateUser = async ({ params, ownerId }) => {
 
 export const getUsers = async ({ usertype, page, limit }) => {
   try {
-    console.log("usertype", usertype);
     const userType = UserType[usertype];
-    console.log("userType", userType);
 
     if (!userType) {
       return Promise.reject({
@@ -539,8 +537,6 @@ export const getUsers = async ({ usertype, page, limit }) => {
       sort: { createdAt: -1 },
     });
 
-    logger.info(`owners details retrievwed as ${JSON.stringify(owners)}`);
-
     const outletDetails = await fetchOutletDetails(owners.docs);
 
     let ownerDetails = [];
@@ -553,25 +549,33 @@ export const getUsers = async ({ usertype, page, limit }) => {
           const lastName = outletDetails[j].lastName;
           const email = outletDetails[j].email;
           const businessType = outletDetails[j].businessType;
-          ownerDetails.push({
-            user,
+          const {
+            userId,
+            phoneNumber,
+            createdAt,
+            updatedAt,
+            commissionStatus = CommissionStatus.NONE,
+          } = user;
+          const details = {
+            userId,
+            phoneNumber,
+            createdAt,
+            updatedAt,
             firstName,
             lastName,
             email,
+            commissionStatus,
             businessType,
-          });
+          };
+          ownerDetails.push(details);
         }
       }
     }
-
-    logger.info(`owners details retrievwed as ${JSON.stringify(ownerDetails)}`);
 
     return Promise.resolve({
       statusCode: OK,
       data: {
         page: owners.page,
-        pages: owners.pages,
-        limit: owners.limit,
         total: owners.total,
         list: ownerDetails,
       },

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate";
-import { UserType, Approval } from "./user.type";
+import { UserType, Approval, CommissionStatus } from "./user.type";
 
 const schema = {
   userId: String,
@@ -15,6 +15,11 @@ const schema = {
   approval: {
     type: String,
     enum: [Approval.APPROVED, Approval.PENDING],
+  },
+  commissionStatus: {
+    type: String,
+    default: CommissionStatus.NONE,
+    enum: Object.keys(CommissionStatus),
   },
 };
 

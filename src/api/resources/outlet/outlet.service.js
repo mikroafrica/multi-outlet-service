@@ -713,8 +713,6 @@ const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
     const outletUserDetailsData = outletUserDetails.data.data;
     const walletId = outletUserDetailsData.store[0].wallet[0].id;
 
-    console.log();
-
     if (
       outletUserDetailsData.store.length < 1 ||
       outletUserDetailsData.store[0].wallet.length < 1
@@ -775,10 +773,6 @@ export const fetchOutletDetails = async (outlets) => {
   await async.forEach(outlets, async (outlet) => {
     const response = await ConsumerService.getUserDetails(outlet.userId);
     const userDetailsData = response.data;
-
-    logger.info(
-      `Verify outlet linking with request [${JSON.stringify(userDetailsData)}]`
-    );
 
     const wallet = userDetailsData.data.store[0].wallet[0];
     const walletId = wallet.id;
