@@ -25,20 +25,6 @@ export const create = async ({ params }) => {
   }
 
   try {
-    const existingCommission = await Commission.findOne({
-      category: params.category,
-    });
-
-    if (existingCommission) {
-      logger.error(
-        `::: Commission with category [${existingCommission.category}] already exist  :::`
-      );
-      return Promise.reject({
-        statusCode: CONFLICT,
-        message: `Commission with category [${existingCommission.category}] already exist`,
-      });
-    }
-
     const createdCommission = await Commission.create(params);
     logger.info(
       `::: commission created with response [${JSON.stringify(
