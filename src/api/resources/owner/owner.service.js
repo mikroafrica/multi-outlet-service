@@ -17,6 +17,8 @@ import { UserType, Approval, CommissionStatus } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 import async from "async";
+import { Commission } from "../commission/commission.model";
+import { OwnerCommission } from "../commission/owner.commission.model";
 
 export const signupMultiOutletOwner = async (params) => {
   if (!params) {
@@ -550,14 +552,14 @@ export const getUsers = async ({ usertype, page, limit }) => {
           const email = outletDetails[j].email;
           const businessType = outletDetails[j].businessType;
           const {
-            userId,
+            id: ownerId,
             phoneNumber,
             createdAt,
             updatedAt,
             commissionStatus = CommissionStatus.NONE,
           } = user;
           const details = {
-            userId,
+            ownerId,
             phoneNumber,
             createdAt,
             updatedAt,
@@ -590,60 +592,66 @@ export const getUsers = async ({ usertype, page, limit }) => {
 
 export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
   try {
-    const outlets = await Outlet.paginate(
-      {
-        ownerId,
-      },
-      { page, limit, sort: { createdAt: -1 } }
-    );
-
-    // Retrieve partner's details from the consumer service
-    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
-    const ownerDetailsData = ownerDetails.data.data;
-
-    logger.info(
-      `Return owner details data as ${JSON.stringify(ownerDetailsData)}`
-    );
-
-    // Find owner and extract data saved during login
-    const owner = await Owner.findOne({ userId: ownerId });
-    if (!owner) {
+    const existingOwner = await Owner.findOne({ _id: ownerId });
+    if (!existingOwner) {
+      logger.error(`::: Owner with id [${ownerId}] is not found :::`);
       return Promise.reject({
         statusCode: NOT_FOUND,
-        message: "Could not find owner.",
+        message: "Owner is not found",
       });
     }
+    const [userDetailsResponse, outlets, commissions] = await Promise.all([
+      ConsumerService.getUserDetails(existingOwner.userId),
+      Outlet.paginate(
+        { ownerId },
+        { page, limit, sort: { createdAt: -1 } }
+      ).then((outlets) => fetchOutletDetails(outlets.docs)),
+      OwnerCommission.find({ ownerId }),
+    ]);
+    const userData = userDetailsResponse.data;
+    const details = userData.data;
 
-    let ownerData = [];
-    ownerData.push({
-      userType: owner.userType,
-      approval: owner.approval,
-      phoneNumber: ownerDetailsData.phoneNumber,
-      firstName: ownerDetailsData.firstName,
-      lastName: ownerDetailsData.lastName,
-      dateOfBirth: ownerDetailsData.dateOfBirth,
-      businessName: ownerDetailsData.businessName,
-      businessType: ownerDetailsData.businessType,
-      email: ownerDetailsData.email,
+    const userList = outlets.map((user) => {
+      const { firstName, lastName, email, phoneNumber, status, id } = user;
+      const terminalId =
+        Array.isArray(user.store) && user.store.length > 0
+          ? user.store[0].terminalId
+          : null;
+      const isTerminalMapped = !!terminalId;
+      return {
+        id,
+        email,
+        status,
+        phoneNumber,
+        isTerminalMapped,
+        name: `${firstName} ${lastName}`,
+      };
     });
 
-    // Use the fetchOutletDetails method to fetch the details of users linked to partner
-    const outletDetails = await fetchOutletDetails(outlets.docs);
-
-    logger.info(`Returning user details as ${JSON.stringify(outletDetails)}`);
+    const ownerDetails = {
+      userType: details.userType,
+      approval: details.approval,
+      phoneNumber: details.phoneNumber,
+      firstName: details.firstName,
+      lastName: details.lastName,
+      dateOfBirth: details.dateOfBirth,
+      businessName: details.businessName,
+      businessType: details.businessType,
+      email: details.email,
+    };
 
     return Promise.resolve({
       statusCode: OK,
       data: {
+        userList,
+        info: ownerDetails,
         page: outlets.page,
-        pages: outlets.pages,
-        limit: outlets.limit,
         total: outlets.total,
-        ownerData,
-        list: outletDetails,
+        commissions,
       },
     });
   } catch (e) {
+    console.error(e);
     logger.error(
       `::: failed to fetch partner with error [${JSON.stringify(e)}] ::: `
     );

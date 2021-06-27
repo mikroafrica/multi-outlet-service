@@ -9,7 +9,6 @@ import {
 import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
 import { OwnerCommission } from "./owner.commission.model";
-import { Outlet } from "../outlet/outlet.model";
 import { CommissionStatus } from "../owner/user.type";
 
 const schemaValidation = Joi.object().keys({
@@ -34,7 +33,7 @@ const schemaValidation = Joi.object().keys({
   serviceFee: Joi.when("range", {
     is: Joi.exist().valid(RangeType.NON_RANGE),
     then: Joi.number().required(),
-    otherwise: Joi.string().allow(null, ""),
+    otherwise: Joi.number().allow(null, ""),
   }),
 
   feeType: Joi.when("serviceFee", {
@@ -45,6 +44,9 @@ const schemaValidation = Joi.object().keys({
 });
 
 export const create = async ({ params }) => {
+  logger.info(
+    `:::: create commission with request [${JSON.stringify(params)}] ::::`
+  );
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -155,7 +157,7 @@ export const update = async ({ params, id }) => {
 };
 
 export const createOwnersCommission = async ({ params, ownerId }) => {
-  logger.info(`::: Request for params is [${params}] :::`);
+  logger.info(`::: Request param for commission creation is [${params}] :::`);
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -205,7 +207,7 @@ export const createOwnersCommission = async ({ params, ownerId }) => {
 
       if (existingOwnerCommission) {
         logger.error(
-          `::: Commission is not found with id [${commissionId}] :::`
+          `::: Commission with name [${existingCommission.name}] already exist :::`
         );
         return Promise.reject({
           statusCode: CONFLICT,
@@ -256,7 +258,7 @@ export const createOwnersCommission = async ({ params, ownerId }) => {
 export const deleteAssignedCommission = async (id: string) => {
   try {
     const response = await OwnerCommission.deleteOne({ _id: id });
-    logger.error(
+    logger.log(
       `::: Commission deleted successfully with id [${id}] and response [${JSON.stringify(
         response
       )}]:::`

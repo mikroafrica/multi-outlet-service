@@ -35,6 +35,10 @@ const schema = {
     enum: Object.keys(RangeType),
   },
 
+  serviceFee: {
+    type: Number,
+  },
+
   rangeList: [
     {
       serviceFee: Number,
