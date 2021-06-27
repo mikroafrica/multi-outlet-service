@@ -9,7 +9,7 @@ export const Approval = {
 };
 
 export const CommissionStatus = {
-  ACTIVE: "APPROVED",
+  ACTIVE: "ACTIVE",
   NONE: "NONE",
   IN_ACTIVE: "IN_ACTIVE",
 };

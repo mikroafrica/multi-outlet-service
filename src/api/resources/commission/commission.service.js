@@ -7,6 +7,42 @@ import {
   RangeType,
 } from "./commission.model";
 import logger from "../../../logger";
+import { Owner } from "../owner/owner.model";
+import { OwnerCommission } from "./owner.commission.model";
+import { Outlet } from "../outlet/outlet.model";
+import { CommissionStatus } from "../owner/user.type";
+
+const schemaValidation = Joi.object().keys({
+  name: Joi.string().required(),
+  category: Joi.string().valid(Object.keys(CommissionCategory)).required(),
+  rangeType: Joi.string().valid(Object.keys(RangeType)).required(),
+  rangeList: Joi.when("rangeType", {
+    is: Joi.exist().valid(RangeType.RANGE),
+    then: Joi.array()
+      .items({
+        serviceFee: Joi.number().required(),
+        feeType: Joi.string().valid(Object.keys(FeeType)).required(),
+        rangeAmount: Joi.object()
+          .keys({
+            from: Joi.number().required(),
+            to: Joi.number().required(),
+          })
+          .required(),
+      })
+      .required(),
+  }),
+  serviceFee: Joi.when("range", {
+    is: Joi.exist().valid(RangeType.NON_RANGE),
+    then: Joi.number().required(),
+    otherwise: Joi.string().allow(null, ""),
+  }),
+
+  feeType: Joi.when("serviceFee", {
+    is: Joi.exist(),
+    then: Joi.string().valid(Object.keys(FeeType)).required(),
+    otherwise: Joi.string().allow(null, ""),
+  }),
+});
 
 export const create = async ({ params }) => {
   if (!params) {
@@ -60,7 +96,7 @@ export const create = async ({ params }) => {
   }
 };
 
-export const get = async () => {
+export const getAllCommissions = async () => {
   try {
     const existingCommission = await Commission.find();
     return Promise.resolve({
@@ -75,7 +111,7 @@ export const get = async () => {
   }
 };
 
-export const put = async ({ params, id }) => {
+export const update = async ({ params, id }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -118,34 +154,100 @@ export const put = async ({ params, id }) => {
   }
 };
 
-const schemaValidation = Joi.object().keys({
-  name: Joi.string().required(),
-  category: Joi.string().valid(Object.keys(CommissionCategory)).required(),
-  rangeType: Joi.string().valid(Object.keys(RangeType)).required(),
-  rangeList: Joi.when("rangeType", {
-    is: Joi.exist().valid(RangeType.RANGE),
-    then: Joi.array()
-      .items({
-        serviceFee: Joi.number().required(),
-        feeType: Joi.string().valid(Object.keys(FeeType)).required(),
-        rangeAmount: Joi.object()
-          .keys({
-            from: Joi.number().required(),
-            to: Joi.number().required(),
-          })
-          .required(),
-      })
-      .required(),
-  }),
-  serviceFee: Joi.when("range", {
-    is: Joi.exist().valid(RangeType.NON_RANGE),
-    then: Joi.number().required(),
-    otherwise: Joi.string().allow(null, ""),
-  }),
+export const createOwnersCommission = async ({ params, ownerId }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
+    });
+  }
 
-  feeType: Joi.when("serviceFee", {
-    is: Joi.exist(),
-    then: Joi.string().valid(Object.keys(FeeType)).required(),
-    otherwise: Joi.string().allow(null, ""),
-  }),
-});
+  const schemaValidation = Joi.array()
+    .min(3)
+    .unique((a, b) => a === b)
+    .items(Joi.string().required())
+    .required();
+  const validateSchema = Joi.validate(params, schemaValidation);
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+  try {
+    const existingOwner = await Owner.findOne({ _id: ownerId });
+    if (!existingOwner) {
+      logger.error(`::: Owner is not found with id [${ownerId}] :::`);
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: `Owner is not found with id [${ownerId}]`,
+      });
+    }
+
+    // check commission exist and ensure only type of commission is assigned to owners account
+    const commissions = [];
+    for (let i = 0; i < params.length; i++) {
+      const commissionId = params[i];
+      const [existingCommission, existingOwnerCommission] = await Promise.all([
+        Commission.findOne({ _id: commissionId }),
+        OwnerCommission.findOne({ commissionId, ownerId }),
+      ]);
+      if (!existingCommission) {
+        logger.error(
+          `::: Commission is not found with id [${commissionId}] :::`
+        );
+        return Promise.reject({
+          statusCode: NOT_FOUND,
+          message: `Commission is not found with id [${commissionId}]`,
+        });
+      }
+
+      if (existingOwnerCommission) {
+        logger.error(
+          `::: Commission is not found with id [${commissionId}] :::`
+        );
+        return Promise.reject({
+          statusCode: CONFLICT,
+          message: `Commission with name [${existingCommission.name}] already exist`,
+        });
+      }
+
+      commissions.push({
+        ownerId,
+        commissionId,
+        name: existingCommission.name,
+        userType: existingOwner.userType,
+        category: existingCommission.category,
+      });
+    }
+
+    const ownersCommission = await OwnerCommission.insertMany(commissions);
+    const owner = await Owner.findOneAndUpdate(
+      {
+        _id: ownerId,
+      },
+      { $set: { commissionStatus: CommissionStatus.ACTIVE } },
+      { new: true }
+    ).exec();
+    logger.info(
+      `::: owner commission status updated with response owner [${JSON.stringify(
+        owner
+      )}] :::`
+    );
+
+    return Promise.resolve({
+      statusCode: OK,
+      data: ownersCommission,
+    });
+  } catch (err) {
+    console.error(err);
+    logger.error(
+      `::: Failed to owner's commission with error [${JSON.stringify(err)}] :::`
+    );
+
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Failed to create owners commission",
+    });
+  }
+};

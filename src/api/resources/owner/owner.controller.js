@@ -1,11 +1,4 @@
 import {
-  signupMultiOutletOwner,
-  loginMultiOutletOwner,
-  sendVerificationEmail,
-  validateEmail,
-  changePassword,
-  requestResetPassword,
-  resetPassword,
   updateUser,
   getUser,
   getUsers,
@@ -68,7 +61,7 @@ export const fetchOwnerById = (req, res) => {
     );
 };
 
-export const fetchTicketsforUsers = (req, res) => {
+export const fetchTicketsForUsers = (req, res) => {
   const ownerId = req.params.ownerId;
 
   const page = parseInt(req.query.page, 10) || 1;
