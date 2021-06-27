@@ -1,5 +1,6 @@
 import {
   createCommission,
+  deleteCommissionById,
   getCommission,
   ownersCommission,
   updateCommission,
@@ -10,6 +11,7 @@ const commission = ({ server, subBase }) => {
   server.post(`${subBase}`, createCommission);
   server.put(`${subBase}/:id`, updateCommission);
   server.post(`${subBase}/:id/owner`, ownersCommission);
+  server.put(`${subBase}/:id/delete`, deleteCommissionById);
 };
 
 export default commission;
