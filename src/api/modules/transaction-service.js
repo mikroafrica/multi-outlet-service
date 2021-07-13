@@ -55,6 +55,50 @@ export const transactionsCategorySummary = ({ userId, dateFrom, dateTo }) => {
   return get({ client, path });
 };
 
+export const transactionsCategorySummaryByUserIds = ({
+  userIds,
+  dateFrom,
+  dateTo,
+}) => {
+  const client = restifyRequest();
+
+  const path = {
+    path: `/transactions/category-summary/multiple`,
+    query: {
+      dateFrom,
+      dateTo,
+    },
+  };
+  return post({ client, path, params: userIds });
+};
+
+export const transactionsByUserIds = ({
+  userIds,
+  dateFrom,
+  dateTo,
+  status,
+  limit,
+  page,
+  type,
+  customerBillerId,
+}) => {
+  const client = restifyRequest();
+
+  const path = {
+    path: `/transactions/multi/users`,
+    query: {
+      type,
+      page,
+      status,
+      limit,
+      dateTo,
+      dateFrom,
+      customerBillerId,
+    },
+  };
+  return post({ client, path, params: userIds });
+};
+
 export const fetchTransactionSummary = ({ userId, dateFrom, dateTo }) => {
   const client = restifyRequest();
 
