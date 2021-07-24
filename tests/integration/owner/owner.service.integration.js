@@ -4,8 +4,8 @@ import chai from "chai";
 import sinon from "sinon";
 import chaiAsPromised from "chai-as-promised";
 import * as OwnerService from "../../../src/api/resources/owner/owner.service";
+import * as AuthService from "../../../src/api/resources/auth/auth.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
-import { Commission } from "../../../src/api/resources/commission/commission.model";
 import {
   BAD_REQUEST,
   CONFLICT,
@@ -14,9 +14,6 @@ import {
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
-import { CommissionBalance } from "../../../src/api/resources/commission/commissionbalance.model";
-import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
-import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -72,7 +69,7 @@ describe("Owner service Tests", function () {
       noOfOutlets: "5-10",
     });
 
-    const response = await OwnerService.signupMultiOutletOwner(signupParams);
+    const response = await AuthService.signupMultiOutletOwner(signupParams);
 
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
@@ -88,7 +85,7 @@ describe("Owner service Tests", function () {
       .reply(BAD_REQUEST, mockResponse);
 
     try {
-      await OwnerService.signupMultiOutletOwner(signupParams);
+      await AuthService.signupMultiOutletOwner(signupParams);
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).exist;
@@ -116,7 +113,7 @@ describe("Owner service Tests", function () {
     });
 
     try {
-      await OwnerService.signupMultiOutletOwner(signupParams);
+      await AuthService.signupMultiOutletOwner(signupParams);
     } catch (err) {
       expect(err.statusCode).equals(CONFLICT);
       expect(err.message).exist;
@@ -162,7 +159,7 @@ describe("Owner service Tests", function () {
       .stub(Owner, "findOne")
       .resolves({ userId: "id", walletId: "74hr-nj3b4" });
 
-    const response = await OwnerService.loginMultiOutletOwner({
+    const response = await AuthService.loginMultiOutletOwner({
       params: loginParams,
     });
 
@@ -184,7 +181,7 @@ describe("Owner service Tests", function () {
       .reply(UN_AUTHORISED, failedLoginMockResponse);
 
     try {
-      await OwnerService.loginMultiOutletOwner({ params: loginParams });
+      await AuthService.loginMultiOutletOwner({ params: loginParams });
     } catch (err) {
       expect(err.statusCode).equals(UN_AUTHORISED);
       expect(err.message).to.exist;
@@ -223,7 +220,7 @@ describe("Owner service Tests", function () {
     const findOneOwner = sinon.stub(Owner, "findOne").resolves(null);
 
     try {
-      await OwnerService.loginMultiOutletOwner({
+      await AuthService.loginMultiOutletOwner({
         params: loginParams,
       });
     } catch (err) {
@@ -254,7 +251,7 @@ describe("Owner service Tests", function () {
       });
 
     try {
-      await OwnerService.loginMultiOutletOwner({ params: loginParams });
+      await AuthService.loginMultiOutletOwner({ params: loginParams });
     } catch (err) {
       expect(err.statusCode).equals(FORBIDDEN);
       expect(err.message).to.exist;
@@ -272,14 +269,14 @@ describe("Owner service Tests", function () {
       .post(`/user/email-verification`)
       .reply(OK, sendVerificationMockResponse);
 
-    const response = await OwnerService.sendVerificationEmail("007");
+    const response = await AuthService.sendVerificationEmail("007");
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });
 
   it("should fail to send a verification email if userId is undefined", async function () {
     try {
-      await OwnerService.sendVerificationEmail();
+      await AuthService.sendVerificationEmail();
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
@@ -297,7 +294,7 @@ describe("Owner service Tests", function () {
       .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
-      await OwnerService.sendVerificationEmail("007");
+      await AuthService.sendVerificationEmail("007");
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
@@ -313,7 +310,7 @@ describe("Owner service Tests", function () {
       .post(`/user/email-validation`)
       .reply(OK, mockResponse);
 
-    const response = await OwnerService.validateEmail(validateEmailParams);
+    const response = await AuthService.validateEmail(validateEmailParams);
     expect(response.statusCode).equals(OK);
   });
 
@@ -327,7 +324,7 @@ describe("Owner service Tests", function () {
       .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
-      await OwnerService.validateEmail(validateEmailParams);
+      await AuthService.validateEmail(validateEmailParams);
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
       expect(err.message).to.exist;
@@ -343,7 +340,7 @@ describe("Owner service Tests", function () {
       .post(`/password/reset-request`)
       .reply(OK, mockResponse);
 
-    const response = await OwnerService.requestResetPassword({
+    const response = await AuthService.requestResetPassword({
       params: { email: "johndoe@mikro.africa" },
     });
     expect(response.statusCode).equals(OK);
@@ -358,7 +355,7 @@ describe("Owner service Tests", function () {
       .post(`/password/reset-request`)
       .reply(BAD_REQUEST, mockResponse);
     try {
-      await OwnerService.requestResetPassword({
+      await AuthService.requestResetPassword({
         email: "johndoe@mikro.africa",
       });
     } catch (err) {
@@ -376,7 +373,7 @@ describe("Owner service Tests", function () {
       .put(`/password/reset-password-web`)
       .reply(OK, mockResponse);
 
-    const response = await OwnerService.resetPassword({
+    const response = await AuthService.resetPassword({
       params: resetPasswordParams,
     });
     expect(response.statusCode).equals(OK);
@@ -393,7 +390,7 @@ describe("Owner service Tests", function () {
       .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
-      await OwnerService.resetPassword({
+      await AuthService.resetPassword({
         params: resetPasswordParams,
       });
     } catch (err) {
@@ -415,7 +412,7 @@ describe("Owner service Tests", function () {
       .put(`/password/change`)
       .reply(OK, mockResponse);
 
-    const response = await OwnerService.changePassword({
+    const response = await AuthService.changePassword({
       params: changePasswordParams,
       ownerId: "some-uuid-pass-word",
     });
@@ -434,7 +431,7 @@ describe("Owner service Tests", function () {
       .reply(BAD_REQUEST, mockErrorResponse);
 
     try {
-      await OwnerService.changePassword({
+      await AuthService.changePassword({
         params: changePasswordParams,
         ownerId: "123",
       });
