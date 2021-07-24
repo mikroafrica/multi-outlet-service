@@ -1,16 +1,16 @@
 import Joi from "joi";
 import * as ConsumerService from "../../modules/consumer-service.js";
+import { getUsersByReferral } from "../../modules/consumer-service.js";
 import { getTickets } from "../../modules/internal-tool-service.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
 import { Owner } from "./owner.model";
-import { UserType, Approval, CommissionStatus } from "./user.type";
+import { CommissionStatus, UserType } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 import async from "async";
 import { OwnerCommission } from "../commission/owner.commission.model";
 import { generateReferralCode } from "../../modules/consumer-service";
-import { getUsersByReferral } from "../../modules/consumer-service.js";
 
 export const getUser = async ({ ownerId }) => {
   try {
@@ -241,9 +241,10 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
       },
     });
   } catch (e) {
-    console.error(e);
     logger.error(
-      `::: failed to fetch partner with error [${JSON.stringify(e)}] ::: `
+      `::: failed to fetch owners with outlets with error [${JSON.stringify(
+        e
+      )}] ::: `
     );
     return Promise.reject({
       statusCode: NOT_FOUND,
@@ -253,7 +254,7 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
 };
 
 export const getUserTickets = async ({
-  ownerId,
+  userId,
   page,
   limit,
   dateTo,
@@ -262,101 +263,51 @@ export const getUserTickets = async ({
   category,
 }) => {
   try {
-    const outlets = await Outlet.paginate(
-      {
-        ownerId,
-      },
-      { page, limit, sort: { createdAt: -1 } }
-    );
-
-    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
-    const ownerDetailsData = ownerDetails.data.data;
-
-    logger.info(
-      `Return owner details data as ${JSON.stringify(ownerDetailsData)}`
-    );
-
-    // Find owner and extract data saved during login
-    const owner = await Owner.findOne({ userId: ownerId });
-    if (!owner) {
+    const existingOwner = await Owner.findOne({ userId });
+    if (!existingOwner) {
+      logger.error(`::: Owner with user id [${userId}] is not found :::`);
       return Promise.reject({
         statusCode: NOT_FOUND,
-        message: "Could not find owner.",
+        message: "Owner is not found",
       });
     }
 
-    let ownerData = [];
-    ownerData.push({
-      userType: owner.userType,
-      approval: owner.approval,
-      phoneNumber: ownerDetailsData.phoneNumber,
-      firstName: ownerDetailsData.firstName,
-      lastName: ownerDetailsData.lastName,
-      dateOfBirth: ownerDetailsData.dateOfBirth,
-    });
+    const ownerId = existingOwner.id;
+    const userIdsList = await getUserIdsUnderOwnerById({ ownerId });
+    if (userIdsList.length === 0) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "There are no users under your account yet.",
+      });
+    }
 
-    let users = outlets.docs;
-    const ticketData = await fetchTicketsForUsers(
-      users,
-      page,
-      limit,
-      dateFrom,
+    const ticketResponse = await getTickets({
       dateTo,
-      status,
-      category
-    );
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: {
-        page: outlets.page,
-        pages: outlets.pages,
-        limit: outlets.limit,
-        total: outlets.total,
-        ownerData,
-        list: ticketData,
-      },
-    });
-  } catch (e) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Tickets could not be fetched for users.",
-    });
-  }
-};
-
-const fetchTicketsForUsers = async (
-  outlets,
-  page,
-  limit,
-  dateFrom,
-  dateTo,
-  status,
-  category
-) => {
-  let outletTickets = [];
-  await async.forEach(outlets, async (outlet) => {
-    const userId = outlet.userId;
-
-    const responseData = await getTickets({
-      userId,
-      page,
-      limit,
       dateFrom,
-      dateTo,
+      userIdsList,
+      limit,
+      page,
       status,
       category,
     });
 
-    const ticketData = responseData.data.data.list;
-
-    if (ticketData.length > 0) {
-      outletTickets.push({ userId: userId, ticketData });
-    }
-
-    logger.info(`Fetching users tickets as [${JSON.stringify(ticketData)}]`);
-  });
-  return outletTickets;
+    const ticketResponseData = ticketResponse.data;
+    const ticketList = ticketResponseData.data;
+    return Promise.resolve({
+      statusCode: OK,
+      data: ticketList,
+    });
+  } catch (e) {
+    logger.error(
+      `::: failed to fetch tickets for users under a owner [${userId}] with error [${JSON.stringify(
+        e
+      )}] ::: `
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: e.message,
+    });
+  }
 };
 
 export const generateReferralCodeByOwner = async ({
@@ -452,4 +403,16 @@ export const getAllReferredUsers = async ({
       message: "Failed to generate referral code",
     });
   }
+};
+
+/**
+ * get all the userids under an owner id
+ * @param ownerId
+ * @returns {Promise<*>}
+ */
+export const getUserIdsUnderOwnerById = async ({ ownerId }) => {
+  const outlets = await Outlet.find({ ownerId });
+  return outlets.map(function (outlet) {
+    return outlet.userId;
+  });
 };

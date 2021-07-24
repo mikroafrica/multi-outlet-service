@@ -66,13 +66,13 @@ export const fetchOwnerById = (req, res) => {
 };
 
 export const fetchTicketsForUsers = (req, res) => {
-  const ownerId = req.params.ownerId;
+  const userId = req.user.userId;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const { dateTo, dateFrom, status, category } = req.query;
 
-  getUserTickets({ ownerId, page, limit, dateTo, dateFrom, status, category })
+  getUserTickets({ userId, page, limit, dateTo, dateFrom, status, category })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

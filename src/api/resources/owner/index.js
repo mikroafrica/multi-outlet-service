@@ -13,9 +13,9 @@ const owner = ({ server, subBase }) => {
   server.get(`${subBase}/details`, getMyAccount);
   server.get(`${subBase}/:id`, fetchOwnerById);
   server.put(`${subBase}/update-profile`, updateUserProfile);
-  server.get(`${subBase}/:ownerId/tickets`, fetchTicketsForUsers);
   server.post(`${subBase}/codegen`, generateAccessCode);
   server.get(`${subBase}/referral`, getReferredUsers);
+  server.get(`${subBase}/tickets`, fetchTicketsForUsers);
 };
 
 export default owner;
