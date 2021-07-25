@@ -13,7 +13,6 @@ import {
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
-import { CommissionBalance } from "../../../src/api/resources/commission/commissionbalance.model";
 import { UserType } from "../../../src/api/resources/owner/user.type";
 
 chai.use(chaiAsPromised);
