@@ -14,6 +14,8 @@ import {
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
+import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
+import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -28,6 +30,7 @@ describe("Owner service Tests", function () {
     gender: "MALE",
     profileImageId: "https://url-to-visit.png",
     noOfOutlets: "5-10",
+    userType: "OUTLET_OWNER",
   };
 
   const loginParams = {
@@ -57,8 +60,9 @@ describe("Owner service Tests", function () {
       },
     };
 
+    const userType = signupParams.userType;
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post(`/user/create/${userType}`)
       .reply(OK, mockResponse);
 
     nock(process.env.AUTH_SERVICE_URL).post("/auth/create").reply(OK, {});
@@ -67,6 +71,7 @@ describe("Owner service Tests", function () {
       userId: "user-id",
       phoneNumber: "09024764875",
       noOfOutlets: "5-10",
+      userType: "PARTNER",
     });
 
     const response = await AuthService.signupMultiOutletOwner(signupParams);
@@ -80,15 +85,16 @@ describe("Owner service Tests", function () {
       message: "User account exists",
     };
 
+    const userType = signupParams.userType;
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post(`/user/create/${userType}`)
       .reply(BAD_REQUEST, mockResponse);
 
     try {
       await AuthService.signupMultiOutletOwner(signupParams);
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
-      expect(err.message).exist;
+      expect(err.message).to.exist;
     }
   });
 
@@ -99,8 +105,9 @@ describe("Owner service Tests", function () {
       },
     };
 
+    const userType = signupParams.userType;
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post(`/user/create/${userType}`)
       .reply(OK, mockResponse);
 
     nock(process.env.CONSUMER_SERVICE_URL)
@@ -116,7 +123,7 @@ describe("Owner service Tests", function () {
       await AuthService.signupMultiOutletOwner(signupParams);
     } catch (err) {
       expect(err.statusCode).equals(CONFLICT);
-      expect(err.message).exist;
+      expect(err.message).to.exist;
     }
   });
 

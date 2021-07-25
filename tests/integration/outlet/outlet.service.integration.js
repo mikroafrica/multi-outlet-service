@@ -13,6 +13,7 @@ import {
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
+import { UserType } from "../../../src/api/resources/owner/user.type";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
