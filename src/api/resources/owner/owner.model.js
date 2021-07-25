@@ -21,6 +21,17 @@ const schema = {
     default: CommissionStatus.NONE,
     enum: Object.keys(CommissionStatus),
   },
+
+  // referral id is mostly used partners for user referral
+  referralId: {
+    type: String,
+  },
+
+  // to generate a referral code, you need an access code.
+  // during partner creation, an access code is assigned to a partner
+  referralAccessCode: {
+    type: String,
+  },
 };
 
 const ownerSchema = new mongoose.Schema(schema, { timestamps: true });

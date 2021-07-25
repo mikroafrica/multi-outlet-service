@@ -10,17 +10,17 @@ const restifyRequest = () => {
 };
 
 export const getTickets = ({
-  userId,
   dateFrom,
   dateTo,
   page,
   limit,
   status,
   category,
+  userIdsList,
 }) => {
   const client = restifyRequest();
   const path = {
-    path: `/tickets/${userId}/user`,
+    path: `/tickets/user/multi`,
     query: {
       page,
       limit,
@@ -30,5 +30,5 @@ export const getTickets = ({
       category,
     },
   };
-  return get({ client, path });
+  return post({ client, path, params: userIdsList });
 };

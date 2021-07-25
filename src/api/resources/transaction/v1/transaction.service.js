@@ -1,12 +1,11 @@
 import { Outlet } from "../../outlet/outlet.model";
 import * as TransactionService from "../../../modules/transaction-service";
 import { OK } from "../../../modules/status";
+import { getUserIdsUnderOwnerById } from "../../owner/owner.service";
 
 export const transactionSummary = async ({ ownerId, dateFrom, dateTo }) => {
-  const outlets = await Outlet.find({ ownerId });
-  const outletUserIds = outlets.map(function (outlet) {
-    return outlet.userId;
-  });
+  // get all the user ids under this particular owner id
+  const outletUserIds = await getUserIdsUnderOwnerById({ ownerId });
 
   const tnxSummaryResponse = await TransactionService.transactionsCategorySummaryByUserIds(
     { userIds: outletUserIds, dateFrom, dateTo }
