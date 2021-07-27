@@ -36,12 +36,12 @@ export const getMyAccount = (req, res) => {
 };
 
 export const fetchUsersByType = (req, res) => {
-  const usertype = req.query.userType;
+  const userType = req.query.userType;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  getUsers({ usertype, page, limit })
+  getUsers({ userType, page, limit })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

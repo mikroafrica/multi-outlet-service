@@ -110,44 +110,36 @@ export const updateUser = async ({ params, ownerId }) => {
  * @param limit
  * @returns {Promise<{data: {total: *, page: *, list: *}, statusCode: number}>}
  */
-export const getUsers = async ({ usertype, page, limit }) => {
+export const getUsers = async ({ userType, page, limit }) => {
   try {
-    const userType = UserType[usertype];
-
-    if (!userType) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Invalid user type supplied. Please supply a valid user type",
-      });
-    }
-
-    let filter = { userType };
-
-    const owners = await Owner.paginate(filter, {
+    const filter = userType ? { userType: UserType[userType] } : {};
+    const ownersDocs = await Owner.paginate(filter, {
       page,
       limit,
       sort: { createdAt: -1 },
     });
 
-    const outletDetails = await fetchOutletDetails(owners.docs);
+    const outletDetails = await fetchOutletDetails(ownersDocs.docs);
 
     let ownerDetails = [];
-    let users = owners.docs;
+    let owners = ownersDocs.docs;
     for (let i = 0; i < outletDetails.length; i++) {
-      for (let j = 0; j < users.length; j++) {
-        if (users[i].userId === outletDetails[j].id) {
-          const user = users[i];
+      for (let j = 0; j < owners.length; j++) {
+        const owner = owners[i];
+        if (owner.userId === outletDetails[j].id) {
           const firstName = outletDetails[j].firstName;
           const lastName = outletDetails[j].lastName;
           const email = outletDetails[j].email;
           const businessType = outletDetails[j].businessType;
+
           const {
             id: ownerId,
             phoneNumber,
             createdAt,
             updatedAt,
+            referrerId,
             commissionStatus = CommissionStatus.NONE,
-          } = user;
+          } = owner;
           const details = {
             ownerId,
             phoneNumber,
@@ -156,6 +148,7 @@ export const getUsers = async ({ usertype, page, limit }) => {
             firstName,
             lastName,
             email,
+            referrerId,
             commissionStatus,
             businessType,
           };
@@ -173,6 +166,7 @@ export const getUsers = async ({ usertype, page, limit }) => {
       },
     });
   } catch (e) {
+    console.error(e);
     return Promise.reject({
       statusCode: BAD_REQUEST,
       message: "Could not fetch users by type. Please try again",

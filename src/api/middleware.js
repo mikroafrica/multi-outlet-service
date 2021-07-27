@@ -64,7 +64,7 @@ const allowMikroSystem = (req) => {
     return true;
   }
 
-  const routes = ["commission", "owner/:id"];
+  const routes = ["commission", "owner/all/users", "owner/:id"];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {
       return true;
