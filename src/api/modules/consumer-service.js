@@ -89,9 +89,7 @@ export const getUsersByReferral = ({
   phoneNumber,
   referralId,
 }) => {
-  const client = restifyRequest();
-  return get({
-    client,
+  const path = {
     path: `/referral/${referralId}/users`,
     query: {
       dateFrom,
@@ -102,7 +100,9 @@ export const getUsersByReferral = ({
       limit,
       phoneNumber,
     },
-  });
+  };
+  const client = restifyRequest();
+  return get({ client, path });
 };
 
 export const createReferral = ({ name, phoneNumber, zone, lga, state }) => {
