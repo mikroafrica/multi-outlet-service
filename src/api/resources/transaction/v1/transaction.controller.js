@@ -31,8 +31,8 @@ export const fetchTransaction = (req, res) => {
     status,
     type,
     customerBillerId,
-    page,
-    limit,
+    page = 1,
+    limit = 10,
   } = req.query;
 
   transactionsByOutlets({
