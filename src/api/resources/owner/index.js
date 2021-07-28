@@ -6,6 +6,7 @@ import {
   fetchTicketsForUsers,
   generateAccessCode,
   getReferredUsers,
+  getUserMetrics,
 } from "./owner.controller";
 
 const owner = ({ server, subBase }) => {
@@ -16,6 +17,7 @@ const owner = ({ server, subBase }) => {
   server.get(`${subBase}/referral`, getReferredUsers);
   server.get(`${subBase}/tickets`, fetchTicketsForUsers);
   server.get(`${subBase}/all/users`, fetchUsersByType);
+  server.get(`${subBase}/user/metrics`, getUserMetrics);
 };
 
 export default owner;

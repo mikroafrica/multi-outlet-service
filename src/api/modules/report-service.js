@@ -16,6 +16,7 @@ const restifyRequest = () => {
 
 export const ReportIndex = {
   TRANSACTION: "mikro-transaction",
+  User: "mikro-user",
 };
 
 export const search = (query) => {
@@ -35,4 +36,22 @@ export type Hit = {
   _id: string,
   _score: string,
   _source: any,
+};
+
+export type Aggregation = {
+  label: string,
+  field: string,
+  operator: string,
+};
+
+export const buildAggregation = (aggregation: Aggregation[]) => {
+  let builder = {};
+  for (const object: Aggregation of aggregation) {
+    const { label, operator, field } = object;
+    const queryString =
+      '{"' + label + '":{"' + operator + '":{"field":"' + field + '"}}}';
+
+    builder = Object.assign(builder, JSON.parse(queryString));
+  }
+  return { aggs: { ...builder } };
 };

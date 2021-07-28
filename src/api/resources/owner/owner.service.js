@@ -11,6 +11,13 @@ import { fetchOutletDetails } from "../outlet/outlet.service";
 import async from "async";
 import { OwnerCommission } from "../commission/owner.commission.model";
 import { generateReferralCode } from "../../modules/consumer-service";
+import {
+  buildAggregation,
+  ReportIndex,
+  search,
+} from "../../modules/report-service";
+import { handleListOfHits } from "../../modules/util";
+import { BusinessType, BusinessTypeStatus } from "./business.type";
 
 export const getUser = async ({ ownerId }) => {
   try {
@@ -126,7 +133,7 @@ export const getUsers = async ({ userType, page, limit }) => {
     for (let i = 0; i < outletDetails.length; i++) {
       for (let j = 0; j < owners.length; j++) {
         const owner = owners[i];
-        if (owner.userId === outletDetails[j].id) {
+        if (owner.userId === (outletDetails[j] ? outletDetails[j].id : null)) {
           const firstName = outletDetails[j].firstName;
           const lastName = outletDetails[j].lastName;
           const email = outletDetails[j].email;
@@ -137,7 +144,7 @@ export const getUsers = async ({ userType, page, limit }) => {
             phoneNumber,
             createdAt,
             updatedAt,
-            referrerId,
+            referralId,
             commissionStatus = CommissionStatus.NONE,
           } = owner;
           const details = {
@@ -148,7 +155,7 @@ export const getUsers = async ({ userType, page, limit }) => {
             firstName,
             lastName,
             email,
-            referrerId,
+            referralId,
             commissionStatus,
             businessType,
           };
@@ -409,4 +416,132 @@ export const getUserIdsUnderOwnerById = async ({ ownerId }) => {
   return outlets.map(function (outlet) {
     return outlet.userId;
   });
+};
+
+export const userMetrics = async ({ userId }) => {
+  const existingOwner = await Owner.findOne({ userId: userId });
+  if (!existingOwner) {
+    logger.error(`::: Owner with user id [${userId}] is not found :::`);
+    return Promise.reject({
+      statusCode: NOT_FOUND,
+      message: "Owner is not found",
+    });
+  }
+
+  const activeMerchantQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.MERCHANT,
+      BusinessTypeStatus.ACTIVE
+    )
+  );
+  const activeAgentQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.AGENT,
+      BusinessTypeStatus.ACTIVE
+    )
+  );
+
+  const inActiveMerchantQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.MERCHANT,
+      BusinessTypeStatus.INACTIVE
+    )
+  );
+  const inActiveAgentQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.AGENT,
+      BusinessTypeStatus.INACTIVE
+    )
+  );
+
+  const [
+    activeMerchantResponse,
+    activeAgentResponse,
+    inActiveMerchantResponse,
+    inActiveAgentResponse,
+  ] = await Promise.all([
+    search(activeMerchantQuery),
+    search(activeAgentQuery),
+    search(inActiveMerchantQuery),
+    search(inActiveAgentQuery),
+  ]);
+
+  const { data: agentQueryActiveResponseData } = activeAgentResponse.data;
+  const { total: totalActiveAgent } = handleListOfHits(
+    agentQueryActiveResponseData
+  );
+
+  const { data: merchantQueryActiveResponseData } = activeMerchantResponse.data;
+  const { total: totalActiveMerchant } = handleListOfHits(
+    merchantQueryActiveResponseData
+  );
+
+  const { data: agentQueryInActiveResponseData } = inActiveAgentResponse.data;
+  const { total: totalInActiveAgent } = handleListOfHits(
+    agentQueryInActiveResponseData
+  );
+
+  const {
+    data: merchantQueryInActiveResponseData,
+  } = inActiveMerchantResponse.data;
+  const { total: totalInActiveMerchant } = handleListOfHits(
+    merchantQueryInActiveResponseData
+  );
+
+  const totalActive = totalActiveMerchant + totalActiveAgent;
+  const totalInActive = totalInActiveAgent + totalInActiveMerchant;
+
+  const total = totalActive + totalInActive;
+
+  return Promise.resolve({
+    statusCode: OK,
+    data: {
+      total,
+      totalActive,
+      totalInActive,
+      totalActiveAgent,
+      totalActiveMerchant,
+      totalInActiveAgent,
+      totalInActiveMerchant,
+    },
+  });
+};
+
+const queryCount = (must) => {
+  return {
+    index: ReportIndex.User,
+    size: 0,
+    body: {
+      query: {
+        bool: {
+          must,
+        },
+      },
+    },
+  };
+};
+
+const mustCount = (referralId: string, userType: string, active: string) => {
+  return [
+    {
+      match: {
+        referralId,
+      },
+    },
+
+    {
+      match: {
+        userType,
+      },
+    },
+    {
+      match: {
+        status: active,
+      },
+    },
+  ];
 };

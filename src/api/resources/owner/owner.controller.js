@@ -4,6 +4,7 @@ import {
   getUsers,
   getOwnerWithOutlets,
   getUserTickets,
+  userMetrics,
 } from "./owner.service.js";
 import {
   generateReferralCodeByOwner,
@@ -111,6 +112,17 @@ export const getReferredUsers = (req, res) => {
     limit,
     phoneNumber,
   })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getUserMetrics = (req, res) => {
+  const userId = req.user.userId;
+  userMetrics({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
