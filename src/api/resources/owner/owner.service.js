@@ -194,10 +194,16 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
     }
     const [userDetailsResponse, outlets, ownerCommissions] = await Promise.all([
       ConsumerService.getUserDetails(existingOwner.userId),
-      Outlet.paginate(
-        { ownerId },
-        { page, limit, sort: { createdAt: -1 } }
-      ).then((outlets) => fetchOutletDetails(outlets.docs)),
+      existingOwner.userType === UserType.OUTLET_OWNER
+        ? Outlet.paginate(
+            { ownerId },
+            { page, limit, sort: { createdAt: -1 } }
+          ).then((outlets) => fetchOutletDetails(outlets.docs))
+        : getUsersByReferral({
+            page,
+            limit,
+            referralId: existingOwner.referralId,
+          }),
       OwnerCommission.find({ ownerId }),
     ]);
 
@@ -216,7 +222,14 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
     const userData = userDetailsResponse.data;
     const details = userData.data;
 
-    const userList = outlets.map((user) => {
+    const outletList =
+      existingOwner.userType === UserType.OUTLET_OWNER
+        ? outlets
+        : outlets.data.data.list.list;
+
+    console.log(outletList);
+
+    const userList = outletList.map((user) => {
       const { firstName, lastName, email, phoneNumber, status, id } = user;
       const terminalId =
         Array.isArray(user.store) && user.store.length > 0
@@ -256,6 +269,7 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
       },
     });
   } catch (e) {
+    console.error(e);
     logger.error(
       `::: failed to fetch owners with outlets with error [${JSON.stringify(
         e
