@@ -166,15 +166,17 @@ const findCommission = async (
     return 0;
   }
 
-  // if service fee is flat , return exact flat fee
-  const isFlat = commission.feeType === FeeType.FLAT_FEE;
-  if (isFlat) {
-    return commission.serviceFee;
-  }
+  // if non range, check for flat fee or percentage
+  if (commission.rangeType === RangeType.RANGE) {
+    // if service fee is flat , return exact flat fee
+    if (commission.feeType === FeeType.FLAT_FEE) {
+      return commission.serviceFee;
+    }
 
-  // check if service fee does not have range, multiply by percent
-  if (commission.rangeType === RangeType.NON_RANGE) {
-    return (commission.serviceFee / 100) * amount;
+    // check if service fee does not have range, multiply by percent
+    if (commission.feeType === FeeType.PERCENTAGE) {
+      return (commission.serviceFee / 100) * amount;
+    }
   }
 
   // if range type, search for the exact match

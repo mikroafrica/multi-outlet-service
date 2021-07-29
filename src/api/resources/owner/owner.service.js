@@ -18,6 +18,7 @@ import {
 } from "../../modules/report-service";
 import { handleListOfHits } from "../../modules/util";
 import { BusinessType, BusinessTypeStatus } from "./business.type";
+import { Commission } from "../commission/commission.model";
 
 export const getUser = async ({ ownerId }) => {
   try {
@@ -191,7 +192,7 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
         message: "Owner is not found",
       });
     }
-    const [userDetailsResponse, outlets, commissions] = await Promise.all([
+    const [userDetailsResponse, outlets, ownerCommissions] = await Promise.all([
       ConsumerService.getUserDetails(existingOwner.userId),
       Outlet.paginate(
         { ownerId },
@@ -199,6 +200,19 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
       ).then((outlets) => fetchOutletDetails(outlets.docs)),
       OwnerCommission.find({ ownerId }),
     ]);
+
+    let commissions = [];
+
+    // find all the owner commission with id from commissions
+    if (ownerCommissions.length > 0) {
+      for (const ownerCommission of ownerCommissions) {
+        const commissionModel = await Commission.findOne({
+          _id: ownerCommission.commissionId,
+        });
+        commissions.push(commissionModel);
+      }
+    }
+
     const userData = userDetailsResponse.data;
     const details = userData.data;
 
