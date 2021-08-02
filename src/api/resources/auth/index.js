@@ -6,7 +6,7 @@ import {
   resendVerificationEmail,
   validateVerificationEmail,
   resetMultiOutletOwnerPassword,
-} from "./owner.auth.controller";
+} from "./auth.controller";
 
 const auth = ({ server, subBase }) => {
   server.post(`${subBase}/login`, login);

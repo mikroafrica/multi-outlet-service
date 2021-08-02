@@ -52,8 +52,6 @@ const schema = {
       },
     },
   ],
-
-  flatServiceFee: Number,
 };
 
 const commissionSchema = new mongoose.Schema(schema, { timestamps: true });

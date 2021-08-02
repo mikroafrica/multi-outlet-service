@@ -4,7 +4,12 @@ import {
   getUsers,
   getOwnerWithOutlets,
   getUserTickets,
+  userMetrics,
 } from "./owner.service.js";
+import {
+  generateReferralCodeByOwner,
+  getAllReferredUsers,
+} from "./owner.service";
 
 export const updateUserProfile = (req, res) => {
   const params = req.body;
@@ -32,12 +37,12 @@ export const getMyAccount = (req, res) => {
 };
 
 export const fetchUsersByType = (req, res) => {
-  const usertype = req.query.userType;
+  const userType = req.query.userType;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  getUsers({ usertype, page, limit })
+  getUsers({ userType, page, limit })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
@@ -62,13 +67,62 @@ export const fetchOwnerById = (req, res) => {
 };
 
 export const fetchTicketsForUsers = (req, res) => {
-  const ownerId = req.params.ownerId;
+  const userId = req.user.userId;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const { dateTo, dateFrom, status, category } = req.query;
 
-  getUserTickets({ ownerId, page, limit, dateTo, dateFrom, status, category })
+  getUserTickets({ userId, page, limit, dateTo, dateFrom, status, category })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const generateAccessCode = (req, res) => {
+  const userId = req.user.userId;
+  const numberOfCodeGen = req.body.numberOfCodeGen || 1;
+
+  generateReferralCodeByOwner({ userId, numberOfCodeGen })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getReferredUsers = (req, res) => {
+  const userId = req.user.userId;
+  const { dateTo, dateFrom, mapped, status, phoneNumber } = req.query;
+
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  getAllReferredUsers({
+    userId,
+    dateTo,
+    dateFrom,
+    mapped,
+    status,
+    page,
+    limit,
+    phoneNumber,
+  })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getUserMetrics = (req, res) => {
+  const userId = req.user.userId;
+  userMetrics({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

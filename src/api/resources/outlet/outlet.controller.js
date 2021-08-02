@@ -8,7 +8,7 @@ import {
   getOutlets,
   unlinkOutletFromOwner,
   switchOutletSuspendedStatus,
-  getOutletByOutletId,
+  getOutletByUserId,
 } from "./outlet.service";
 
 export const tempUserCreation = (req, res) => {
@@ -144,9 +144,9 @@ export const fetchOutlets = (req, res) => {
 };
 
 export const fetchOutletById = (req, res) => {
-  const outletId = req.params.id;
+  const userId = req.params.id;
 
-  getOutletByOutletId({ outletId })
+  getOutletByUserId({ userId })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

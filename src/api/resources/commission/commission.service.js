@@ -256,9 +256,13 @@ export const createOwnersCommission = async ({ params, ownerId }) => {
 };
 
 export const deleteAssignedCommission = async (id: string) => {
+  // delete owner commission or commission by id
   try {
-    const response = await OwnerCommission.deleteOne({ _id: id });
-    logger.log(
+    const response = await Promise.all([
+      Commission.remove({ _id: id }),
+      OwnerCommission.remove({ commissionId: id }),
+    ]);
+    logger.info(
       `::: Commission deleted successfully with id [${id}] and response [${JSON.stringify(
         response
       )}]:::`
@@ -268,10 +272,15 @@ export const deleteAssignedCommission = async (id: string) => {
       data: "Deleted commission successfully",
     });
   } catch (e) {
-    logger.error(`::: Failed to delete commission with id [${id}] :::`);
+    console.error(e);
+    logger.error(
+      `::: Failed to delete commission with id [${id}] with error [${JSON.stringify(
+        e
+      )}]:::`
+    );
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Failed to create owners commission",
+      message: "Failed to delete commission",
     });
   }
 };
