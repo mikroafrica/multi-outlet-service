@@ -64,6 +64,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     phoneNumber: Joi.string().required(),
     businessName: Joi.string().required(),
     address: Joi.string().required(),
+    country: Joi.string().required(),
     state: Joi.string().required(),
     email: Joi.string().email(),
     pin: Joi.string().required().length(4),
@@ -119,6 +120,8 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
   // fetch owner data
   const userDetails = await ConsumerService.getUserDetails(ownerId);
   const userDetailsData = userDetails.data.data;
+
+  console.log("userDetailsData", userDetailsData);
 
   const {
     firstName,
