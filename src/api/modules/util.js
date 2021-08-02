@@ -1,5 +1,4 @@
 import GoogleLibPhone from "google-libphonenumber";
-import moment from "moment";
 
 const phoneUtil = GoogleLibPhone.PhoneNumberUtil.getInstance();
 const PNF = GoogleLibPhone.PhoneNumberFormat;
