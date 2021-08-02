@@ -10,7 +10,6 @@ import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import {
   validatePhone,
   getRegionAndZoneFromState,
-  dateOfBirthToString,
 } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import { Commission } from "../commission/commission.model.js";
@@ -89,9 +88,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
   }
 
   const zone = regionObject.zone;
-
   const acquisitionOfficers = await ConsumerService.referralByZone();
-
   const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
 
   const referralObject = mapAcquisitionOfficerToUser({
@@ -120,8 +117,6 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
   // fetch owner data
   const userDetails = await ConsumerService.getUserDetails(ownerId);
   const userDetailsData = userDetails.data.data;
-
-  console.log("userDetailsData", userDetailsData);
 
   const {
     firstName,
