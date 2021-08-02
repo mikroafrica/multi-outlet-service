@@ -78,3 +78,52 @@ export const updateUserProfile = ({ params, userId }) => {
   const client = restifyRequest();
   return put({ client, path: `/user/${userId}/profile`, params });
 };
+
+export const tempUserCreation = (phoneNumber) => {
+  const client = restifyRequest();
+  return post({
+    client,
+    path: `/user/${phoneNumber}/create`,
+    params: {},
+  });
+};
+
+export const validateTempUserOtp = ({ registrationId, otpCode, params }) => {
+  const client = restifyRequest();
+  return put({
+    client,
+    path: `/user/${otpCode}/${registrationId}/validate`,
+    params,
+  });
+};
+
+export const acquisitionOfficers = async ({
+  dateFrom,
+  dateTo,
+  page,
+  limit,
+  phoneNumber,
+}) => {
+  const client = restifyRequest();
+  const path = {
+    path: "/referral",
+    query: {
+      dateFrom,
+      dateTo,
+      page,
+      limit,
+      phoneNumber,
+    },
+  };
+  return await get({ client, path });
+};
+
+export const referralByZone = () => {
+  const client = restifyRequest();
+  return get({ client, path: "/referral/zones" });
+};
+
+export const generateReferral = async (params) => {
+  const client = restifyRequest();
+  return post({ client, path: "/referral/codegen", params });
+};

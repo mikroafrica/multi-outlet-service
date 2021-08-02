@@ -7,12 +7,252 @@ import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
 import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
-import { validatePhone } from "../../modules/util.js";
+import {
+  validatePhone,
+  getRegionAndZoneFromState,
+  dateOfBirthToString,
+} from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
 import { Commission } from "../commission/commission.model.js";
 import logger from "../../../logger.js";
 import { AuthServiceAction, OutletStatus } from "./outlet.status.js";
 import { UserType } from "../owner/user.type";
+import userAccountEmitter from "../../events/user-account-event";
+import { CLEAR_ACCOUNT_EVENT } from "../../events";
+import { UserRole } from "../owner/user.role";
+
+export const createTempUser = (phoneNumber) => {
+  if (!phoneNumber) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Phone number is required",
+    });
+  }
+
+  return ConsumerService.tempUserCreation(phoneNumber)
+    .then((responseData) => {
+      const tempData = responseData.data;
+      const { registrationId, expirationTimeInMilliSecs } = tempData.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: {
+          registrationId,
+          expirationTimeInMilliSecs,
+        },
+      });
+    })
+    .catch((err) => {
+      logger.error(
+        `creating a temporary user failed with error ${JSON.stringify(err)}`
+      );
+      return Promise.reject({
+        statusCode: err.statusCode,
+        message: err.message,
+      });
+    });
+};
+
+export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required.",
+    });
+  }
+
+  const schema = Joi.object().keys({
+    phoneNumber: Joi.string().required(),
+    businessName: Joi.string().required(),
+    address: Joi.string().required(),
+    state: Joi.string().required(),
+    email: Joi.string().email(),
+    pin: Joi.string().required().length(4),
+    lga: Joi.string().required(),
+    userType: Joi.string().required(),
+    merchantCategory: Joi.string(),
+  });
+
+  const validateSchema = Joi.validate({ params, schema });
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+
+  params = Object.assign(params, { registrationId });
+
+  const regionObject = getRegionAndZoneFromState(params.state);
+  if (regionObject) {
+    params = Object.assign(params, regionObject);
+  }
+
+  const zone = regionObject.zone;
+
+  const acquisitionOfficers = await ConsumerService.referralByZone();
+
+  const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
+
+  const referralObject = mapAcquisitionOfficerToUser({
+    acquisitionOfficersByZones,
+    zone,
+  });
+
+  const accessCode = referralObject.accessCode;
+  const request = {
+    accessCode,
+    numberOfCodeGen: 1,
+  };
+
+  const referralCodeResponse = await ConsumerService.generateReferral(request);
+  const referralCodeData = referralCodeResponse.data.data[0];
+  const referredCodeId = referralCodeData.id;
+
+  logger.info(
+    `Referral code with id ${JSON.stringify(
+      referredCodeId
+    )} generated for outlet creation`
+  );
+
+  params.personalPhoneNumber = params.phoneNumber;
+
+  // fetch owner data
+  const userDetails = await ConsumerService.getUserDetails(ownerId);
+  const userDetailsData = userDetails.data.data;
+
+  const {
+    firstName,
+    lastName,
+    profileImageId,
+    dateOfBirth,
+    gender,
+    outletCount,
+  } = userDetailsData;
+
+  const dob = dateOfBirth.replace("West Africa Standard Time", "GMT+01:00");
+
+  params = Object.assign(params, {
+    registrationId,
+    referredCodeId,
+    dob,
+    firstName,
+    lastName,
+    gender,
+    profileImageId,
+    outletCount,
+  });
+
+  return ConsumerService.signup(params, params.userType)
+    .then(async (outlet) => {
+      const outletData = outlet.data;
+      const userId = outletData.data.id;
+
+      logger.info(
+        `Outlet succesfully created with details ${JSON.stringify(outletData)}`
+      );
+
+      // Fetch the outlet data and get the walletId
+      const outletDetails = await ConsumerService.getUserDetails(userId);
+      const outletDetailsData = outletDetails.data.data;
+      const walletId = outletDetailsData.store[0].wallet[0].id;
+
+      const authServiceSignUpRequest = {
+        username: params.phoneNumber,
+        userId,
+        password: params.pin,
+        role: "outlet",
+      };
+
+      try {
+        const responseAuthData = await AuthService.signup(
+          authServiceSignUpRequest
+        );
+        const createUserAuthData = responseAuthData.data;
+        const accessToken = createUserAuthData.data.token;
+
+        // Link outlet to owner
+        const newOutletMapping = await saveNewOutletMapping({
+          outletUserId: userId,
+          ownerId,
+          walletId,
+        });
+
+        return Promise.resolve({
+          statusCode: OK,
+          data: Object.assign(outletData.data, { accessToken }),
+        });
+      } catch (e) {
+        userAccountEmitter.emit(CLEAR_ACCOUNT_EVENT, userId);
+        logger.error(
+          `An error occurred while creating outlet: ${JSON.stringify(err)}`
+        );
+
+        return Promise.reject({
+          statusCode: BAD_REQUEST,
+          message: err.message || "Could not link outlet. Please try again",
+        });
+      }
+    })
+    .catch((err) => {
+      logger.error(
+        `Creating outlet of object ${JSON.stringify(
+          params
+        )} failed with error ${JSON.stringify(err)}`
+      );
+
+      return Promise.reject({
+        statusCode: err.statusCode,
+        message: err.message,
+      });
+    });
+};
+
+const mapAcquisitionOfficerToUser = ({ acquisitionOfficersByZones, zone }) => {
+  let referralObject;
+  for (let i = 0; i < acquisitionOfficersByZones.length; i++) {
+    if (acquisitionOfficersByZones[i].zone === zone) {
+      referralObject = acquisitionOfficersByZones[i].referral;
+    }
+  }
+  return referralObject;
+};
+
+export const otpValidation = (registrationId, otpCode) => {
+  if (!registrationId) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Registration id is required.",
+    });
+  }
+
+  return ConsumerService.validateTempUserOtp({
+    registrationId,
+    otpCode,
+    params: { registrationId },
+  })
+    .then((otpResponseData) => {
+      const responseData = otpResponseData.data;
+      const { registrationId, expirationTimeInMilliSecs } = responseData.data;
+      return Promise.resolve({
+        statusCode: otpResponseData.statusCode,
+        data: {
+          registrationId,
+          expirationTimeInMilliSecs,
+        },
+      });
+    })
+    .catch((err) => {
+      logger.error(
+        `failed to validate OTP ${otpCode} with registration id ${registrationId} with error ${JSON.stringify(
+          err
+        )}`
+      );
+      return Promise.reject({
+        statusCode: err.statusCode,
+        message: err.message,
+      });
+    });
+};
 
 export const linkOwnerToOutlet = async ({ params, ownerId }) => {
   if (!params) {
@@ -157,11 +397,11 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
       walletId,
     });
 
-    await addCommissionToOwner({
-      userDetails,
-      outletUserId,
-      ownerId,
-    });
+    // await addCommissionToOwner({
+    //   userDetails,
+    //   outletUserId,
+    //   ownerId,
+    // });
 
     return Promise.resolve({
       statusCode: OK,

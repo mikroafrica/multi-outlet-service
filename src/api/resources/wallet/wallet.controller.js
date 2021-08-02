@@ -2,10 +2,12 @@ import {
   walletTransactionsById,
   walletSummaryById,
   walletById,
+  getIncomeAndExpenseSummaryForAdmin,
 } from "./wallet.service.js";
 
 export const getWallet = (req, res) => {
-  const ownerId = req.user.userId;
+  // const ownerId = req.user.userId;
+  const ownerId = req.params.userId;
 
   walletById({ ownerId })
     .then(({ statusCode, data }) =>
@@ -48,6 +50,20 @@ export const getWalletTransactions = (req, res) => {
     limit,
     transactionCategory,
     transactionType,
+    walletId,
+  })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getIncomeSummary = (req, res) => {
+  const walletId = req.params.id;
+
+  getIncomeAndExpenseSummaryForAdmin({
     walletId,
   })
     .then(({ statusCode, data }) =>
