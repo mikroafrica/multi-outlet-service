@@ -97,27 +97,6 @@ export const validateTempUserOtp = ({ registrationId, otpCode, params }) => {
   });
 };
 
-export const acquisitionOfficers = async ({
-  dateFrom,
-  dateTo,
-  page,
-  limit,
-  phoneNumber,
-}) => {
-  const client = restifyRequest();
-  const path = {
-    path: "/referral",
-    query: {
-      dateFrom,
-      dateTo,
-      page,
-      limit,
-      phoneNumber,
-    },
-  };
-  return await get({ client, path });
-};
-
 export const referralByZone = () => {
   const client = restifyRequest();
   return get({ client, path: "/referral/zones" });
