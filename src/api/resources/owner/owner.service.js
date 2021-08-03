@@ -1,437 +1,28 @@
 import Joi from "joi";
 import * as ConsumerService from "../../modules/consumer-service.js";
-import * as AuthService from "../../modules/auth-service.js";
+import { getUsersByReferral } from "../../modules/consumer-service.js";
 import { getTickets } from "../../modules/internal-tool-service.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import logger from "../../../logger.js";
-import { UserRole } from "./user.role.js";
-import { CONFLICT } from "../../modules/status.js";
-import { CLEAR_ACCOUNT_EVENT } from "../../events";
-import userAccountEmitter from "../../events/user-account-event.js";
-import type { NotificationModel } from "../../events/slack/slack.event";
-import emitter from "../../events/slack/slack.event";
-import { SLACK_EVENT } from "../../events/slack";
 import { Owner } from "./owner.model";
-import { TempOwner } from "./temp.owner.model";
-import { UserType, Approval, CommissionStatus } from "./user.type";
+import { CommissionStatus, UserType } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
 import async from "async";
-import { Commission } from "../commission/commission.model";
 import { OwnerCommission } from "../commission/owner.commission.model";
-
-export const signupMultiOutletOwner = async (params) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Request body is required",
-    });
-  }
-
-  const validateSchema = validateSignupParamsSchema(params);
-  if (validateSchema.error) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  logger.info(
-    `Signup request with request body ${JSON.stringify({
-      ...params,
-      password: "",
-    })}`
-  );
-
-  params.personalPhoneNumber = params.phoneNumber;
-
-  return ConsumerService.signup(params, params.userType)
-    .then(async (outletOwner) => {
-      const outletOwnerData = outletOwner.data;
-      const userId = await outletOwnerData.data.id;
-
-      try {
-        await AuthService.signup(authServiceSignUpParams(params, userId));
-        const tempOwner = new TempOwner({
-          userId,
-          phoneNumber: params.phoneNumber,
-          noOfOutlets: params.noOfOutlets,
-          userType: params.userType,
-        });
-        await tempOwner.save();
-
-        sendSlackNotification({ params });
-
-        return Promise.resolve({
-          statusCode: OK,
-          data: outletOwnerData.data,
-        });
-      } catch (e) {
-        userAccountEmitter.emit(CLEAR_ACCOUNT_EVENT, userId);
-        logger.error(
-          `User auth creation failed while at auth service with email ${
-            params.email
-          } with error ${JSON.stringify(e)}`
-        );
-        return Promise.reject({
-          statusCode: CONFLICT,
-          message: "Account creation failed. Please try again",
-        });
-      }
-    })
-    .catch((err) => {
-      params = { ...params, password: "" };
-      logger.error(
-        `Creating multi outlet owner of object ${JSON.stringify(
-          params
-        )} failed with error ${JSON.stringify(err)}`
-      );
-
-      return Promise.reject({
-        statusCode: err.statusCode,
-        message: err.message,
-      });
-    });
-};
-
-export const sendSlackNotification = ({ params }) => {
-  const name = params.firstName + " " + params.lastName;
-  const userType = params.userType;
-  const phoneNumber = params.phoneNumber;
-  const slack: NotificationModel = {
-    title: "New User Signup.",
-    message:
-      "`Message:` New Signup on Mikro-Multi-Outlet Dashboard\n" +
-      "`Name:` " +
-      `${name}\n` +
-      "`PhoneNumber:` " +
-      `${phoneNumber}\n` +
-      "`userType:` " +
-      `${userType}`,
-    channel: process.env.SLACK_USERS_CHANNEL,
-  };
-  emitter.emit(SLACK_EVENT, slack);
-};
-
-const authServiceSignUpParams = (params, userId) => {
-  return {
-    username: params.email,
-    userId: userId,
-    password: params.password,
-    role: UserRole.ADMIN,
-  };
-};
-
-export const loginMultiOutletOwner = async ({ params }) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "request body is required",
-    });
-  }
-
-  const validateSchema = validateLoginSchema(params);
-  if (validateSchema.error) {
-    logger.error(
-      `Invalid params during login ${validateSchema.error.details[0].message}`
-    );
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  const loginRequest = {
-    username: params.email,
-    password: params.password,
-    role: "admin",
-  };
-  logger.info(
-    `Login request with request body ${JSON.stringify({
-      ...loginRequest,
-      password: "",
-    })}`
-  );
-  try {
-    const loginResponse = await AuthService.login(loginRequest);
-
-    const loginResponseData = loginResponse.data;
-    const userId = loginResponseData.data.userId;
-
-    try {
-      const userDetails = await ConsumerService.getUserDetails(userId);
-      const userDetailsData = userDetails.data.data;
-
-      // CHECK TO SEE THAT WALLET-ID HAS BEEN MAPPED TO USER ON THE OUTLET SERVICE
-      let owner = await Owner.findOne({
-        userId,
-      });
-
-      if (!owner) {
-        if (
-          userDetailsData.store.length > 0 &&
-          userDetailsData.store[0].wallet.length > 0
-        ) {
-          const walletId = userDetailsData.store[0].wallet[0].id;
-          const tempOwner = await TempOwner.findOne({ userId });
-
-          const createdOwner = new Owner({
-            walletId,
-            userId,
-            phoneNumber: tempOwner ? tempOwner.phoneNumber : "",
-            noOfOutlets: tempOwner ? tempOwner.noOfOutlets : "",
-            userType: tempOwner ? tempOwner.userType : "",
-          });
-          await createdOwner.save();
-          owner = createdOwner;
-
-          if (owner.userType === UserType.OUTLET_OWNER) {
-            owner.approval = Approval.APPROVED;
-            await owner.save();
-          } else {
-            owner.approval = Approval.PENDING;
-            await owner.save();
-          }
-        } else {
-          return Promise.reject({
-            statusCode: BAD_REQUEST,
-            message: "Login failed. Try again",
-          });
-        }
-      }
-      const store = userDetailsData.store[0];
-      const ownerAccountDetails = {
-        accountName: store.accountName,
-        accountNumber: store.accountNumber,
-        bank: store.bank,
-        bankCode: store.bankCode,
-      };
-
-      userDetailsData.phoneNumber = owner ? owner.phoneNumber : "";
-      userDetailsData.noOfOutlets = owner ? owner.noOfOutlets : "";
-      loginResponseData.data = {
-        ...loginResponseData.data,
-        ...ownerAccountDetails,
-        ...userDetailsData,
-      };
-      return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
-    } catch (e) {
-      logger.error(
-        `An error occurred while fetching user details login ${JSON.stringify(
-          e
-        )}`
-      );
-
-      if (e.statusCode === 403) {
-        return Promise.reject({
-          statusCode: e.statusCode,
-          message: "User account is not verified",
-          data: { userId },
-        });
-      }
-      return Promise.reject({
-        statusCode: e.statusCode || BAD_REQUEST,
-        message: e.message,
-      });
-    }
-  } catch (e) {
-    logger.error(`An error occurred during login ${JSON.stringify(e)}`);
-    return Promise.reject({
-      statusCode: e.statusCode || BAD_REQUEST,
-      message: e.message,
-    });
-  }
-};
-
-export const sendVerificationEmail = async (userId) => {
-  if (!userId) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "User Id is required",
-    });
-  }
-
-  logger.info(`Request to send verification email to user with id ${userId}`);
-  try {
-    const response = await ConsumerService.requestVerificationEmail({ userId });
-    const responseData = response.data;
-    responseData.data.userId = userId;
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: responseData.data,
-    });
-  } catch (e) {
-    logger.error("An error occurred while sending verification email");
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: e.message,
-    });
-  }
-};
-
-export const validateEmail = async (params) => {
-  const schema = Joi.object().keys({
-    verificationId: Joi.string().required(),
-    otpCode: Joi.string().required(),
-  });
-
-  const validateSchema = Joi.validate(params, schema);
-
-  if (validateSchema.error) {
-    logger.error(
-      `Invalid params during signup ${validateSchema.error.details[0].message}`
-    );
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  logger.info(
-    `Validate email address with request body ${JSON.stringify(params)}`
-  );
-  try {
-    const response = await ConsumerService.validateVerificationOtp(params);
-    const responseData = response.data;
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: responseData.data,
-    });
-  } catch (e) {
-    logger.error("An error occurred while verifying OTP sent to email");
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: e.message,
-    });
-  }
-};
-
-export const requestResetPassword = async ({ params }) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "request body is required",
-    });
-  }
-
-  const validateSchema = validateRequestResetPasswordSchema(params);
-
-  if (validateSchema.error) {
-    logger.error(
-      `Invalid params during reset password request ${validateSchema.error.details[0].message}`
-    );
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  logger.info(
-    `Requested a password reset with request body ${JSON.stringify(params)}`
-  );
-  try {
-    const resetPasswordRequestResponse = await AuthService.resetPasswordRequest(
-      { username: params.email }
-    );
-    const responseData = resetPasswordRequestResponse.data;
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: responseData.data,
-    });
-  } catch (e) {
-    logger.error("An error occurred when requesting for password reset");
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: e.message,
-    });
-  }
-};
-
-export const resetPassword = async ({ params }) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "request body is required",
-    });
-  }
-
-  const validateSchema = validateResetPasswordSchema(params);
-
-  if (validateSchema.error) {
-    logger.error(
-      `Invalid params when resetting password ${validateSchema.error.details[0].message}`
-    );
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  try {
-    const resetPasswordResponse = await AuthService.resetPassword(params);
-    const responseData = resetPasswordResponse.data;
-    return Promise.resolve({
-      statusCode: OK,
-      data: responseData.data,
-    });
-  } catch (e) {
-    logger.error("An error occurred when resetting password");
-
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: e.message,
-    });
-  }
-};
-
-export const changePassword = async ({ params, ownerId }) => {
-  if (!params) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "request body is required",
-    });
-  }
-
-  params.userId = ownerId;
-  const validateSchema = validateChangePasswordSchema(params);
-
-  if (validateSchema.error) {
-    logger.error(
-      `Invalid params when resetting password ${validateSchema.error.details[0].message}`
-    );
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: validateSchema.error.details[0].message,
-    });
-  }
-
-  try {
-    const resetPasswordResponse = await AuthService.changePassword(params);
-    const responseData = resetPasswordResponse.data;
-    return Promise.resolve({
-      statusCode: OK,
-      data: responseData.data,
-    });
-  } catch (e) {
-    logger.error("An error occurred when changing password");
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: e.message,
-    });
-  }
-};
+import { generateReferralCode } from "../../modules/consumer-service";
+import {
+  buildAggregation,
+  ReportIndex,
+  search,
+} from "../../modules/report-service";
+import { handleListOfHits } from "../../modules/util";
+import { BusinessType, BusinessTypeStatus } from "./business.type";
+import { Commission } from "../commission/commission.model";
 
 export const getUser = async ({ ownerId }) => {
   try {
     const userDetails = await ConsumerService.getUserDetails(ownerId);
-
     const userDetailsData = userDetails.data;
 
     return Promise.resolve({
@@ -520,44 +111,43 @@ export const updateUser = async ({ params, ownerId }) => {
   }
 };
 
-export const getUsers = async ({ usertype, page, limit }) => {
+/**
+ * this is mostly used by outlet owners and not partners
+ * @param usertype
+ * @param page
+ * @param limit
+ * @returns {Promise<{data: {total: *, page: *, list: *}, statusCode: number}>}
+ */
+export const getUsers = async ({ userType, page, limit }) => {
   try {
-    const userType = UserType[usertype];
-
-    if (!userType) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Invalid user type supplied. Please supply a valid user type",
-      });
-    }
-
-    let filter = { userType };
-
-    const owners = await Owner.paginate(filter, {
+    const filter = userType ? { userType: UserType[userType] } : {};
+    const ownersDocs = await Owner.paginate(filter, {
       page,
       limit,
       sort: { createdAt: -1 },
     });
 
-    const outletDetails = await fetchOutletDetails(owners.docs);
+    const outletDetails = await fetchOutletDetails(ownersDocs.docs);
 
     let ownerDetails = [];
-    let users = owners.docs;
+    let owners = ownersDocs.docs;
     for (let i = 0; i < outletDetails.length; i++) {
-      for (let j = 0; j < users.length; j++) {
-        if (users[i].userId === outletDetails[j].id) {
-          const user = users[i];
+      for (let j = 0; j < owners.length; j++) {
+        const owner = owners[i];
+        if (owner.userId === (outletDetails[j] ? outletDetails[j].id : null)) {
           const firstName = outletDetails[j].firstName;
           const lastName = outletDetails[j].lastName;
           const email = outletDetails[j].email;
           const businessType = outletDetails[j].businessType;
+
           const {
             id: ownerId,
             phoneNumber,
             createdAt,
             updatedAt,
+            referralId,
             commissionStatus = CommissionStatus.NONE,
-          } = user;
+          } = owner;
           const details = {
             ownerId,
             phoneNumber,
@@ -566,6 +156,7 @@ export const getUsers = async ({ usertype, page, limit }) => {
             firstName,
             lastName,
             email,
+            referralId,
             commissionStatus,
             businessType,
           };
@@ -583,6 +174,7 @@ export const getUsers = async ({ usertype, page, limit }) => {
       },
     });
   } catch (e) {
+    console.error(e);
     return Promise.reject({
       statusCode: BAD_REQUEST,
       message: "Could not fetch users by type. Please try again",
@@ -600,18 +192,44 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
         message: "Owner is not found",
       });
     }
-    const [userDetailsResponse, outlets, commissions] = await Promise.all([
+    const [userDetailsResponse, outlets, ownerCommissions] = await Promise.all([
       ConsumerService.getUserDetails(existingOwner.userId),
-      Outlet.paginate(
-        { ownerId },
-        { page, limit, sort: { createdAt: -1 } }
-      ).then((outlets) => fetchOutletDetails(outlets.docs)),
+      existingOwner.userType === UserType.OUTLET_OWNER
+        ? Outlet.paginate(
+            { ownerId },
+            { page, limit, sort: { createdAt: -1 } }
+          ).then((outlets) => fetchOutletDetails(outlets.docs))
+        : getUsersByReferral({
+            page,
+            limit,
+            referralId: existingOwner.referralId,
+          }),
       OwnerCommission.find({ ownerId }),
     ]);
+
+    let commissions = [];
+
+    // find all the owner commission with id from commissions
+    if (ownerCommissions.length > 0) {
+      for (const ownerCommission of ownerCommissions) {
+        const commissionModel = await Commission.findOne({
+          _id: ownerCommission.commissionId,
+        });
+        commissions.push(commissionModel);
+      }
+    }
+
     const userData = userDetailsResponse.data;
     const details = userData.data;
 
-    const userList = outlets.map((user) => {
+    const outletList =
+      existingOwner.userType === UserType.OUTLET_OWNER
+        ? outlets
+        : outlets.data.data.list.list;
+
+    console.log(outletList);
+
+    const userList = outletList.map((user) => {
       const { firstName, lastName, email, phoneNumber, status, id } = user;
       const terminalId =
         Array.isArray(user.store) && user.store.length > 0
@@ -653,7 +271,9 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
   } catch (e) {
     console.error(e);
     logger.error(
-      `::: failed to fetch partner with error [${JSON.stringify(e)}] ::: `
+      `::: failed to fetch owners with outlets with error [${JSON.stringify(
+        e
+      )}] ::: `
     );
     return Promise.reject({
       statusCode: NOT_FOUND,
@@ -663,7 +283,7 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
 };
 
 export const getUserTickets = async ({
-  ownerId,
+  userId,
   page,
   limit,
   dateTo,
@@ -672,155 +292,284 @@ export const getUserTickets = async ({
   category,
 }) => {
   try {
-    const outlets = await Outlet.paginate(
-      {
-        ownerId,
-      },
-      { page, limit, sort: { createdAt: -1 } }
-    );
-
-    const ownerDetails = await ConsumerService.getUserDetails(ownerId);
-    const ownerDetailsData = ownerDetails.data.data;
-
-    logger.info(
-      `Return owner details data as ${JSON.stringify(ownerDetailsData)}`
-    );
-
-    // Find owner and extract data saved during login
-    const owner = await Owner.findOne({ userId: ownerId });
-    if (!owner) {
+    const existingOwner = await Owner.findOne({ userId });
+    if (!existingOwner) {
+      logger.error(`::: Owner with user id [${userId}] is not found :::`);
       return Promise.reject({
         statusCode: NOT_FOUND,
-        message: "Could not find owner.",
+        message: "Owner is not found",
       });
     }
 
-    let ownerData = [];
-    ownerData.push({
-      userType: owner.userType,
-      approval: owner.approval,
-      phoneNumber: ownerDetailsData.phoneNumber,
-      firstName: ownerDetailsData.firstName,
-      lastName: ownerDetailsData.lastName,
-      dateOfBirth: ownerDetailsData.dateOfBirth,
-    });
+    const ownerId = existingOwner.id;
+    const userIdsList = await getUserIdsUnderOwnerById({ ownerId });
+    if (userIdsList.length === 0) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "There are no users under your account yet.",
+      });
+    }
 
-    let users = outlets.docs;
-    const ticketData = await fetchTicketsForUsers(
-      users,
-      page,
-      limit,
-      dateFrom,
+    const ticketResponse = await getTickets({
       dateTo,
-      status,
-      category
-    );
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: {
-        page: outlets.page,
-        pages: outlets.pages,
-        limit: outlets.limit,
-        total: outlets.total,
-        ownerData,
-        list: ticketData,
-      },
-    });
-  } catch (e) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Tickets could not be fetched for users.",
-    });
-  }
-};
-
-const fetchTicketsForUsers = async (
-  outlets,
-  page,
-  limit,
-  dateFrom,
-  dateTo,
-  status,
-  category
-) => {
-  let outletTickets = [];
-  await async.forEach(outlets, async (outlet) => {
-    const userId = outlet.userId;
-
-    const responseData = await getTickets({
-      userId,
-      page,
-      limit,
       dateFrom,
-      dateTo,
+      userIdsList,
+      limit,
+      page,
       status,
       category,
     });
 
-    const ticketData = responseData.data.data.list;
+    const ticketResponseData = ticketResponse.data;
+    const ticketList = ticketResponseData.data;
+    return Promise.resolve({
+      statusCode: OK,
+      data: ticketList,
+    });
+  } catch (e) {
+    logger.error(
+      `::: failed to fetch tickets for users under a owner [${userId}] with error [${JSON.stringify(
+        e
+      )}] ::: `
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: e.message,
+    });
+  }
+};
 
-    if (ticketData.length > 0) {
-      outletTickets.push({ userId: userId, ticketData });
+export const generateReferralCodeByOwner = async ({
+  userId,
+  numberOfCodeGen,
+}) => {
+  try {
+    const existingOwner = await Owner.findOne({ userId });
+    if (!existingOwner) {
+      logger.error(`::: Owner with user id [${userId}] is not found :::`);
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Owner is not found",
+      });
     }
 
-    logger.info(`Fetching users tickets as [${JSON.stringify(ticketData)}]`);
-  });
-  return outletTickets;
+    if (existingOwner.userType !== UserType.PARTNER) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: `User type with [${existingOwner.userType}] not supported to generate referral code`,
+      });
+    }
+
+    const accessCode = existingOwner.referralAccessCode;
+    const referralGeneration = await generateReferralCode({
+      accessCode,
+      numberOfCodeGen,
+    });
+
+    const referralAccessResponse = referralGeneration.data;
+    const referralData = referralAccessResponse.data;
+    return Promise.resolve({
+      statusCode: OK,
+      data: referralData,
+    });
+  } catch (e) {
+    logger.error(
+      `::: Failed to generate access code for user id [${userId}] with error [${JSON.stringify(
+        e
+      )}] :::`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Failed to generate referral code",
+    });
+  }
 };
 
-const validateSignupParamsSchema = (params) => {
-  const schema = Joi.object()
-    .keys({
-      firstName: Joi.string().required(),
-      lastName: Joi.string().required(),
-      email: Joi.string().email().required(),
-      phoneNumber: Joi.string().required(),
-      password: Joi.string().required(),
-      gender: Joi.string().required(),
-      noOfOutlets: Joi.string(),
-      profileImageId: Joi.string(),
-      userType: Joi.string()
-        .valid(UserType.OUTLET_OWNER, UserType.PARTNER)
-        .required(),
-    })
-    .unknown(true);
+export const getAllReferredUsers = async ({
+  userId,
+  dateTo,
+  dateFrom,
+  mapped,
+  status,
+  page,
+  limit,
+  phoneNumber,
+}) => {
+  try {
+    const existingOwner = await Owner.findOne({ userId });
+    if (!existingOwner) {
+      logger.error(`::: Owner with user id [${userId}] is not found :::`);
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Owner is not found",
+      });
+    }
 
-  return Joi.validate(params, schema);
+    const referredUsersResponse = await getUsersByReferral({
+      dateTo,
+      dateFrom,
+      mapped,
+      status,
+      page,
+      limit,
+      phoneNumber,
+      referralId: existingOwner.referralId,
+    });
+    const referredData = referredUsersResponse.data;
+    const referrals = referredData.data;
+    return Promise.resolve({
+      statusCode: OK,
+      data: referrals,
+    });
+  } catch (e) {
+    logger.error(
+      `::: Failed to generate access code for user id [${userId}] with error [${JSON.stringify(
+        e
+      )}] :::`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Failed to generate referral code",
+    });
+  }
 };
 
-const validateLoginSchema = (params) => {
-  const schema = Joi.object().keys({
-    email: Joi.string().required(),
-    password: Joi.string().required(),
+/**
+ * get all the userids under an owner id
+ * @param ownerId
+ * @returns {Promise<*>}
+ */
+export const getUserIdsUnderOwnerById = async ({ ownerId }) => {
+  const outlets = await Outlet.find({ ownerId });
+  return outlets.map(function (outlet) {
+    return outlet.userId;
   });
-
-  return Joi.validate(params, schema);
 };
 
-const validateRequestResetPasswordSchema = (params) => {
-  const schema = Joi.object().keys({
-    email: Joi.string().required(),
-  });
+export const userMetrics = async ({ userId }) => {
+  const existingOwner = await Owner.findOne({ userId: userId });
+  if (!existingOwner) {
+    logger.error(`::: Owner with user id [${userId}] is not found :::`);
+    return Promise.reject({
+      statusCode: NOT_FOUND,
+      message: "Owner is not found",
+    });
+  }
 
-  return Joi.validate(params, schema);
+  const activeMerchantQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.MERCHANT,
+      BusinessTypeStatus.ACTIVE
+    )
+  );
+  const activeAgentQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.AGENT,
+      BusinessTypeStatus.ACTIVE
+    )
+  );
+
+  const inActiveMerchantQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.MERCHANT,
+      BusinessTypeStatus.INACTIVE
+    )
+  );
+  const inActiveAgentQuery = queryCount(
+    mustCount(
+      existingOwner.referralId,
+      BusinessType.AGENT,
+      BusinessTypeStatus.INACTIVE
+    )
+  );
+
+  const [
+    activeMerchantResponse,
+    activeAgentResponse,
+    inActiveMerchantResponse,
+    inActiveAgentResponse,
+  ] = await Promise.all([
+    search(activeMerchantQuery),
+    search(activeAgentQuery),
+    search(inActiveMerchantQuery),
+    search(inActiveAgentQuery),
+  ]);
+
+  const { data: agentQueryActiveResponseData } = activeAgentResponse.data;
+  const { total: totalActiveAgent } = handleListOfHits(
+    agentQueryActiveResponseData
+  );
+
+  const { data: merchantQueryActiveResponseData } = activeMerchantResponse.data;
+  const { total: totalActiveMerchant } = handleListOfHits(
+    merchantQueryActiveResponseData
+  );
+
+  const { data: agentQueryInActiveResponseData } = inActiveAgentResponse.data;
+  const { total: totalInActiveAgent } = handleListOfHits(
+    agentQueryInActiveResponseData
+  );
+
+  const {
+    data: merchantQueryInActiveResponseData,
+  } = inActiveMerchantResponse.data;
+  const { total: totalInActiveMerchant } = handleListOfHits(
+    merchantQueryInActiveResponseData
+  );
+
+  const totalActive = totalActiveMerchant + totalActiveAgent;
+  const totalInActive = totalInActiveAgent + totalInActiveMerchant;
+
+  const total = totalActive + totalInActive;
+
+  return Promise.resolve({
+    statusCode: OK,
+    data: {
+      total,
+      totalActive,
+      totalInActive,
+      totalActiveAgent,
+      totalActiveMerchant,
+      totalInActiveAgent,
+      totalInActiveMerchant,
+    },
+  });
 };
 
-const validateResetPasswordSchema = (params) => {
-  const schema = Joi.object().keys({
-    token: Joi.string().required(),
-    password: Joi.string().required(),
-  });
-
-  return Joi.validate(params, schema);
+const queryCount = (must) => {
+  return {
+    index: ReportIndex.User,
+    size: 0,
+    body: {
+      query: {
+        bool: {
+          must,
+        },
+      },
+    },
+  };
 };
 
-const validateChangePasswordSchema = (params) => {
-  const schema = Joi.object().keys({
-    userId: Joi.string().required(),
-    currentPassword: Joi.string().required(),
-    newPassword: Joi.string().required(),
-  });
+const mustCount = (referralId: string, userType: string, active: string) => {
+  return [
+    {
+      match: {
+        referralId,
+      },
+    },
 
-  return Joi.validate(params, schema);
+    {
+      match: {
+        userType,
+      },
+    },
+    {
+      match: {
+        status: active,
+      },
+    },
+  ];
 };

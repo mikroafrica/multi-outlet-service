@@ -1,4 +1,5 @@
 import GoogleLibPhone from "google-libphonenumber";
+import type { HitResponse } from "./report-service";
 
 const phoneUtil = GoogleLibPhone.PhoneNumberUtil.getInstance();
 const PNF = GoogleLibPhone.PhoneNumberFormat;
@@ -175,4 +176,23 @@ export const getRegionAndZoneFromState = (state) => {
   const formattedState = state.replace(" ", "").trim().toLowerCase();
 
   return stateToRegion[formattedState];
+};
+
+export const handleListOfHits = (response) => {
+  const hitResponse: HitResponse = response.hits;
+  const docs = transformDoc(hitResponse.hits);
+  return {
+    list: docs,
+    total: hitResponse.total.value,
+  };
+};
+
+const transformDoc = (hits: any) => {
+  if (Array.isArray(hits)) {
+    return hits.map((docs) => {
+      const { _source } = docs;
+      return _source;
+    });
+  }
+  return hits._source;
 };

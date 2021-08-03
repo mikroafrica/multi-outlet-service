@@ -13,7 +13,7 @@ const checkAccess = (name: string, password: string): boolean => {
   return valid;
 };
 
-export const secureRoute = (req, res, next) => {
+export const secureRoute = async (req, res, next) => {
   if (allowPublicRoutes(req)) {
     return next();
   }
@@ -35,24 +35,29 @@ export const secureRoute = (req, res, next) => {
     }
     return next();
   } else {
-    const authHeader = req.headers.authorization;
-    const token = authHeader.split(" ")[1];
-    const params = { token };
-    AuthService.validateToken(params)
-      .then((authResponse) => {
-        const authResponseData = authResponse.data;
-        req.user = authResponseData.data;
-        return next();
-      })
-      .catch((err) => {
-        logger.error(
-          `failed to validate token with error ${JSON.stringify(err)}`
-        );
-        return res.send(err.statusCode || UN_AUTHORISED, {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.send(UN_AUTHORISED, {
           status: false,
-          message: err.message || "Your session has expired",
+          message: "Token is not defined",
         });
+      }
+      const token = authHeader.split(" ")[1];
+      const params = { token };
+      const response = await AuthService.validateToken(params);
+      const authResponseData = response.data;
+      req.user = authResponseData.data;
+      return next();
+    } catch (err) {
+      logger.error(
+        `failed to validate token with error ${JSON.stringify(err)}`
+      );
+      return res.send(err.statusCode || UN_AUTHORISED, {
+        status: false,
+        message: err.message || "Your session has expired",
       });
+    }
   }
 };
 
@@ -64,7 +69,7 @@ const allowMikroSystem = (req) => {
     return true;
   }
 
-  const routes = ["commission", "owner"];
+  const routes = ["commission", "owner/all/users", "owner/:id"];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {
       return true;
@@ -84,7 +89,6 @@ const allowPublicRoutes = (req) => {
   const routes = [
     "login",
     "signup",
-    "metrics",
     "reset-password",
     "email-validation",
     "email-verification",

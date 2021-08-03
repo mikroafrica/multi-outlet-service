@@ -1008,49 +1008,43 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
 
 export const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
-  await async.forEach(outlets, async (outlet) => {
-    const response = await ConsumerService.getUserDetails(outlet.userId);
-    const userDetailsData = response.data;
+  try {
+    await async.forEach(outlets, async (outlet) => {
+      const response = await ConsumerService.getUserDetails(outlet.userId);
+      const userDetailsData = response.data;
 
-    const wallet = userDetailsData.data.store[0].wallet[0];
-    const walletId = wallet.id;
+      const wallet = userDetailsData.data.store[0].wallet[0];
+      const walletId = wallet.id;
 
-    const walletSummaryResponse = await WalletService.getWalletById(walletId);
-    const walletSummaryData = walletSummaryResponse.data;
+      const walletSummaryResponse = await WalletService.getWalletById(walletId);
+      const walletSummaryData = walletSummaryResponse.data;
 
-    userDetailsData.data.store[0].wallet[0] = {
-      ...wallet,
-      ...walletSummaryData.data,
-    };
+      userDetailsData.data.store[0].wallet[0] = {
+        ...wallet,
+        ...walletSummaryData.data,
+      };
 
-    outletDetails.push({
-      ...userDetailsData.data,
-      status: outlet.status,
+      outletDetails.push({
+        ...userDetailsData.data,
+        status: outlet.status,
+      });
     });
-  });
+  } catch (e) {
+    logger.error(`::: failed to fetch user details :::`);
+  }
   return outletDetails;
 };
 
-export const getOutletByOutletId = async ({ outletId }) => {
+export const getOutletByUserId = async ({ userId }) => {
   try {
     const outletUserDetailsResponse = await ConsumerService.getUserDetails(
-      outletId
+      userId
     );
     const outletUserDetailsData = outletUserDetailsResponse.data;
 
-    const outlet = await Outlet.findOne({ userId: outletId });
-
-    const outletDetailsData = {
-      ...outletUserDetailsData.data,
-      status: outlet.status,
-      walletId: outlet.walletId,
-      createdAt: outlet.createdAt,
-      updatedAt: outlet.updatedAt,
-    };
-
     return Promise.resolve({
       statusCode: OK,
-      data: outletDetailsData,
+      data: outletUserDetailsData.data,
     });
   } catch (e) {
     logger.error(

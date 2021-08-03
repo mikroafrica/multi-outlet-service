@@ -6,7 +6,7 @@ import {
   changePassword,
   requestResetPassword,
   resetPassword,
-} from "../owner.service.js";
+} from "./auth.service.js";
 
 export const signup = (req, res) => {
   const params = req.body;
