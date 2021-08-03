@@ -14,6 +14,7 @@ import {
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
 import { UserType } from "../../../src/api/resources/owner/user.type";
+import { createPersonalBankAccount } from "../../../src/api/resources/outlet/outlet.service";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -416,5 +417,53 @@ describe("Outlet service Tests", function () {
     sinon.assert.calledOnce(findOneVerification);
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
+  });
+
+  it("should successfully fetch created accounts", async function () {
+    const userId = "bvjqhkxjuq";
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/personal-account`)
+      .reply(OK, {
+        statusCode: OK,
+        data: {
+          canCreate: true,
+          accounts: [],
+        },
+      });
+
+    const response = await OutletService.fetchCreatedBankAccounts({ userId });
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+  });
+
+  it("should successfully create beneficiary bank account", async function () {
+    const userId = "bvjqhkxjuq";
+
+    const params = {
+      bankName: "GTB",
+      bankCode: "0344",
+      accountNumber: "343564356486",
+      accountName: "Account Name",
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .post(`/user/${userId}/personal-account`)
+      .reply(OK, {
+        statusCode: OK,
+        data: {
+          bankName: "name",
+          bankCode: "0123",
+          accountNumber: "1234567890",
+          accountName: "account name",
+        },
+      });
+
+    const response = await OutletService.createPersonalBankAccount({
+      userId,
+      params,
+    });
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
   });
 });
