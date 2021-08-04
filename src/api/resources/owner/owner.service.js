@@ -168,8 +168,8 @@ export const getUsers = async ({ userType, page, limit }) => {
     return Promise.resolve({
       statusCode: OK,
       data: {
-        page: owners.page,
-        total: owners.total,
+        page: ownersDocs.page,
+        total: ownersDocs.total,
         list: ownerDetails,
       },
     });
