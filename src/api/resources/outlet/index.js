@@ -7,8 +7,6 @@ import {
   fetchOutlets,
   switchOutletStatus,
   fetchOutletById,
-  fetchBankAccounts,
-  createBankAccount,
 } from "./outlet.controller";
 
 const outlet = ({ server, subBase }) => {
@@ -20,8 +18,6 @@ const outlet = ({ server, subBase }) => {
   server.put(`${subBase}/:id/:status`, switchOutletStatus);
   server.get(`${subBase}`, fetchOutlets);
   server.get(`${subBase}/:id`, fetchOutletById);
-  server.get(`${subBase}/bank`, fetchBankAccounts);
-  server.post(`${subBase}/bank`, createBankAccount);
 };
 
 export default outlet;
