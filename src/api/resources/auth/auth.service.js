@@ -13,7 +13,7 @@ import emitter from "../../events/slack/slack.event";
 import { SLACK_EVENT } from "../../events/slack";
 import { UserRole } from "../owner/user.role";
 
-export const requestResetPassword = async ({ params }) => {
+export const requestResetPassword = async ({ params, isPartner }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -39,7 +39,10 @@ export const requestResetPassword = async ({ params }) => {
   );
   try {
     const resetPasswordRequestResponse = await AuthService.resetPasswordRequest(
-      { username: params.email }
+      {
+        username: params.email,
+        link: isPartner ? process.env.PARTNERS_DASHBOARD_URL : null,
+      }
     );
     const responseData = resetPasswordRequestResponse.data;
 
@@ -342,10 +345,12 @@ export const loginMultiOutletOwner = async ({ params }) => {
 
       userDetailsData.phoneNumber = owner ? owner.phoneNumber : "";
       userDetailsData.noOfOutlets = owner ? owner.noOfOutlets : "";
+
       loginResponseData.data = {
         ...loginResponseData.data,
         ...ownerAccountDetails,
         ...userDetailsData,
+        commissionStatus: owner.commissionStatus,
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {

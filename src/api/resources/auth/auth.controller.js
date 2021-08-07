@@ -57,8 +57,9 @@ export const validateVerificationEmail = (req, res) => {
 
 export const resetPasswordRequest = (req, res) => {
   const params = req.body;
+  const isPartner = req.query;
 
-  requestResetPassword({ params })
+  requestResetPassword({ params, isPartner })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
