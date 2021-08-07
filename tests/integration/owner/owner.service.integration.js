@@ -16,6 +16,7 @@ import {
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
 import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
 import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
+import * as ConsumerService from "../../../src/api/modules/consumer-service";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -602,15 +603,28 @@ describe("Owner service Tests", function () {
   });
 
   it("should fetch users when a valid usertype is supplied", async function () {
-    const usertype = "OUTLET_OWNER";
     const userType = "OUTLET_OWNER";
-    const filter = { userType: usertype };
+    const usertype = "OUTLET_OWNER";
+    const userId = "bhgykhcb1uy";
+    const filter = { userType };
     const page = 1;
     const limit = 2;
+
+    const mockUserDetailsResponse = {
+      data: {
+        userId,
+        firstName: "Joe",
+        lastName: "Doe",
+      },
+    };
 
     const findOwners = sinon
       .stub(Owner, "paginate")
       .resolves({ filter, page, limit });
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .get(`/user/${userId}/details`)
+      .reply(OK, mockUserDetailsResponse);
 
     const response = await OwnerService.getUsers({ usertype, page, limit });
 
