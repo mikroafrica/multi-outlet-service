@@ -72,8 +72,6 @@ export const walletTransfer = async ({
       params.transactionType = "P2P";
       params.destinationFcmToken = "";
     } else if (destination === "outlet") {
-      console.log("outlet params", params);
-
       params.userWalletId = owner.walletId;
       params.userId = ownerId;
       params.recipientId = outletId;
@@ -117,7 +115,6 @@ export const walletTransfer = async ({
       const serviceFeeResponseData = await getServiceFee({ params, type });
 
       params.serviceFee = serviceFeeResponseData;
-      console.log("other params", params);
       // case destination === "others":
     }
 
