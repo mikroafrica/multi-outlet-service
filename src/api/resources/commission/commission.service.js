@@ -1,14 +1,52 @@
-import { BAD_REQUEST, OK } from "../../modules/status";
+import { BAD_REQUEST, CONFLICT, NOT_FOUND, OK } from "../../modules/status";
 import Joi from "joi";
-import { Type, Level } from "./commission.type";
-import { Commission } from "./commission.model";
+import {
+  Commission,
+  CommissionCategory,
+  FeeType,
+  RangeType,
+} from "./commission.model";
 import logger from "../../../logger";
 import { Owner } from "../owner/owner.model";
-import { Approval } from "../owner/user.type";
-import { CommissionBalance } from "./commissionbalance.model";
-import { TransferCommission } from "./transfer-commission.model";
+import { OwnerCommission } from "./owner.commission.model";
+import { CommissionStatus } from "../owner/user.type";
 
-export const createCommission = async ({ params }) => {
+const schemaValidation = Joi.object().keys({
+  name: Joi.string().required(),
+  category: Joi.string().valid(Object.keys(CommissionCategory)).required(),
+  rangeType: Joi.string().valid(Object.keys(RangeType)).required(),
+  rangeList: Joi.when("rangeType", {
+    is: Joi.exist().valid(RangeType.RANGE),
+    then: Joi.array()
+      .items({
+        serviceFee: Joi.number().required(),
+        feeType: Joi.string().valid(Object.keys(FeeType)).required(),
+        rangeAmount: Joi.object()
+          .keys({
+            from: Joi.number().required(),
+            to: Joi.number().required(),
+          })
+          .required(),
+      })
+      .required(),
+  }),
+  serviceFee: Joi.when("range", {
+    is: Joi.exist().valid(RangeType.NON_RANGE),
+    then: Joi.number().required(),
+    otherwise: Joi.number().allow(null, ""),
+  }),
+
+  feeType: Joi.when("serviceFee", {
+    is: Joi.exist(),
+    then: Joi.string().valid(Object.keys(FeeType)).required(),
+    otherwise: Joi.string().allow(null, ""),
+  }),
+});
+
+export const create = async ({ params }) => {
+  logger.info(
+    `:::: create commission with request [${JSON.stringify(params)}] ::::`
+  );
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -16,7 +54,7 @@ export const createCommission = async ({ params }) => {
     });
   }
 
-  const validateSchema = validateCommissionSchema(params);
+  const validateSchema = Joi.validate(params, schemaValidation);
   if (validateSchema.error) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -25,130 +63,57 @@ export const createCommission = async ({ params }) => {
   }
 
   try {
-    const level = Level[params.level];
-    const type = Type[params.type];
-
-    if (!type) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Please supply a valid commission type.",
-      });
-    }
-
-    //update commission setting if already existing
-    const existingCommissionSettings = await Commission.findOne({
-      owner: params.ownerId,
-      type,
-      level,
+    const existingCommission = await Commission.findOne({
+      name: params.name.toLocaleLowerCase(),
     });
-
-    logger.info(
-      `Get existing partner commission settings as  ${JSON.stringify(
-        existingCommissionSettings
-      )}`
-    );
-
-    if (existingCommissionSettings) {
-      const updatedCommission = await Commission.findOneAndUpdate(
-        {
-          owner: params.ownerId,
-          type,
-          level,
-        },
-        {
-          $set: { condition: params.condition, multiplier: params.multiplier },
-        },
-        { new: true }
+    if (existingCommission) {
+      logger.error(
+        `::: commission with name [${params.name}] already exist :::`
       );
-      return Promise.resolve({
-        statusCode: OK,
-        data: updatedCommission,
+      return Promise.reject({
+        statusCode: CONFLICT,
+        message: `commission with name [${params.name}] already exist`,
       });
     }
-
-    const saveNewCommission = new Commission({
-      condition: params.condition,
-      multiplier: params.multiplier,
-      owner: params.ownerId,
-      type,
-      level,
-    });
-
-    await saveNewCommission.save();
-
-    logger.info(`Commission created as ${saveNewCommission}`);
-
-    // Find owner and set approval status to APPROVED since commission has been set for the owner
-    const owner = await Owner.findOne({ userId: params.ownerId });
-    if (owner.approval === Approval.PENDING) {
-      owner.approval = Approval.APPROVED;
-      await owner.save();
-    }
-
+    const createdCommission = await Commission.create(params);
+    logger.info(
+      `::: commission created with response [${JSON.stringify(
+        createdCommission
+      )}] :::`
+    );
     return Promise.resolve({
       statusCode: OK,
-      data: saveNewCommission,
+      data: createdCommission,
     });
   } catch (err) {
+    console.error(err);
     logger.error(
-      `An error occurred while trying to create commission: ${JSON.stringify(
-        err
-      )}`
+      `::: Failed to commission with error [${JSON.stringify(err)}] :::`
     );
 
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: err.message || "Could not create commission. Please try again",
+      message: "Failed to create commission",
     });
   }
 };
 
-export const getOwnerCommissionBalance = async ({ ownerId }) => {
+export const getAllCommissions = async () => {
   try {
-    // check for if the partner has commissions already set
-    const ownerCommission = await CommissionBalance.find({ owner: ownerId });
-    if (!ownerCommission) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Commission not set for partner",
-      });
-    }
-
+    const existingCommission = await Commission.find();
     return Promise.resolve({
       statusCode: OK,
-      data: ownerCommission,
+      data: existingCommission,
     });
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not fetch commission balance for partner.",
+      message: "Failed to fetch resource. Kindly try again",
     });
   }
 };
 
-export const getOwnerCommissionSettings = async ({ ownerId }) => {
-  try {
-    const commissionSettings = await Commission.find({ owner: ownerId });
-    if (!commissionSettings) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Commission rule not yet set for owner.",
-      });
-    }
-
-    return Promise.resolve({
-      statusCode: OK,
-      data: commissionSettings,
-    });
-  } catch (e) {
-    return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Could not confirm partner approval status",
-    });
-  }
-};
-
-export const updateOwnerCommissionSettings = async ({ params, id }) => {
+export const update = async ({ params, id }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -156,16 +121,28 @@ export const updateOwnerCommissionSettings = async ({ params, id }) => {
     });
   }
 
-  try {
-    const updatedCommission = await Commission.findOneAndUpdate(
-      {
-        _id: id,
-      },
-      { $set: { condition: params.condition, multiplier: params.multiplier } },
-      { new: true }
-    );
+  const validateSchema = Joi.validate(params, schemaValidation);
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
 
-    logger.info(`Owner updated comiision ${JSON.stringify(updatedCommission)}`);
+  try {
+    const existingCommission = await Commission.findOne({ _id: id });
+    if (!existingCommission) {
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: "Failed to fetch resource. Kindly try again",
+      });
+    }
+
+    const updatedCommission = await Commission.findOneAndUpdate(
+      { _id: id },
+      { $set: params },
+      { new: true }
+    ).exec();
 
     return Promise.resolve({
       statusCode: OK,
@@ -174,59 +151,136 @@ export const updateOwnerCommissionSettings = async ({ params, id }) => {
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not update commission setting for partner",
+      message: "Failed to fetch resource. Kindly try again",
     });
   }
 };
 
-export const getOwnerTransferCommissions = async ({ ownerId }) => {
-  try {
-    const transferCommissions = await TransferCommission.find({
-      owner: ownerId,
+export const createOwnersCommission = async ({ params, ownerId }) => {
+  logger.info(`::: Request param for commission creation is [${params}] :::`);
+  if (!params) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "request body is required",
     });
-    if (!transferCommissions) {
+  }
+
+  const schemaValidation = Joi.array()
+    .min(3)
+    .unique((a, b) => a === b)
+    .items(Joi.string().required())
+    .required();
+  const validateSchema = Joi.validate(params, schemaValidation);
+  if (validateSchema.error) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: validateSchema.error.details[0].message,
+    });
+  }
+  try {
+    const existingOwner = await Owner.findOne({ _id: ownerId });
+    if (!existingOwner) {
+      logger.error(`::: Owner is not found with id [${ownerId}] :::`);
       return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Commission not found.",
+        statusCode: NOT_FOUND,
+        message: `Owner is not found with id [${ownerId}]`,
       });
     }
 
+    // check commission exist and ensure only type of commission is assigned to owners account
+    const commissions = [];
+    for (let i = 0; i < params.length; i++) {
+      const commissionId = params[i];
+      const [existingCommission, existingOwnerCommission] = await Promise.all([
+        Commission.findOne({ _id: commissionId }),
+        OwnerCommission.findOne({ commissionId, ownerId }),
+      ]);
+      if (!existingCommission) {
+        logger.error(
+          `::: Commission is not found with id [${commissionId}] :::`
+        );
+        return Promise.reject({
+          statusCode: NOT_FOUND,
+          message: `Commission is not found with id [${commissionId}]`,
+        });
+      }
+
+      if (existingOwnerCommission) {
+        logger.error(
+          `::: Commission with name [${existingCommission.name}] already exist :::`
+        );
+        return Promise.reject({
+          statusCode: CONFLICT,
+          message: `Commission with name [${existingCommission.name}] already exist`,
+        });
+      }
+
+      commissions.push({
+        ownerId,
+        commissionId,
+        name: existingCommission.name,
+        userType: existingOwner.userType,
+        category: existingCommission.category,
+      });
+    }
+
+    const ownersCommission = await OwnerCommission.insertMany(commissions);
+    const owner = await Owner.findOneAndUpdate(
+      {
+        _id: ownerId,
+      },
+      { $set: { commissionStatus: CommissionStatus.ACTIVE } },
+      { new: true }
+    ).exec();
     logger.info(
-      `Owner updated commission ${JSON.stringify(transferCommissions)}`
+      `::: owner commission status updated with response owner [${JSON.stringify(
+        owner
+      )}] :::`
     );
 
     return Promise.resolve({
       statusCode: OK,
-      data: transferCommissions,
+      data: ownersCommission,
     });
-  } catch (e) {
+  } catch (err) {
+    console.error(err);
+    logger.error(
+      `::: Failed to owner's commission with error [${JSON.stringify(err)}] :::`
+    );
+
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Could not fetch commission breakdown for owner.",
+      message: "Failed to create owners commission",
     });
   }
 };
 
-const validateCommissionSchema = ({ params }) => {
-  const schema = Joi.object()
-    .keys({
-      condition: Joi.number().required(),
-      ownerId: Joi.string().required(),
-      multiplier: Joi.number().required(),
-      type: Joi.string()
-        .valid([Type.ONBOARDING, Type.TRANSFER, Type.WITHDRAWAL])
-        .required(),
-      level: Joi.string()
-        .valid([
-          Level.LEVEL_ONE,
-          Level.LEVEL_TWO,
-          Level.LEVEL_THREE,
-          Level.LEVEL_FOUR,
-          Level.LEVEL_FIVE,
-        ])
-        .required(),
-    })
-    .unknown(true);
-
-  return Joi.validate(params, schema);
+export const deleteAssignedCommission = async (id: string) => {
+  // delete owner commission or commission by id
+  try {
+    const response = await Promise.all([
+      Commission.remove({ _id: id }),
+      OwnerCommission.remove({ commissionId: id }),
+    ]);
+    logger.info(
+      `::: Commission deleted successfully with id [${id}] and response [${JSON.stringify(
+        response
+      )}]:::`
+    );
+    return Promise.resolve({
+      statusCode: OK,
+      data: "Deleted commission successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    logger.error(
+      `::: Failed to delete commission with id [${id}] with error [${JSON.stringify(
+        e
+      )}]:::`
+    );
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Failed to delete commission",
+    });
+  }
 };

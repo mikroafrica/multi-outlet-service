@@ -78,3 +78,55 @@ export const updateUserProfile = ({ params, userId }) => {
   const client = restifyRequest();
   return put({ client, path: `/user/${userId}/profile`, params });
 };
+
+export const getUsersByReferral = ({
+  dateTo,
+  dateFrom,
+  mapped,
+  status,
+  page,
+  limit,
+  phoneNumber,
+  referralId,
+}) => {
+  const path = {
+    path: `/referral/${referralId}/users`,
+    query: {
+      dateFrom,
+      dateTo,
+      mapped,
+      status,
+      page,
+      limit,
+      phoneNumber,
+    },
+  };
+  const client = restifyRequest();
+  return get({ client, path });
+};
+
+export const createReferral = ({ name, phoneNumber, zone, lga, state }) => {
+  const params = { name, phoneNumber, zone, lga, state };
+  const client = restifyRequest();
+  return post({ client, path: "/referral/create", params });
+};
+
+export const generateReferralCode = ({ accessCode, numberOfCodeGen }) => {
+  const params = { accessCode, numberOfCodeGen };
+  const client = restifyRequest();
+  return post({ client, path: "/referral/codegen", params });
+};
+
+export const fetchPersonalBankAccount = ({ userId }) => {
+  const client = restifyRequest();
+  return get({ client, path: `/user/${userId}/personal-account` });
+};
+
+export const personalBankAccountCreation = ({ userId, params }) => {
+  const client = restifyRequest();
+  return post({
+    client,
+    path: `/user/${userId}/personal-account`,
+    params,
+  });
+};

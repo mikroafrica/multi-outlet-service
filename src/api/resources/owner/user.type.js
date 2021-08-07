@@ -7,3 +7,9 @@ export const Approval = {
   APPROVED: "APPROVED",
   PENDING: "PENDING",
 };
+
+export const CommissionStatus = {
+  ACTIVE: "ACTIVE",
+  NONE: "NONE",
+  IN_ACTIVE: "IN_ACTIVE",
+};

@@ -1,101 +1,15 @@
 import {
-  signupMultiOutletOwner,
-  loginMultiOutletOwner,
-  sendVerificationEmail,
-  validateEmail,
-  changePassword,
-  requestResetPassword,
-  resetPassword,
   updateUser,
   getUser,
   getUsers,
   getOwnerWithOutlets,
   getUserTickets,
+  userMetrics,
 } from "./owner.service.js";
-
-export const signup = (req, res) => {
-  const params = req.body;
-
-  signupMultiOutletOwner(params)
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const login = (req, res) => {
-  const params = req.body;
-  loginMultiOutletOwner({ params })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message, data }) =>
-      res.send(statusCode, { status: false, message, data })
-    );
-};
-
-export const resendVerificationEmail = (req, res) => {
-  const params = req.body;
-
-  sendVerificationEmail(params.userId)
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const validateVerificationEmail = (req, res) => {
-  const params = req.body;
-
-  validateEmail(params)
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const resetPasswordRequest = (req, res) => {
-  const params = req.body;
-
-  requestResetPassword({ params })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const resetMultiOutletOwnerPassword = (req, res) => {
-  const params = req.body;
-
-  resetPassword({ params })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const changePasswordRequest = (req, res) => {
-  const ownerId = req.user.userId;
-  const params = req.body;
-
-  changePassword({ params, ownerId })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
+import {
+  generateReferralCodeByOwner,
+  getAllReferredUsers,
+} from "./owner.service";
 
 export const updateUserProfile = (req, res) => {
   const params = req.body;
@@ -110,7 +24,7 @@ export const updateUserProfile = (req, res) => {
     );
 };
 
-export const fetchOwnerDetails = (req, res) => {
+export const getMyAccount = (req, res) => {
   const ownerId = req.user.userId;
 
   getUser({ ownerId })
@@ -123,12 +37,12 @@ export const fetchOwnerDetails = (req, res) => {
 };
 
 export const fetchUsersByType = (req, res) => {
-  const usertype = req.query.usertype;
+  const userType = req.query.userType;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  getUsers({ usertype, page, limit })
+  getUsers({ userType, page, limit })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
@@ -152,14 +66,63 @@ export const fetchOwnerById = (req, res) => {
     );
 };
 
-export const fetchTicketsforUsers = (req, res) => {
-  const ownerId = req.params.ownerId;
+export const fetchTicketsForUsers = (req, res) => {
+  const userId = req.user.userId;
 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const { dateTo, dateFrom, status, category } = req.query;
 
-  getUserTickets({ ownerId, page, limit, dateTo, dateFrom, status, category })
+  getUserTickets({ userId, page, limit, dateTo, dateFrom, status, category })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const generateAccessCode = (req, res) => {
+  const userId = req.user.userId;
+  const numberOfCodeGen = req.body.numberOfCodeGen || 1;
+
+  generateReferralCodeByOwner({ userId, numberOfCodeGen })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getReferredUsers = (req, res) => {
+  const userId = req.user.userId;
+  const { dateTo, dateFrom, mapped, status, phoneNumber } = req.query;
+
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  getAllReferredUsers({
+    userId,
+    dateTo,
+    dateFrom,
+    mapped,
+    status,
+    page,
+    limit,
+    phoneNumber,
+  })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getUserMetrics = (req, res) => {
+  const userId = req.user.userId;
+  userMetrics({ userId })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

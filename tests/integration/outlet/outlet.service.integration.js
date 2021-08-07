@@ -13,8 +13,8 @@ import {
   OK,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
-import { CommissionBalance } from "../../../src/api/resources/commission/commissionbalance.model";
 import { UserType } from "../../../src/api/resources/owner/user.type";
+import { createPersonalBankAccount } from "../../../src/api/resources/outlet/outlet.service";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

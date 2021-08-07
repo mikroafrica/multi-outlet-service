@@ -13,48 +13,72 @@ const checkAccess = (name: string, password: string): boolean => {
   return valid;
 };
 
-export const secureRoute = (req, res, next) => {
-  if (allowRoutesByMikroSystem(req)) {
+export const secureRoute = async (req, res, next) => {
+  if (allowPublicRoutes(req)) {
     return next();
   }
 
-  const credentials = basicAuth(req);
+  if (allowMikroSystem(req)) {
+    const credentials = basicAuth(req);
 
-  // check against account credentials stored
-  if (!credentials || !checkAccess(credentials.name, credentials.pass)) {
-    // if basic auth is not successful , use the token
-    const authHeader = req.headers.authorization;
+    // check against account credentials stored
+    if (!credentials || !checkAccess(credentials.name, credentials.pass)) {
+      // if basic auth is not successful , use the token
+      const authHeader = req.headers.authorization;
 
-    if (!authHeader || authHeader.split(" ").length < 2) {
-      logger.error(`Token wasn't supplied`);
-      return res.send(UN_AUTHORISED, {
+      if (!authHeader || authHeader.split(" ").length < 2) {
+        return res.send(UN_AUTHORISED, {
+          status: false,
+          message: "Authorization is required",
+        });
+      }
+    }
+    return next();
+  } else {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.send(UN_AUTHORISED, {
+          status: false,
+          message: "Token is not defined",
+        });
+      }
+      const token = authHeader.split(" ")[1];
+      const params = { token };
+      const response = await AuthService.validateToken(params);
+      const authResponseData = response.data;
+      req.user = authResponseData.data;
+      return next();
+    } catch (err) {
+      logger.error(
+        `failed to validate token with error ${JSON.stringify(err)}`
+      );
+      return res.send(err.statusCode || UN_AUTHORISED, {
         status: false,
-        message: "Authorization is required",
+        message: err.message || "Your session has expired",
       });
     }
-    const token = authHeader.split(" ")[1];
-    const params = { token };
-    AuthService.validateToken(params)
-      .then((authResponse) => {
-        const authResponseData = authResponse.data;
-        req.user = authResponseData.data;
-        return next();
-      })
-      .catch((err) => {
-        logger.error(
-          `failed to validate token with error ${JSON.stringify(err)}`
-        );
-        return res.send(err.statusCode || UN_AUTHORISED, {
-          status: false,
-          message: err.message || "Your session has expired",
-        });
-      });
   }
-
-  return next();
 };
 
-const allowRoutesByMikroSystem = (req) => {
+const allowMikroSystem = (req) => {
+  const path = req.route.path;
+  const method = req.method;
+
+  if (Object.is(method, "GET") && path === "/") {
+    return true;
+  }
+
+  const routes = ["commission", "owner/all/users", "owner/:id"];
+  for (let i = 0; i < routes.length; i++) {
+    if (path.includes(routes[i])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const allowPublicRoutes = (req) => {
   const path = req.route.path;
   const method = req.method;
 
@@ -65,14 +89,10 @@ const allowRoutesByMikroSystem = (req) => {
   const routes = [
     "login",
     "signup",
-    "metrics",
-    "auth/users",
-    "auth/user/:id",
     "reset-password",
     "email-validation",
     "email-verification",
     "reset-password-request",
-    "outlet/link-outlet/:id",
   ];
   for (let i = 0; i < routes.length; i++) {
     if (path.includes(routes[i])) {

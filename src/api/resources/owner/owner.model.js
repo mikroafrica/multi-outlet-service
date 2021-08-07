@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate";
-import { UserType, Approval } from "./user.type";
+import { UserType, Approval, CommissionStatus } from "./user.type";
 
 const schema = {
   userId: String,
@@ -12,9 +12,21 @@ const schema = {
     default: UserType.OUTLET_OWNER,
     enum: [UserType.OUTLET_OWNER, UserType.PARTNER],
   },
-  approval: {
+  commissionStatus: {
     type: String,
-    enum: [Approval.APPROVED, Approval.PENDING],
+    default: CommissionStatus.NONE,
+    enum: Object.keys(CommissionStatus),
+  },
+
+  // referral id is mostly used partners for user referral
+  referralId: {
+    type: String,
+  },
+
+  // to generate a referral code, you need an access code.
+  // during partner creation, an access code is assigned to a partner
+  referralAccessCode: {
+    type: String,
   },
 };
 

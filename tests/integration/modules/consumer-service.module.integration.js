@@ -19,11 +19,12 @@ describe("Consumer service module Tests", function () {
       },
     };
 
+    const userType = "OUTLET_OWNER";
     nock(process.env.CONSUMER_SERVICE_URL)
-      .post("/user/create/OUTLET_OWNER")
+      .post(`/user/create/${userType}`)
       .reply(OK, mockResponse);
 
-    const response = await ConsumerService.signup({});
+    const response = await ConsumerService.signup({}, userType);
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
   });

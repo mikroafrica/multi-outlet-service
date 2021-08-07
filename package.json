@@ -21,9 +21,6 @@
     "node",
     "js"
   ],
-  "engines": {
-    "node": "11.10.1"
-  },
   "author": "Meshileya Seun (info@meshileyaseun.dev)",
   "license": "ISC",
   "devDependencies": {
@@ -58,6 +55,7 @@
     "dotenv": "^8.2.0",
     "google-libphonenumber": "^3.2.15",
     "joi": "^14.3.1",
+    "mikro-kafka-client": "https://github.com/meshboy/kafka-wrapper.git#confluent",
     "mongoose": "^5.9.17",
     "mongoose-paginate": "^5.0.3",
     "nock": "^13.0.5",

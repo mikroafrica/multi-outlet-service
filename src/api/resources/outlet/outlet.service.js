@@ -5,10 +5,7 @@ import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
 import { Outlet } from "./outlet.model.js";
-import { CommissionBalance } from "../commission/commissionbalance.model.js";
-import { TransferCommission } from "../commission/transfer-commission.model.js";
 import { Owner } from "../owner/owner.model.js";
-import { Level, Type } from "../commission/commission.type";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
 import { validatePhone } from "../../modules/util.js";
 import { Verification } from "./verification.model.js";
@@ -716,8 +713,6 @@ const saveOutletWithOwner = async ({ outletUserId, ownerId, walletId }) => {
     const outletUserDetailsData = outletUserDetails.data.data;
     const walletId = outletUserDetailsData.store[0].wallet[0].id;
 
-    console.log();
-
     if (
       outletUserDetailsData.store.length < 1 ||
       outletUserDetailsData.store[0].wallet.length < 1
@@ -775,53 +770,43 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
 
 export const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
-  await async.forEach(outlets, async (outlet) => {
-    const response = await ConsumerService.getUserDetails(outlet.userId);
-    const userDetailsData = response.data;
+  try {
+    await async.forEach(outlets, async (outlet) => {
+      const response = await ConsumerService.getUserDetails(outlet.userId);
+      const userDetailsData = response.data;
 
-    logger.info(
-      `Verify outlet linking with request [${JSON.stringify(userDetailsData)}]`
-    );
+      const wallet = userDetailsData.data.store[0].wallet[0];
+      const walletId = wallet.id;
 
-    const wallet = userDetailsData.data.store[0].wallet[0];
-    const walletId = wallet.id;
+      const walletSummaryResponse = await WalletService.getWalletById(walletId);
+      const walletSummaryData = walletSummaryResponse.data;
 
-    const walletSummaryResponse = await WalletService.getWalletById(walletId);
-    const walletSummaryData = walletSummaryResponse.data;
+      userDetailsData.data.store[0].wallet[0] = {
+        ...wallet,
+        ...walletSummaryData.data,
+      };
 
-    userDetailsData.data.store[0].wallet[0] = {
-      ...wallet,
-      ...walletSummaryData.data,
-    };
-
-    outletDetails.push({
-      ...userDetailsData.data,
-      status: outlet.status,
+      outletDetails.push({
+        ...userDetailsData.data,
+        status: outlet.status,
+      });
     });
-  });
+  } catch (e) {
+    logger.error(`::: failed to fetch user details :::`);
+  }
   return outletDetails;
 };
 
-export const getOutletByOutletId = async ({ outletId }) => {
+export const getOutletByUserId = async ({ userId }) => {
   try {
     const outletUserDetailsResponse = await ConsumerService.getUserDetails(
-      outletId
+      userId
     );
     const outletUserDetailsData = outletUserDetailsResponse.data;
 
-    const outlet = await Outlet.findOne({ userId: outletId });
-
-    const outletDetailsData = {
-      ...outletUserDetailsData.data,
-      status: outlet.status,
-      walletId: outlet.walletId,
-      createdAt: outlet.createdAt,
-      updatedAt: outlet.updatedAt,
-    };
-
     return Promise.resolve({
       statusCode: OK,
-      data: outletDetailsData,
+      data: outletUserDetailsData.data,
     });
   } catch (e) {
     logger.error(

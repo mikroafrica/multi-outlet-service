@@ -1,17 +1,15 @@
 import {
-  createCommission,
-  getOwnerCommissionBalance,
-  getOwnerCommissionSettings,
-  updateOwnerCommissionSettings,
-  getOwnerTransferCommissions,
+  create,
+  update,
+  getAllCommissions,
+  createOwnersCommission,
+  deleteAssignedCommission,
 } from "./commission.service";
 
-export const createCommissionForOwner = (req, res) => {
+export const createCommission = (req, res) => {
   const params = req.body;
 
-  createCommission({
-    params,
-  })
+  create({ params })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -20,10 +18,8 @@ export const createCommissionForOwner = (req, res) => {
     );
 };
 
-export const ownerCommissionBalance = (req, res) => {
-  const ownerId = req.params.ownerId;
-
-  getOwnerCommissionBalance({ ownerId })
+export const getCommission = (req, res) => {
+  getAllCommissions()
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -32,23 +28,10 @@ export const ownerCommissionBalance = (req, res) => {
     );
 };
 
-export const ownerCommissionSettings = (req, res) => {
-  const ownerId = req.params.ownerId;
-
-  getOwnerCommissionSettings({ ownerId })
-    .then(({ statusCode, data }) =>
-      res.send(statusCode, { status: true, data })
-    )
-    .catch(({ statusCode, message }) =>
-      res.send(statusCode, { status: false, message })
-    );
-};
-
-export const updateCommissionSetting = (req, res) => {
+export const updateCommission = (req, res) => {
   const params = req.body;
   const id = req.params.id;
-
-  updateOwnerCommissionSettings({ params, id })
+  update({ params, id })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -57,10 +40,21 @@ export const updateCommissionSetting = (req, res) => {
     );
 };
 
-export const fetchOwnerTransferCommissions = (req, res) => {
-  const ownerId = req.params.ownerId;
+export const ownersCommission = (req, res) => {
+  const params = req.body;
+  const ownerId = req.params.id;
+  createOwnersCommission({ params, ownerId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
 
-  getOwnerTransferCommissions({ ownerId })
+export const deleteCommissionById = (req, res) => {
+  const id = req.params.id;
+  deleteAssignedCommission(id)
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
