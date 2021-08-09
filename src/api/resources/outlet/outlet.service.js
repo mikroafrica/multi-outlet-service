@@ -59,20 +59,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     });
   }
 
-  const schema = Joi.object().keys({
-    phoneNumber: Joi.string().required(),
-    businessName: Joi.string().required(),
-    address: Joi.string().required(),
-    country: Joi.string().required(),
-    state: Joi.string().required(),
-    email: Joi.string().email(),
-    pin: Joi.string().required().length(4),
-    lga: Joi.string().required(),
-    userType: Joi.string().required(),
-    merchantCategory: Joi.string(),
-  });
-
-  const validateSchema = Joi.validate({ params, schema });
+  const validateSchema = validateOutletCreationParams({ params });
   if (validateSchema.error) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -90,6 +77,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
   const zone = regionObject.zone;
   const acquisitionOfficers = await ConsumerService.referralByZone();
   const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
+  console.log("acquisitionOfficersByZones", acquisitionOfficersByZones);
 
   const referralObject = mapAcquisitionOfficerToUser({
     acquisitionOfficersByZones,
@@ -149,10 +137,12 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
         `Outlet succesfully created with details ${JSON.stringify(outletData)}`
       );
 
-      // Fetch the outlet data and get the walletId
+      // // Fetch the outlet data and get the walletId
       const outletDetails = await ConsumerService.getUserDetails(userId);
       const outletDetailsData = outletDetails.data.data;
       const walletId = outletDetailsData.store[0].wallet[0].id;
+
+      // const walletId = outletData.data.store[0].wallet[0].id;
 
       const authServiceSignUpRequest = {
         username: params.phoneNumber,
@@ -213,6 +203,23 @@ const mapAcquisitionOfficerToUser = ({ acquisitionOfficersByZones, zone }) => {
     }
   }
   return referralObject;
+};
+
+const validateOutletCreationParams = ({ params }) => {
+  const schema = Joi.object().keys({
+    phoneNumber: Joi.string().required(),
+    businessName: Joi.string().required(),
+    address: Joi.string().required(),
+    country: Joi.string().required(),
+    state: Joi.string().required(),
+    email: Joi.string().email(),
+    pin: Joi.string().required().length(4),
+    lga: Joi.string().required(),
+    userType: Joi.string().required(),
+    merchantCategory: Joi.string(),
+  });
+
+  return Joi.validate(params, schema);
 };
 
 export const otpValidation = (registrationId, otpCode) => {
