@@ -42,8 +42,7 @@ export const walletTransfer = async ({
     if (
       destination !== "owner" &&
       destination !== "outlet" &&
-      destination !== "bank" &&
-      destination !== "others"
+      destination !== "bank"
     ) {
       return Promise.reject({
         statusCode: BAD_REQUEST,
@@ -68,7 +67,7 @@ export const walletTransfer = async ({
       params.sourceName = `${outletDetailsData.businessName}`;
 
       params.recipientPhoneNumber = ownerDetailsData.phoneNumber;
-      params.recipientName = `Admin`;
+      params.recipientName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
       params.transactionType = "P2P";
       params.destinationFcmToken = "";
     } else if (destination === "outlet") {
@@ -77,10 +76,10 @@ export const walletTransfer = async ({
       params.recipientId = outletId;
       params.customerBillerId = outlet.walletId;
 
-      params.sourceName = `Admin`;
+      params.sourceName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
 
       params.recipientPhoneNumber = outletDetailsData.phoneNumber;
-      params.recipientName = `${outletDetailsData.businessName}`;
+      params.recipientName = `${outletDetailsData.firstName} ${outletDetailsData.lastName}`;
       params.transactionType = "P2P";
       params.destinationFcmToken = outletDetailsData.fcmToken;
     } else if (destination === "bank") {
@@ -115,7 +114,6 @@ export const walletTransfer = async ({
       const serviceFeeResponseData = await getServiceFee({ params, type });
 
       params.serviceFee = serviceFeeResponseData;
-      // case destination === "others":
     }
 
     const uuid = uuidv4();
