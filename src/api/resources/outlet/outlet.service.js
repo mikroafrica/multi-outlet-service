@@ -4,6 +4,7 @@ import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
+import * as AppService from "../../modules/app-service";
 import { Outlet } from "./outlet.model.js";
 import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
@@ -77,7 +78,6 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
   const zone = regionObject.zone;
   const acquisitionOfficers = await ConsumerService.referralByZone();
   const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
-  console.log("acquisitionOfficersByZones", acquisitionOfficersByZones);
 
   const referralObject = mapAcquisitionOfficerToUser({
     acquisitionOfficersByZones,
