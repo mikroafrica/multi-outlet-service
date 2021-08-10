@@ -334,7 +334,9 @@ export const loginMultiOutletOwner = async ({ params }) => {
                 lga,
               });
               logger.info(
-                `::: Referral created for partner with userId [${userId}] is [${referralResponse}] :::`
+                `::: Referral created for partner with userId [${userId}] is [${JSON.stringify(
+                  referralResponse
+                )}] :::`
               );
               const referralData = referralResponse.data;
               const referral = referralData.data;
@@ -391,6 +393,8 @@ export const loginMultiOutletOwner = async ({ params }) => {
         bankCode: store.bankCode,
       };
 
+      console.log(owner.referralId);
+
       userDetailsData.phoneNumber = owner ? owner.phoneNumber : "";
       userDetailsData.noOfOutlets = owner ? owner.noOfOutlets : "";
 
@@ -399,6 +403,8 @@ export const loginMultiOutletOwner = async ({ params }) => {
         ...ownerAccountDetails,
         ...userDetailsData,
         commissionStatus: owner.commissionStatus,
+        referralId: owner.referralId,
+        referralAccessCode: owner.referralAccessCode,
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {
