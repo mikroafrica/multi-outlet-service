@@ -8,14 +8,9 @@ import { Owner } from "./owner.model";
 import { CommissionStatus, UserType } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
-import async from "async";
 import { OwnerCommission } from "../commission/owner.commission.model";
 import { generateReferralCode } from "../../modules/consumer-service";
-import {
-  buildAggregation,
-  ReportIndex,
-  search,
-} from "../../modules/report-service";
+import { ReportIndex, search } from "../../modules/report-service";
 import { handleListOfHits } from "../../modules/util";
 import { BusinessType, BusinessTypeStatus } from "./business.type";
 import { Commission } from "../commission/commission.model";
