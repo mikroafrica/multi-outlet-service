@@ -393,8 +393,6 @@ export const loginMultiOutletOwner = async ({ params }) => {
         bankCode: store.bankCode,
       };
 
-      console.log(owner.referralId);
-
       userDetailsData.phoneNumber = owner ? owner.phoneNumber : "";
       userDetailsData.noOfOutlets = owner ? owner.noOfOutlets : "";
 
