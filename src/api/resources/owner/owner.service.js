@@ -174,7 +174,6 @@ export const getUsers = async ({ userType, page, limit }) => {
       const _foundUser = userIdAndCommissionStatus.find(
         (_user) => _user.userId === user.userId
       );
-      // console.log(_foundUser)
       user.phoneNumber = user.personalPhoneNumber;
       delete user.personalPhoneNumber;
       return {
