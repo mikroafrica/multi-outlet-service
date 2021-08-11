@@ -1,5 +1,5 @@
 import restify from "restify-clients";
-import { get, post, put } from "./request";
+import { get, post } from "./request";
 
 const restifyClient = () => {
   const restifyClient = restify.createJSONClient({
@@ -9,7 +9,7 @@ const restifyClient = () => {
 
   restifyClient.basicAuth(
     process.env.PAYMENT_SERVICE_USERNAME,
-    process.env.PAYMENT_SERVIC_PASSWORD
+    process.env.PAYMENT_SERVICE_PASSWORD
   );
   return restifyClient;
 };
@@ -17,4 +17,9 @@ const restifyClient = () => {
 export const accountNumberLookUp = (params) => {
   const client = restifyClient();
   return post({ client, path: "/validate", params });
+};
+
+export const banks = () => {
+  const client = restifyClient();
+  return get({ client, path: "/banks" });
 };

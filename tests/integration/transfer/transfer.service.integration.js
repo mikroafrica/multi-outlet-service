@@ -9,6 +9,7 @@ import * as TransferService from "../../../src/api/resources/transfer/transfer.s
 import { BAD_REQUEST, OK } from "../../../src/api/modules/status";
 import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
 import * as TransactionService from "../../../src/api/modules/transaction-service";
+import * as OutletService from "../../../src/api/resources/outlet/outlet.service";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -83,7 +84,7 @@ describe("Owner service Tests", function () {
       .get(`/user/${outletId}/details`)
       .reply(OK, mockOutletData);
 
-    const response = await TransferService.walletTransfer({
+    const response = await TransferService.transfer({
       ownerId,
       outletId,
       params,
@@ -108,7 +109,7 @@ describe("Owner service Tests", function () {
     };
 
     try {
-      await TransferService.walletTransfer({
+      await TransferService.transfer({
         ownerId,
         outletId,
         params,
@@ -155,7 +156,7 @@ describe("Owner service Tests", function () {
       .reply(OK, mockOutletData);
 
     try {
-      await TransferService.walletTransfer({
+      await TransferService.transfer({
         ownerId,
         outletId,
         params,
@@ -178,21 +179,6 @@ describe("Owner service Tests", function () {
       amount: 10,
       accountNumber: "21367894409",
       bankCode: "073",
-      recipientRemarks: "Remarks",
-    };
-
-    const mockAccountValidationResponse = {
-      status: true,
-      data: {
-        bankCode: "098",
-        accountName: "Name",
-        accountNumber: "0450758567",
-      },
-    };
-
-    const mockServiceFeeResponseData = {
-      status: true,
-      data: "100",
     };
 
     const mockTransferResponse = {
@@ -232,19 +218,11 @@ describe("Owner service Tests", function () {
       .get(`/user/${outletId}/details`)
       .reply(OK, mockOutletData);
 
-    nock(process.env.PAYMENT_SERVICE_URL)
-      .post("/validate")
-      .reply(OK, mockAccountValidationResponse);
-
-    nock(process.env.TRANSACTION_SERVICE_URL)
-      .post(`/transactions/${type}/fee`)
-      .reply(OK, mockServiceFeeResponseData);
-
     nock(process.env.TRANSACTION_SERVICE_URL)
       .post(`/transactions/create`)
       .reply(OK, mockTransferResponse);
 
-    const response = await TransferService.walletTransfer({
+    const response = await TransferService.transfer({
       ownerId,
       outletId,
       params,
@@ -266,22 +244,6 @@ describe("Owner service Tests", function () {
       amount: 10000,
       accountNumber: "21367894409",
       bankCode: "073",
-      recipientRemarks: "Remarks",
-    };
-
-    const mockAccountValidationResponse = {
-      status: true,
-      data: {
-        bankCode: "098",
-        bankName: "Bank",
-        accountName: "Name",
-        accountNumber: "0450758567",
-      },
-    };
-
-    const mockServiceFeeResponseData = {
-      status: true,
-      data: "120",
     };
 
     const mockFailedTransferResponse = {
@@ -311,20 +273,12 @@ describe("Owner service Tests", function () {
       .get(`/user/${outletId}/details`)
       .reply(OK, mockOutletData);
 
-    nock(process.env.PAYMENT_SERVICE_URL)
-      .post("/validate")
-      .reply(OK, mockAccountValidationResponse);
-
-    nock(process.env.TRANSACTION_SERVICE_URL)
-      .post(`/transactions/${type}/fee`)
-      .reply(OK, mockServiceFeeResponseData);
-
     nock(process.env.TRANSACTION_SERVICE_URL)
       .post(`/transactions/create`)
       .reply(OK, mockFailedTransferResponse);
 
     try {
-      await TransferService.walletTransfer({
+      await TransferService.transfer({
         ownerId,
         outletId,
         params,
@@ -340,5 +294,76 @@ describe("Owner service Tests", function () {
 
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
+  });
+
+  it("should successfully validate account number", async function () {
+    const params = {
+      accountNumber: "0450758897",
+      bankCode: "058",
+    };
+
+    const mockAccountValidationResponse = {
+      status: true,
+      data: {
+        bankCode: "098",
+        bankName: "Bank",
+        accountName: "Name",
+        accountNumber: "0450758567",
+      },
+    };
+
+    nock(process.env.PAYMENT_SERVICE_URL)
+      .post("/validate")
+      .reply(OK, mockAccountValidationResponse);
+
+    const response = await TransferService.validateAccountNumber({
+      params,
+    });
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+  });
+
+  it("should successfully get service fee", async function () {
+    const type = "TRANSFER";
+    const params = {
+      amount: "100",
+    };
+
+    const mockServiceFeeResponseData = {
+      status: true,
+      data: "120",
+    };
+
+    nock(process.env.TRANSACTION_SERVICE_URL)
+      .post(`/transactions/${type}/fee`)
+      .reply(OK, mockServiceFeeResponseData);
+
+    const response = await TransferService.getServiceFee({
+      params,
+      type,
+    });
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+  });
+
+  it("should successfully fetch supported banks", async function () {
+    const mockSupportedBankResponseData = {
+      status: true,
+      data: {
+        name: "GTBank",
+        code: "011",
+        sortCode: "058152",
+        nibssCode: "0013",
+        url: "https://bank.com",
+      },
+    };
+
+    nock(process.env.PAYMENT_SERVICE_URL)
+      .get("/banks")
+      .reply(OK, mockSupportedBankResponseData);
+
+    const response = await TransferService.fetchBanks();
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
   });
 });

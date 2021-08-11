@@ -8,12 +8,7 @@ import { Owner } from "../owner/owner.model";
 import { Outlet } from "../outlet/outlet.model";
 import { v4 as uuidv4 } from "uuid";
 
-export const walletTransfer = async ({
-  ownerId,
-  outletId,
-  params,
-  destination,
-}) => {
+export const transfer = async ({ ownerId, outletId, params, destination }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -25,7 +20,6 @@ export const walletTransfer = async ({
     amount: Joi.number().required(),
     accountNumber: Joi.string(),
     bankCode: Joi.string(),
-    recipientRemarks: Joi.string(),
   });
 
   const validateSchema = Joi.validate(params, schema);
@@ -83,37 +77,18 @@ export const walletTransfer = async ({
       params.transactionType = "P2P";
       params.destinationFcmToken = outletDetailsData.fcmToken;
     } else if (destination === "bank") {
-      const accountValidationResponseData = await verifyAccountNumber({
-        params,
-      });
-      if (!accountValidationResponseData) {
-        return Promise.reject({
-          statusCode: BAD_REQUEST,
-          message: "The account number provided could not be found.",
-        });
-      }
-
       params.product = "OTHERS";
-      params.recipientAccountNumber =
-        accountValidationResponseData.accountNumber;
       params.customerBillerId = params.accountNumber;
       params.recipientAddress = "";
-      params.recipientBank = accountValidationResponseData.bankName;
-      params.recipientName = accountValidationResponseData.accountName;
       params.recipientPhoneNumber = "";
       params.userId = ownerId;
-      params.productCategory = accountValidationResponseData.bankCode;
       params.agentFee = 0;
       params.transactionType = "TRANSFER";
       params.userWalletId = owner.walletId;
       params.userName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
       params.fcmToken = ownerDetailsData.fcmToken;
       params.userPhoneNumber = owner.phoneNumber;
-
-      const type = params.transactionType;
-      const serviceFeeResponseData = await getServiceFee({ params, type });
-
-      params.serviceFee = serviceFeeResponseData;
+      params.recipientRemarks = "remarks";
     }
 
     const uuid = uuidv4();
@@ -142,33 +117,62 @@ export const walletTransfer = async ({
   }
 };
 
-const verifyAccountNumber = async ({ params }) => {
-  const { accountNumber, bankCode } = params;
-
-  const request = {
-    accountNumber,
-    bankCode,
-  };
-
-  const accountValidationResponse = await PaymentService.accountNumberLookUp(
-    request
-  );
-  const accountValidationResponseData = accountValidationResponse.data.data;
-  return accountValidationResponseData;
+export const validateAccountNumber = async ({ params }) => {
+  return PaymentService.accountNumberLookUp(params)
+    .then((responseData) => {
+      const response = responseData.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: response.data,
+      });
+    })
+    .catch((err) => {
+      logger.error(
+        `Error occurred while validating account number ${JSON.stringify(err)}`
+      );
+      return Promise.reject({
+        statusCode: err.statusCode,
+        message: err.message || "Something went wrong. Please try again",
+      });
+    });
 };
 
-const getServiceFee = async ({ params, type }) => {
-  const { amount } = params;
+export const getServiceFee = async ({ params, type }) => {
+  return TransactionService.fetchServiceFee(params, type)
+    .then((responseData) => {
+      const response = responseData.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: response.data,
+      });
+    })
+    .catch((err) => {
+      logger.error(
+        `Error occurred while fetching service fee ${JSON.stringify(err)}`
+      );
+      return Promise.reject({
+        statusCode: err.statusCode,
+        message: err.message || "Something went wrong. Please try again",
+      });
+    });
+};
 
-  const request = {
-    amount,
-  };
-
-  const serviceFeeResponse = await TransactionService.fetchServiceFee(
-    request,
-    type
-  );
-
-  const serviceFeeResponseData = serviceFeeResponse.data.data;
-  return serviceFeeResponseData;
+export const fetchBanks = () => {
+  return PaymentService.banks()
+    .then((responseData) => {
+      const bankResponse = responseData.data;
+      return Promise.resolve({
+        statusCode: OK,
+        data: bankResponse.data,
+      });
+    })
+    .catch((err) => {
+      logger.error(
+        `Error occurred while fetching banks with error ${JSON.stringify(err)}`
+      );
+      return Promise.reject({
+        statusCode: NOT_FOUND,
+        message: err.message || "Something went wrong. Please try again",
+      });
+    });
 };
