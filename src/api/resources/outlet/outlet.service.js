@@ -771,31 +771,27 @@ export const getOutlets = async ({ ownerId, page, limit }) => {
 export const fetchOutletDetails = async (outlets) => {
   let outletDetails = [];
   try {
-    // await async.forEach(outlets, async (outlet) => {
-    //   console.log(outlet)
-    const response = await ConsumerService.getUserDetails(
-      "6112d6b062c7bb399f276b14"
-    );
-    const userDetailsData = response.data;
+    await async.forEach(outlets, async (outlet) => {
+      const response = await ConsumerService.getUserDetails(outlet.userId);
+      const userDetailsData = response.data;
 
-    const wallet = userDetailsData.data.store[0].wallet[0];
-    const walletId = wallet.id;
+      const wallet = userDetailsData.data.store[0].wallet[0];
+      const walletId = wallet.id;
 
-    const walletSummaryResponse = await WalletService.getWalletById(walletId);
-    const walletSummaryData = walletSummaryResponse.data;
+      const walletSummaryResponse = await WalletService.getWalletById(walletId);
+      const walletSummaryData = walletSummaryResponse.data;
 
-    userDetailsData.data.store[0].wallet[0] = {
-      ...wallet,
-      ...walletSummaryData.data,
-    };
+      userDetailsData.data.store[0].wallet[0] = {
+        ...wallet,
+        ...walletSummaryData.data,
+      };
 
-    outletDetails.push({
-      ...userDetailsData.data,
-      status: outlet.status,
+      outletDetails.push({
+        ...userDetailsData.data,
+        status: outlet.status,
+      });
     });
-    // });
   } catch (e) {
-    console.log(e);
     logger.error(`::: failed to fetch user details :::`);
   }
   return outletDetails;
