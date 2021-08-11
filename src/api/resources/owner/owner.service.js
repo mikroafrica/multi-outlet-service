@@ -184,7 +184,11 @@ export const getUsers = async ({ userType, page, limit }) => {
     });
     return Promise.resolve({
       statusCode: OK,
-      data: ownerFullDetails,
+      data: {
+        limit,
+        total: ownersDocs.total,
+        list: ownerFullDetails,
+      },
     });
   } catch (e) {
     console.error(e);

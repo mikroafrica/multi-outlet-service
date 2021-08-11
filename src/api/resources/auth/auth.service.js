@@ -291,10 +291,6 @@ export const loginMultiOutletOwner = async ({ params }) => {
       // CHECK TO SEE THAT WALLET-ID HAS BEEN MAPPED TO USER ON THE OUTLET SERVICE
       let owner = await Owner.findOne({ userId });
 
-      console.log("...........owner..................");
-      console.log(JSON.stringify(owner));
-      console.log("...........owner..................");
-
       if (!owner) {
         if (
           userDetailsData.store.length > 0 &&
@@ -313,7 +309,6 @@ export const loginMultiOutletOwner = async ({ params }) => {
           });
           await createdOwner.save();
           owner = createdOwner;
-          console.log(JSON.stringify(store));
 
           if (owner.userType === UserType.OUTLET_OWNER) {
             owner.approval = Approval.APPROVED;
@@ -356,8 +351,6 @@ export const loginMultiOutletOwner = async ({ params }) => {
         }
       }
       const store = userDetailsData.store[0];
-
-      console.log(JSON.stringify(userDetailsData));
 
       if (owner.userType === UserType.PARTNER && !owner.referralId) {
         const name = `${userDetailsData.firstName} ${userDetailsData.lastName}`;
