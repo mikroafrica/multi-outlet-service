@@ -1,6 +1,7 @@
 import { BAD_REQUEST, CONFLICT, OK } from "../../modules/status";
 import logger from "../../../logger";
 import * as AuthService from "../../modules/auth-service";
+import * as AppService from "../../modules/app-service";
 import Joi from "joi";
 import * as ConsumerService from "../../modules/consumer-service";
 import { Owner } from "../owner/owner.model";
@@ -160,6 +161,15 @@ export const signupMultiOutletOwner = async (params) => {
 
   params.personalPhoneNumber = params.phoneNumber;
 
+  if (params.userType === UserType.PARTNER) {
+    const zoneResponse = await AppService.getRegion({ state: params.state });
+    const zoneData = zoneResponse.data;
+    const zoneObject = zoneData.data;
+    params = Object.assign(params, zoneObject);
+  }
+
+  logger.info(`::: User sign up request is [${JSON.stringify(params)}] :::`);
+
   return ConsumerService.signup(params, params.userType)
     .then(async (outletOwner) => {
       const outletOwnerData = outletOwner.data;
@@ -304,28 +314,33 @@ export const loginMultiOutletOwner = async ({ params }) => {
             owner.approval = Approval.APPROVED;
             await owner.save();
           } else {
-            const name = `${userDetailsData.firstName} ${userDetailsData.lastName}`;
-            const phoneNumber = userDetailsData.phoneNumber;
-            const zone = userDetailsData.zone;
-            const { state, lga } = store;
+            // check if the referral id is empty
+            if (!owner.referralId) {
+              const name = `${userDetailsData.firstName} ${userDetailsData.lastName}`;
+              const phoneNumber = userDetailsData.phoneNumber;
+              const zone = userDetailsData.zone;
+              const { state, lga } = store;
 
-            const referralResponse = await createReferral({
-              name,
-              phoneNumber,
-              zone,
-              state,
-              lga,
-            });
-            logger.info(
-              `::: Referral created for partner with userId [${userId}] is [${referralResponse}] :::`
-            );
-            const referralData = referralResponse.data;
-            const referral = referralData.data;
+              const referralResponse = await createReferral({
+                name,
+                phoneNumber,
+                zone,
+                state,
+                lga,
+              });
+              logger.info(
+                `::: Referral created for partner with userId [${userId}] is [${JSON.stringify(
+                  referralResponse
+                )}] :::`
+              );
+              const referralData = referralResponse.data;
+              const referral = referralData.data;
 
-            const { id, accessCode } = referral;
-            owner.approval = Approval.PENDING;
-            owner.referralId = id;
-            owner.referralAccessCode = accessCode;
+              const { id, accessCode } = referral;
+              owner.approval = Approval.PENDING;
+              owner.referralId = id;
+              owner.referralAccessCode = accessCode;
+            }
             await owner.save();
           }
         } else {
@@ -336,6 +351,34 @@ export const loginMultiOutletOwner = async ({ params }) => {
         }
       }
       const store = userDetailsData.store[0];
+
+      if (owner.userType === UserType.PARTNER && !owner.referralId) {
+        const name = `${userDetailsData.firstName} ${userDetailsData.lastName}`;
+        const phoneNumber = userDetailsData.personalPhoneNumber;
+        const zone = userDetailsData.zone;
+        const { state, lga } = store;
+
+        const referralResponse = await createReferral({
+          name,
+          phoneNumber,
+          zone,
+          state,
+          lga,
+        });
+        logger.info(
+          `::: Referral created for partner with userId [${userId}] is [${referralResponse}] :::`
+        );
+        const referralData = referralResponse.data;
+        const referral = referralData.data;
+
+        const { id, accessCode } = referral;
+        owner.approval = Approval.PENDING;
+        owner.referralId = id;
+        owner.referralAccessCode = accessCode;
+
+        await owner.save();
+      }
+
       const ownerAccountDetails = {
         accountName: store.accountName,
         accountNumber: store.accountNumber,
@@ -351,6 +394,8 @@ export const loginMultiOutletOwner = async ({ params }) => {
         ...ownerAccountDetails,
         ...userDetailsData,
         commissionStatus: owner.commissionStatus,
+        referralId: owner.referralId,
+        referralAccessCode: owner.referralAccessCode,
       };
       return Promise.resolve({ statusCode: OK, data: loginResponseData.data });
     } catch (e) {
@@ -503,6 +548,8 @@ const validateSignupParamsSchema = (params) => {
       gender: Joi.string().required(),
       noOfOutlets: Joi.string(),
       profileImageId: Joi.string(),
+      state: Joi.string(),
+      lga: Joi.string(),
       userType: Joi.string()
         .valid(UserType.OUTLET_OWNER, UserType.PARTNER)
         .required(),
@@ -510,4 +557,42 @@ const validateSignupParamsSchema = (params) => {
     .unknown(true);
 
   return Joi.validate(params, schema);
+};
+
+export const getLocation = async () => {
+  try {
+    const locationResponse = await AppService.getStates();
+    const locationResponseData = locationResponse.data;
+    return Promise.resolve({
+      statusCode: OK,
+      data: locationResponseData.data,
+    });
+  } catch (e) {
+    logger.error(
+      `::: failed to fetch location with error [${JSON.stringify(e)}] :::`
+    );
+    return Promise.reject({
+      statusCode: e.statusCode || BAD_REQUEST,
+      message: e.message || "Something went wrong. Please try again",
+    });
+  }
+};
+
+export const getLocalGovtByState = async ({ state }) => {
+  try {
+    const locationResponse = await AppService.getLocalGovt({ state });
+    const locationResponseData = locationResponse.data;
+    return Promise.resolve({
+      statusCode: OK,
+      data: locationResponseData.data,
+    });
+  } catch (e) {
+    logger.error(
+      `::: failed to fetch lga location with error [${JSON.stringify(e)}] :::`
+    );
+    return Promise.reject({
+      statusCode: e.statusCode || BAD_REQUEST,
+      message: e.message || "Something went wrong. Please try again",
+    });
+  }
 };
