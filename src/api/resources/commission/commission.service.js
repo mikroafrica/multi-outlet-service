@@ -138,11 +138,15 @@ export const update = async ({ params, id }) => {
       });
     }
 
+    console.log("existingCommission", existingCommission);
+
     const updatedCommission = await Commission.findOneAndUpdate(
       { _id: id },
       { $set: params },
       { new: true }
     ).exec();
+
+    console.log("updatedCommission", updatedCommission);
 
     return Promise.resolve({
       statusCode: OK,
@@ -151,7 +155,7 @@ export const update = async ({ params, id }) => {
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Failed to fetch resource. Kindly try again",
+      message: "Failed to update commission. Kindly try again",
     });
   }
 };
