@@ -179,6 +179,11 @@ describe("Owner service Tests", function () {
       amount: 10,
       accountNumber: "21367894409",
       bankCode: "073",
+      productCategory: "011",
+      recipientBank: "bank",
+      recipientName: "name",
+      recipientAccountNumber: "21367894409",
+      serviceFee: "100",
     };
 
     const mockTransferResponse = {
@@ -244,6 +249,11 @@ describe("Owner service Tests", function () {
       amount: 10000,
       accountNumber: "21367894409",
       bankCode: "073",
+      productCategory: "011",
+      recipientBank: "bank",
+      recipientName: "name",
+      recipientAccountNumber: "21367894409",
+      serviceFee: "100",
     };
 
     const mockFailedTransferResponse = {

@@ -20,6 +20,11 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
     amount: Joi.number().required(),
     accountNumber: Joi.string(),
     bankCode: Joi.string(),
+    productCategory: Joi.string(),
+    recipientBank: Joi.string(),
+    recipientName: Joi.string(),
+    recipientAccountNumber: Joi.string(),
+    serviceFee: Joi.string(),
   });
 
   const validateSchema = Joi.validate(params, schema);
