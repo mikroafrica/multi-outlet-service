@@ -4,6 +4,7 @@ import nock from "nock";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Commission } from "../../../src/api/resources/commission/commission.model";
+import { OwnerCommission } from "../../../src/api/resources/commission/owner.commission.model";
 import * as CommissionService from "../../../src/api/resources/commission/commission.service";
 import { Owner } from "../../../src/api/resources/owner/owner.model";
 import {
@@ -139,21 +140,17 @@ describe("Commission service Tests", function () {
       feeType: "FLAT_FEE",
     });
 
-    try {
-      const newCommission = sinon
-        .stub(Commission, "findOneAndUpdate")
-        .resolves({
-          name: "updated commission",
-          category: "POS_WITHDRAWAL",
-          rangeType: "NON_RANGE",
-          feeType: "FLAT_FEE",
-          serviceFee: 2000,
-        });
+    const newCommission = sinon.stub(Commission, "findOneAndUpdate").returns({
+      exec: sinon.stub().returns({
+        name: "updated commission",
+        category: "POS_WITHDRAWAL",
+        rangeType: "NON_RANGE",
+        feeType: "FLAT_FEE",
+        serviceFee: 2000,
+      }),
+    });
 
-      const response = await CommissionService.update({ params, id });
-    } catch (err) {
-      console.log(err);
-    }
+    const response = await CommissionService.update({ params, id });
 
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
@@ -163,5 +160,25 @@ describe("Commission service Tests", function () {
 
     newCommission.restore();
     sinon.assert.calledOnce(newCommission);
+  });
+
+  it("should successfully delete assigned commission.", async function () {
+    const removedCommission = sinon.stub(Commission, "remove").resolves(null);
+    const removedOwnerCommission = sinon
+      .stub(OwnerCommission, "remove")
+      .resolves(null);
+
+    const response = await CommissionService.deleteAssignedCommission({
+      id: "vy1ugysb1ug87uy",
+    });
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+
+    removedCommission.restore();
+    sinon.assert.calledOnce(removedCommission);
+
+    removedOwnerCommission.restore();
+    sinon.assert.calledOnce(removedOwnerCommission);
   });
 });

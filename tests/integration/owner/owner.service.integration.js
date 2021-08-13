@@ -604,7 +604,6 @@ describe("Owner service Tests", function () {
 
   it("should fetch users when a valid usertype is supplied", async function () {
     const userType = "OUTLET_OWNER";
-    const usertype = "OUTLET_OWNER";
     const userId = "bhgykhcb1uy";
     const filter = { userType };
     const page = 1;
