@@ -609,23 +609,74 @@ describe("Owner service Tests", function () {
     const page = 1;
     const limit = 2;
 
-    const mockUserDetailsResponse = {
+    const mockQueryResponse = {
+      // data: {
       data: {
-        userId,
-        firstName: "Joe",
-        lastName: "Doe",
+        hits: {
+          total: { value: 1, relation: "eq" },
+          max_score: null,
+          hits: [
+            {
+              _index: "mikro.user",
+              _score: null,
+              _source: {
+                userId: "bhgykhcb1uy",
+                firstName: "user",
+              },
+            },
+          ],
+        },
+      },
+      // },
+    };
+
+    const should = [{ match: { userId: "78yiu1gb1hduy" } }];
+
+    const query = {
+      index: "mikro.user",
+      from: page,
+      size: limit,
+      _source: ["userId", "email", "firstName"],
+      body: {
+        query: {
+          must: {
+            bool: {
+              should: should,
+            },
+          },
+        },
       },
     };
 
-    const findOwners = sinon
-      .stub(Owner, "paginate")
-      .resolves({ filter, page, limit });
+    const userIdAndCommissionStatus = {
+      commissionStatus: "commission",
+      userId: "bhgykhcb1uy",
+      ownerId: "diyhbu2yduy",
+      referralId: "d7h978u",
+    };
 
-    nock(process.env.CONSUMER_SERVICE_URL)
-      .get(`/user/${userId}/details`)
-      .reply(OK, mockUserDetailsResponse);
+    try {
+      const findOwners = sinon.stub(Owner, "paginate").resolves({
+        filter,
+        page,
+        limit,
+        docs: [
+          {
+            userType: "OUTLET_OWNER",
+            userId: "ufdgvu3y",
+            commissionStatus: "none",
+          },
+        ],
+      });
 
-    const response = await OwnerService.getUsers({ usertype, page, limit });
+      nock(process.env.REPORT_SERVICE_URL)
+        .post("/report/raw")
+        .reply(OK, mockQueryResponse);
+
+      const response = await OwnerService.getUsers({ userType, page, limit });
+    } catch (err) {
+      console.log(err);
+    }
 
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
