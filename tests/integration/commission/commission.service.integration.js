@@ -11,6 +11,7 @@ import {
   BAD_REQUEST,
   NOT_FOUND,
   OK,
+  CONFLICT,
   UN_AUTHORISED,
 } from "../../../src/api/modules/status";
 
@@ -50,6 +51,35 @@ describe("Commission service Tests", function () {
 
     newCommission.restore();
     sinon.assert.calledOnce(newCommission);
+  });
+
+  it("should fail to create commission if commission name already exist", async function () {
+    const ownerId = "5ff84b6929be4225a084874a";
+    const userId = "vhvuyi9";
+
+    const params = {
+      name: "TEST_COMMISSION",
+      category: "POS_WITHDRAWAL",
+      rangeType: "NON_RANGE",
+      feeType: "FLAT_FEE",
+      serviceFee: 5000,
+    };
+
+    const existingCommission = sinon.stub(Commission, "findOne").resolves({
+      name: "TEST_COMMISSION",
+      category: "POS_WITHDRAWAL",
+      rangeType: "NON_RANGE",
+    });
+
+    try {
+      await CommissionService.create({ params });
+    } catch (err) {
+      expect(err.statusCode).equals(CONFLICT);
+      expect(err.message).to.exist;
+    }
+
+    existingCommission.restore();
+    sinon.assert.calledOnce(existingCommission);
   });
 
   it("should create commission of rangeType range", async function () {
@@ -122,6 +152,20 @@ describe("Commission service Tests", function () {
     sinon.assert.calledOnce(existingCommission);
   });
 
+  it("should throw if there is no existing commissions", async function () {
+    const existingCommission = sinon.stub(Commission, "find").resolves(null);
+
+    try {
+      await CommissionService.getAllCommissions();
+    } catch (err) {
+      expect(err.statusCode).equals(NOT_FOUND);
+      expect(err.message).to.exist;
+    }
+
+    existingCommission.restore();
+    sinon.assert.calledOnce(existingCommission);
+  });
+
   it("should successfully update commission", async function () {
     const id = "0166254";
 
@@ -160,6 +204,40 @@ describe("Commission service Tests", function () {
 
     newCommission.restore();
     sinon.assert.calledOnce(newCommission);
+  });
+
+  it("should fail to update commission if commission does not exist", async function () {
+    const id = "0166254";
+
+    const params = {
+      name: "updated commission",
+      category: "POS_WITHDRAWAL",
+      rangeType: "NON_RANGE",
+      feeType: "FLAT_FEE",
+      serviceFee: 2000,
+    };
+
+    const commission = sinon.stub(Commission, "findOne").resolves(null);
+
+    const newCommission = sinon.stub(Commission, "findOneAndUpdate").returns({
+      exec: sinon.stub().returns({
+        name: "updated commission",
+        category: "POS_WITHDRAWAL",
+        rangeType: "NON_RANGE",
+        feeType: "FLAT_FEE",
+        serviceFee: 2000,
+      }),
+    });
+
+    try {
+      await CommissionService.update({ params, id });
+    } catch (err) {
+      expect(err.statusCode).equals(NOT_FOUND);
+      expect(err.message).to.exist;
+    }
+
+    commission.restore();
+    sinon.assert.calledOnce(commission);
   });
 
   it("should successfully delete assigned commission.", async function () {

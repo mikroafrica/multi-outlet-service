@@ -168,11 +168,9 @@ export const getUsers = async ({ userType, page, limit }) => {
     };
 
     const queryResponse = await ReportService.search(query);
-    console.log("queryResponse", queryResponse.data.data.hits.hits);
     const { data: queryResponseData } = queryResponse.data;
 
     const { list: userList, total } = handleListOfHits(queryResponseData);
-    // console.log("list", list)
 
     // get other details for users based on user id
     const ownerFullDetails = userList.map(function (user) {
