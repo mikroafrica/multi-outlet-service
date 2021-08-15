@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 export const CommissionCategory = {
   POS_WITHDRAWAL: "POS_WITHDRAWAL",
-  ON_BOARDING: "ON_BOARDING",
+  // ON_BOARDING: "ON_BOARDING",
   TRANSFER: "TRANSFER",
 };
 
