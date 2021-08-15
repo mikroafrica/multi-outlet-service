@@ -1,29 +1,39 @@
 import restify from "restify-clients";
-import { get } from "./request.js";
+import { get, post } from "./request.js";
 
-const restifyRequest = function () {
-  const restifyClient = restify.createJSONClient({
+const restifyRequest = () => {
+  const client = restify.createJSONClient({
     url: process.env.APP_SERVICE_URL,
     version: "*",
   });
 
-  restifyClient.basicAuth(
+  client.basicAuth(
     process.env.APP_SERVICE_USERNAME,
     process.env.APP_SERVICE_PASSWORD
   );
-  return restifyClient;
+  return client;
 };
 
-export const locationState = () => {
+export const getStates = () => {
   const client = restifyRequest();
-  const path = "/location";
-
-  return get({ client, path });
+  return get({
+    client,
+    path: "/location",
+  });
 };
 
-export const locationLgaByState = (state) => {
+export const getLocalGovt = ({ state }) => {
   const client = restifyRequest();
-  const path = `/location/${state}`;
+  return get({
+    client,
+    path: `/location/${state}`,
+  });
+};
 
-  return get({ client, path });
+export const getRegion = ({ state }) => {
+  const client = restifyRequest();
+  return get({
+    client,
+    path: `/location/${state}/region`,
+  });
 };

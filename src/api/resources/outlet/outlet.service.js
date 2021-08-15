@@ -70,12 +70,19 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
 
   params = Object.assign(params, { registrationId });
 
-  const regionObject = getRegionAndZoneFromState(params.state);
+  const state = params.state;
+  const regionObject = await AppService.getRegion({ state });
+  const regionObjectData = regionObject.data.data;
   if (regionObject) {
-    params = Object.assign(params, regionObject);
+    params = Object.assign(params, {
+      zone: regionObjectData.zone,
+      region: regionObjectData.region,
+    });
   }
 
-  const zone = regionObject.zone;
+  console.log("params", params);
+
+  const zone = params.zone;
   const acquisitionOfficers = await ConsumerService.referralByZone();
   const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
 
@@ -137,12 +144,12 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
         `Outlet succesfully created with details ${JSON.stringify(outletData)}`
       );
 
-      // // Fetch the outlet data and get the walletId
+      // Fetch the outlet data and get the walletId.
+      // The user details has to be feched to have access to the user wallet
+      // becasue wallet and outlet creation happen asynchronously.
       const outletDetails = await ConsumerService.getUserDetails(userId);
       const outletDetailsData = outletDetails.data.data;
       const walletId = outletDetailsData.store[0].wallet[0].id;
-
-      // const walletId = outletData.data.store[0].wallet[0].id;
 
       const authServiceSignUpRequest = {
         username: params.phoneNumber,
