@@ -129,7 +129,7 @@ export const getUsers = async ({ userType, page, limit }) => {
         commissionStatus: owner.commissionStatus,
         userId: owner.userId,
         ownerId: owner._id,
-        created: owner.createdAt,
+        createdAt: owner.createdAt,
         updatedAt: owner.updatedAt,
         referralId: owner.referralId,
       };
