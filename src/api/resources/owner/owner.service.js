@@ -301,8 +301,10 @@ export const getUserTickets = async ({
       });
     }
 
-    const ownerId = existingOwner.id;
-    const userIdsList = await getUserIdsUnderOwnerById({ ownerId });
+    const ownerId = existingOwner.userId;
+    const userIdsList = await getUserIdsUnderOwnerById({
+      ownerId,
+    });
     if (userIdsList.length === 0) {
       return Promise.reject({
         statusCode: NOT_FOUND,
