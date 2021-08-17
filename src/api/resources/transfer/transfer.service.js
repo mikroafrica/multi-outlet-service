@@ -49,8 +49,6 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
       });
     }
 
-    // 0268886f-cd69-4b02-9e9d-a4e2efbb70bc
-
     const owner = await Owner.findOne({ userId: ownerId });
     const outlet = await Outlet.findOne({ userId: outletId });
 
