@@ -6,6 +6,8 @@ import {
   changePassword,
   requestResetPassword,
   resetPassword,
+  getLocation,
+  getLocalGovtByState,
 } from "./auth.service.js";
 
 export const signup = (req, res) => {
@@ -57,8 +59,9 @@ export const validateVerificationEmail = (req, res) => {
 
 export const resetPasswordRequest = (req, res) => {
   const params = req.body;
+  const isPartner = req.query;
 
-  requestResetPassword({ params })
+  requestResetPassword({ params, isPartner })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )
@@ -84,6 +87,27 @@ export const changePasswordRequest = (req, res) => {
   const params = req.body;
 
   changePassword({ params, ownerId })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getStates = (req, res) => {
+  getLocation()
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getLocalGovts = (req, res) => {
+  const state = req.params.state;
+  getLocalGovtByState({ state })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
     )

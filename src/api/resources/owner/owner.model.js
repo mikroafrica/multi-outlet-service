@@ -12,10 +12,6 @@ const schema = {
     default: UserType.OUTLET_OWNER,
     enum: [UserType.OUTLET_OWNER, UserType.PARTNER],
   },
-  approval: {
-    type: String,
-    enum: [Approval.APPROVED, Approval.PENDING],
-  },
   commissionStatus: {
     type: String,
     default: CommissionStatus.NONE,

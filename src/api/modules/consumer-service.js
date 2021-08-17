@@ -116,3 +116,17 @@ export const generateReferralCode = ({ accessCode, numberOfCodeGen }) => {
   const client = restifyRequest();
   return post({ client, path: "/referral/codegen", params });
 };
+
+export const fetchPersonalBankAccount = ({ userId }) => {
+  const client = restifyRequest();
+  return get({ client, path: `/user/${userId}/personal-account` });
+};
+
+export const personalBankAccountCreation = ({ userId, params }) => {
+  const client = restifyRequest();
+  return post({
+    client,
+    path: `/user/${userId}/personal-account`,
+    params,
+  });
+};
