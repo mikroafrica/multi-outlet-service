@@ -20,9 +20,6 @@ const expect = chai.expect;
 
 describe("Commission service Tests", function () {
   it("should create commission of rangeType non-range", async function () {
-    const ownerId = "5ff84b6929be4225a084874a";
-    const userId = "vhvuyi9";
-
     const params = {
       name: "TEST_COMMISSION",
       category: "POS_WITHDRAWAL",
@@ -54,9 +51,6 @@ describe("Commission service Tests", function () {
   });
 
   it("should fail to create commission if commission name already exist", async function () {
-    const ownerId = "5ff84b6929be4225a084874a";
-    const userId = "vhvuyi9";
-
     const params = {
       name: "TEST_COMMISSION",
       category: "POS_WITHDRAWAL",
@@ -83,9 +77,6 @@ describe("Commission service Tests", function () {
   });
 
   it("should create commission of rangeType range", async function () {
-    const ownerId = "5ff84b6929be4225a084874a";
-    const userId = "vhvuyi9";
-
     const params = {
       name: "sample_test",
       category: "TRANSFER",

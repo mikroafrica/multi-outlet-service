@@ -138,15 +138,11 @@ export const update = async ({ params, id }) => {
       });
     }
 
-    console.log("existingCommission", existingCommission);
-
     const updatedCommission = await Commission.findOneAndUpdate(
       { _id: id },
       { $set: params },
       { new: true }
     ).exec();
-
-    console.log("updatedCommission", updatedCommission);
 
     return Promise.resolve({
       statusCode: OK,
