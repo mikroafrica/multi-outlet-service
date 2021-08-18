@@ -124,6 +124,7 @@ export const getUsers = async ({ userType, page, limit }) => {
     });
 
     const filteredOwners = ownersDocs.docs;
+
     const userIdAndCommissionStatus = filteredOwners.map(function (owner) {
       return {
         commissionStatus: owner.commissionStatus,
@@ -138,6 +139,7 @@ export const getUsers = async ({ userType, page, limit }) => {
     const should = userIdAndCommissionStatus.map(function (data) {
       return { match: { userId: data.userId } };
     });
+
     const query = {
       index: ReportIndex.User,
       from: Math.max(page - 1, 0),
@@ -167,6 +169,7 @@ export const getUsers = async ({ userType, page, limit }) => {
 
     const queryResponse = await ReportService.search(query);
     const { data: queryResponseData } = queryResponse.data;
+
     const { list: userList, total } = handleListOfHits(queryResponseData);
 
     // get other details for users based on user id
@@ -181,6 +184,7 @@ export const getUsers = async ({ userType, page, limit }) => {
         ...user,
       };
     });
+
     return Promise.resolve({
       statusCode: OK,
       data: {
