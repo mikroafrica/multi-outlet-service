@@ -84,7 +84,7 @@ export const fetchTicketsForUsers = (req, res) => {
 
 export const generateAccessCode = (req, res) => {
   const userId = req.user.userId;
-  const numberOfCodeGen = req.body.numberOfCodeGen || 1;
+  const numberOfCodeGen = req.body ? req.body.numberOfCodeGen || 1 : 1;
 
   generateReferralCodeByOwner({ userId, numberOfCodeGen })
     .then(({ statusCode, data }) =>

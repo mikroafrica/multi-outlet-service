@@ -12,10 +12,12 @@ import {
   FORBIDDEN,
   OK,
   UN_AUTHORISED,
+  NOT_FOUND,
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
 import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
 import { OutletStatus } from "../../../src/api/resources/outlet/outlet.status";
+import * as ConsumerService from "../../../src/api/modules/consumer-service";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -602,20 +604,99 @@ describe("Owner service Tests", function () {
   });
 
   it("should fetch users when a valid usertype is supplied", async function () {
-    const usertype = "OUTLET_OWNER";
     const userType = "OUTLET_OWNER";
-    const filter = { userType: usertype };
+    const userId = "bhgykhcb1uy";
+    const filter = { userType };
     const page = 1;
     const limit = 2;
 
-    const findOwners = sinon
-      .stub(Owner, "paginate")
-      .resolves({ filter, page, limit });
+    const mockQueryResponse = {
+      data: {
+        hits: {
+          total: { value: 1, relation: "eq" },
+          max_score: null,
+          hits: [
+            {
+              _index: "mikro-user",
+              _score: null,
+              _source: {
+                userId: "bhgykhcb1uy",
+                firstName: "user",
+              },
+            },
+          ],
+        },
+      },
+    };
 
-    const response = await OwnerService.getUsers({ usertype, page, limit });
+    const should = [{ match: { userId: "78yiu1gb1hduy" } }];
+
+    const findOwners = sinon.stub(Owner, "paginate").resolves({
+      filter,
+      page,
+      limit,
+      docs: [
+        {
+          userType: "OUTLET_OWNER",
+          userId: "ufdgvu3y",
+          commissionStatus: "none",
+        },
+      ],
+    });
+
+    nock(process.env.REPORT_SERVICE_URL)
+      .post("/report/raw")
+      .reply(OK, mockQueryResponse);
+
+    const response = await OwnerService.getUsers({ userType, page, limit });
 
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
+
+    findOwners.restore();
+    sinon.assert.calledOnce(findOwners);
+  });
+
+  it("should fail to fetch users if owner does not exist.", async function () {
+    const userType = "OUTLET_OWNER";
+    const userId = "bhgykhcb1uy";
+    const filter = { userType };
+    const page = 1;
+    const limit = 2;
+
+    const mockQueryResponse = {
+      data: {
+        hits: {
+          total: { value: 1, relation: "eq" },
+          max_score: null,
+          hits: [
+            {
+              _index: "mikro-user",
+              _score: null,
+              _source: {
+                userId: "bhgykhcb1uy",
+                firstName: "user",
+              },
+            },
+          ],
+        },
+      },
+    };
+
+    const should = [{ match: { userId: "78yiu1gb1hduy" } }];
+
+    const findOwners = sinon.stub(Owner, "paginate").resolves(null);
+
+    nock(process.env.REPORT_SERVICE_URL)
+      .post("/report/raw")
+      .reply(OK, mockQueryResponse);
+
+    try {
+      await OwnerService.getUsers({ userType, page, limit });
+    } catch (err) {
+      expect(err.statusCode).equals(NOT_FOUND);
+      expect(err.message).to.exist;
+    }
 
     findOwners.restore();
     sinon.assert.calledOnce(findOwners);
