@@ -43,6 +43,7 @@ describe("Owner service Tests", function () {
   it("should transfer between two wallets", async function () {
     const params = {
       amount: 3000,
+      destination: "owner",
     };
 
     const mockTransferResponse = {
@@ -88,7 +89,6 @@ describe("Owner service Tests", function () {
       ownerId,
       outletId,
       params,
-      destination: "owner",
     });
     expect(response.statusCode).equals(OK);
     expect(response.data).to.exist;
@@ -106,6 +106,7 @@ describe("Owner service Tests", function () {
 
     const params = {
       amount: 100,
+      destination: "fakeDestination",
     };
 
     try {
@@ -113,17 +114,19 @@ describe("Owner service Tests", function () {
         ownerId,
         outletId,
         params,
-        destination: "RANDOM_OWNER",
       });
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
-      expect(err.message).to.equals("Please supply a valid destination");
+      expect(err.message).to.equals(
+        '"destination" must be one of [owner, outlet, bank]'
+      );
     }
   });
 
   it("should fail to transfer between two wallets if balance is not sufficient", async function () {
     const params = {
       amount: 1000,
+      destination: "owner",
     };
 
     const mockFailedTransferResponse = {
@@ -160,7 +163,6 @@ describe("Owner service Tests", function () {
         ownerId,
         outletId,
         params,
-        destination: "owner",
       });
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);
@@ -178,6 +180,7 @@ describe("Owner service Tests", function () {
     const params = {
       amount: 10,
       accountNumber: "21367894409",
+      destination: "bank",
       bankCode: "073",
       productCategory: "011",
       recipientBank: "bank",
@@ -231,7 +234,6 @@ describe("Owner service Tests", function () {
       ownerId,
       outletId,
       params,
-      destination: "bank",
     });
 
     expect(response.statusCode).equals(OK);
@@ -248,6 +250,7 @@ describe("Owner service Tests", function () {
     const params = {
       amount: 10000,
       accountNumber: "21367894409",
+      destination: "bank",
       bankCode: "073",
       productCategory: "011",
       recipientBank: "bank",
@@ -292,7 +295,6 @@ describe("Owner service Tests", function () {
         ownerId,
         outletId,
         params,
-        destination: "bank",
       });
     } catch (err) {
       expect(err.statusCode).equals(BAD_REQUEST);

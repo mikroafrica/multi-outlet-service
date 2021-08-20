@@ -8,7 +8,7 @@ import { Owner } from "../owner/owner.model";
 import { Outlet } from "../outlet/outlet.model";
 import { v4 as uuidv4 } from "uuid";
 
-export const transfer = async ({ ownerId, outletId, params, destination }) => {
+export const transfer = async ({ ownerId, outletId, params }) => {
   if (!params) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
@@ -18,6 +18,7 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
 
   const schema = Joi.object().keys({
     amount: Joi.number().required(),
+    destination: Joi.string().valid("owner", "outlet", "bank").required(),
     accountNumber: Joi.string(),
     bankCode: Joi.string(),
     productCategory: Joi.string(),
@@ -37,18 +38,6 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
   }
 
   try {
-    destination = destination.toLowerCase();
-    if (
-      destination !== "owner" &&
-      destination !== "outlet" &&
-      destination !== "bank"
-    ) {
-      return Promise.reject({
-        statusCode: BAD_REQUEST,
-        message: "Please supply a valid destination",
-      });
-    }
-
     const owner = await Owner.findOne({ userId: ownerId });
     const outlet = await Outlet.findOne({ userId: outletId });
 
@@ -58,7 +47,7 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
     const outletDetails = await ConsumerService.getUserDetails(outletId);
     const outletDetailsData = outletDetails.data.data;
 
-    if (destination === "owner") {
+    if (params.destination === "owner") {
       params.userWalletId = outlet.walletId;
       params.userId = outletId;
       params.recipientId = ownerId;
@@ -69,7 +58,7 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
       params.recipientName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
       params.transactionType = "P2P";
       params.destinationFcmToken = "";
-    } else if (destination === "outlet") {
+    } else if (params.destination === "outlet") {
       params.userWalletId = owner.walletId;
       params.userId = ownerId;
       params.recipientId = outletId;
@@ -81,7 +70,7 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
       params.recipientName = `${outletDetailsData.firstName} ${outletDetailsData.lastName}`;
       params.transactionType = "P2P";
       params.destinationFcmToken = outletDetailsData.fcmToken;
-    } else if (destination === "bank") {
+    } else if (params.destination === "bank") {
       params.product = "OTHERS";
       params.customerBillerId = params.accountNumber;
       params.recipientAddress = "";
@@ -103,8 +92,12 @@ export const transfer = async ({ ownerId, outletId, params, destination }) => {
     };
 
     logger.info(
-      `Transfer to ${destination} wallet request body ${JSON.stringify(params)}`
+      `Transfer to ${params.destination} wallet request body ${JSON.stringify(
+        params
+      )}`
     );
+
+    delete params.destination;
 
     const response = await TransactionService.creteTransaction(params);
     const responseData = response.data;
