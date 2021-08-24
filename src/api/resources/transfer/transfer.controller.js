@@ -7,10 +7,9 @@ import {
 
 export const transferToDestination = (req, res) => {
   const ownerId = req.user.userId;
-  const outletId = req.params.id;
   const params = req.body;
 
-  transfer({ ownerId, outletId, params })
+  transfer({ ownerId, params })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })

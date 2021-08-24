@@ -18,6 +18,7 @@ export const transfer = async ({ ownerId, outletId, params }) => {
 
   const schema = Joi.object().keys({
     amount: Joi.number().required(),
+    outletId: Joi.string(),
     destination: Joi.string().valid("owner", "outlet", "bank").required(),
     accountNumber: Joi.string(),
     bankCode: Joi.string(),
@@ -39,17 +40,19 @@ export const transfer = async ({ ownerId, outletId, params }) => {
 
   try {
     const owner = await Owner.findOne({ userId: ownerId });
-    const outlet = await Outlet.findOne({ userId: outletId });
-
     const ownerDetails = await ConsumerService.getUserDetails(ownerId);
     const ownerDetailsData = ownerDetails.data.data;
 
-    const outletDetails = await ConsumerService.getUserDetails(outletId);
-    const outletDetailsData = outletDetails.data.data;
+    let outlet, outletDetails, outletDetailsData;
+    if (params.destination !== "bank") {
+      outlet = await Outlet.findOne({ userId: params.outletId });
+      outletDetails = await ConsumerService.getUserDetails(params.outletId);
+      outletDetailsData = outletDetails.data.data;
+    }
 
     if (params.destination === "owner") {
       params.userWalletId = outlet.walletId;
-      params.userId = outletId;
+      params.userId = params.outletId;
       params.recipientId = ownerId;
       params.customerBillerId = owner.walletId;
       params.sourceName = `${outletDetailsData.businessName}`;
@@ -61,7 +64,7 @@ export const transfer = async ({ ownerId, outletId, params }) => {
     } else if (params.destination === "outlet") {
       params.userWalletId = owner.walletId;
       params.userId = ownerId;
-      params.recipientId = outletId;
+      params.recipientId = params.outletId;
       params.customerBillerId = outlet.walletId;
 
       params.sourceName = `${ownerDetailsData.firstName} ${ownerDetailsData.lastName}`;
