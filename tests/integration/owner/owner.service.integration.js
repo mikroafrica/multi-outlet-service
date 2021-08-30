@@ -13,6 +13,7 @@ import {
   OK,
   NOT_FOUND,
   UN_AUTHORISED,
+  NOT_FOUND,
 } from "../../../src/api/modules/status";
 import { TempOwner } from "../../../src/api/resources/owner/temp.owner.model";
 import { Outlet } from "../../../src/api/resources/outlet/outlet.model";
