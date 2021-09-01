@@ -4,7 +4,7 @@ import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
-import * as AppService from "../../modules/app-service";
+// import * as AppService from "../../modules/app-service";
 import { Outlet } from "./outlet.model.js";
 import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
@@ -70,18 +70,6 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
 
   params = Object.assign(params, { registrationId });
 
-  // const state = params.state;
-  // const regionObject = await AppService.getRegion({ state });
-  // const regionObjectData = regionObject.data.data;
-  // if (regionObject) {
-  //   params = Object.assign(params, {
-  //     zone: regionObjectData.zone,
-  //     region: regionObjectData.region,
-  //   });
-  // }
-
-  console.log("params", params);
-
   const zone = params.zone;
   const acquisitionOfficers = await ConsumerService.referralByZone();
   const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
@@ -90,6 +78,8 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     acquisitionOfficersByZones,
     zone,
   });
+
+  console.log("referralObject", referralObject);
 
   const accessCode = referralObject.accessCode;
   const request = {
@@ -120,8 +110,6 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     gender,
     outletCount,
   } = userDetailsData;
-
-  // const dob = dateOfBirth.replace("West Africa Standard Time", "GMT+01:00");
 
   params = Object.assign(params, {
     registrationId,
@@ -157,11 +145,26 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
       };
 
       try {
+        //  Sign up outlet on auth service
         const responseAuthData = await AuthService.signup(
           authServiceSignUpRequest
         );
         const createUserAuthData = responseAuthData.data;
         const accessToken = createUserAuthData.data.token;
+
+        //  Verify if outlet already exists to prevent linking the same outlet more than once
+        const existingOutlet = await Outlet.findOne({
+          userId,
+          ownerId,
+        });
+        logger.info(`Linking ${JSON.stringify(userId)}`);
+
+        if (existingOutlet) {
+          return Promise.reject({
+            statusCode: BAD_REQUEST,
+            message: "Outlet has been added previously",
+          });
+        }
 
         // Link outlet to owner
         const newOutletMapping = await saveNewOutletMapping({
@@ -203,7 +206,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
 const mapAcquisitionOfficerToUser = ({ acquisitionOfficersByZones, zone }) => {
   let referralObject;
   for (let i = 0; i < acquisitionOfficersByZones.length; i++) {
-    if (acquisitionOfficersByZones[i].zone === zone) {
+    if (acquisitionOfficersByZones[i].referral.zone === zone) {
       referralObject = acquisitionOfficersByZones[i].referral;
     }
   }
@@ -221,6 +224,7 @@ const validateOutletCreationParams = ({ params }) => {
     email: Joi.string().email(),
     pin: Joi.string().required().length(4),
     lga: Joi.string().required(),
+    zone: Joi.string().required(),
     userType: Joi.string().required(),
     merchantCategory: Joi.string(),
   });
