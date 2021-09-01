@@ -70,15 +70,15 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
 
   params = Object.assign(params, { registrationId });
 
-  const state = params.state;
-  const regionObject = await AppService.getRegion({ state });
-  const regionObjectData = regionObject.data.data;
-  if (regionObject) {
-    params = Object.assign(params, {
-      zone: regionObjectData.zone,
-      region: regionObjectData.region,
-    });
-  }
+  // const state = params.state;
+  // const regionObject = await AppService.getRegion({ state });
+  // const regionObjectData = regionObject.data.data;
+  // if (regionObject) {
+  //   params = Object.assign(params, {
+  //     zone: regionObjectData.zone,
+  //     region: regionObjectData.region,
+  //   });
+  // }
 
   console.log("params", params);
 
@@ -117,17 +117,15 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     firstName,
     lastName,
     profileImageId,
-    dateOfBirth,
     gender,
     outletCount,
   } = userDetailsData;
 
-  const dob = dateOfBirth.replace("West Africa Standard Time", "GMT+01:00");
+  // const dob = dateOfBirth.replace("West Africa Standard Time", "GMT+01:00");
 
   params = Object.assign(params, {
     registrationId,
     referredCodeId,
-    dob,
     firstName,
     lastName,
     gender,
@@ -217,6 +215,7 @@ const validateOutletCreationParams = ({ params }) => {
     phoneNumber: Joi.string().required(),
     businessName: Joi.string().required(),
     address: Joi.string().required(),
+    dob: Joi.string().required(),
     country: Joi.string().required(),
     state: Joi.string().required(),
     email: Joi.string().email(),
