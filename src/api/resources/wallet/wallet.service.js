@@ -125,7 +125,10 @@ export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
       dateTo: Date.now(),
     };
 
-    console.log("params", params);
+    logger.info(
+      `Fetch wallet transactions request body [${JSON.stringify(params)}]`
+    );
+
     const responseData = await walletTransactionsById(params);
     const walletTransactions = responseData.data.list;
 
@@ -143,7 +146,7 @@ export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
     });
   } catch (e) {
     logger.error(
-      `Error occurred while computing wallet transaction summary by id ${walletId} with error ${JSON.stringify(
+      `Error occurred while fetching wallet transaction summary ${walletId} with error ${JSON.stringify(
         e
       )}`
     );
@@ -199,9 +202,5 @@ const calculateTransactionSummary = (dateFrom, dateTo, walletTransactions) => {
     walletTransactions
   );
 
-  console.log(
-    "transactionSummaryForFirstSixMonth",
-    transactionSummaryForFirstSixMonth
-  );
   return transactionSummaryForFirstSixMonth;
 };
