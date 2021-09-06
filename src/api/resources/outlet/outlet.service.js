@@ -4,7 +4,7 @@ import * as AuthService from "../../modules/auth-service.js";
 import * as ConsumerService from "../../modules/consumer-service.js";
 import * as TransactionService from "../../modules/transaction-service.js";
 import * as WalletService from "../../modules/wallet-service";
-// import * as AppService from "../../modules/app-service";
+import * as AppService from "../../modules/app-service";
 import { Outlet } from "./outlet.model.js";
 import { Owner } from "../owner/owner.model.js";
 import { BAD_REQUEST, NOT_FOUND, OK } from "../../modules/status.js";
@@ -79,7 +79,11 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     zone,
   });
 
-  console.log("referralObject", referralObject);
+  logger.info(
+    `Referral object of the acquisition officer generating referral code for outlet registration: ${JSON.stringify(
+      referralObject
+    )}`
+  );
 
   const accessCode = referralObject.accessCode;
   const request = {
@@ -157,6 +161,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
           userId,
           ownerId,
         });
+
         logger.info(`Linking ${JSON.stringify(userId)}`);
 
         if (existingOutlet) {
@@ -381,7 +386,6 @@ export const linkOutletWithoutVerification = async ({ params, ownerId }) => {
   try {
     // Retrieve outlet's dtails from consumer service
     const userDetails = await ConsumerService.getUserDetails(params.outletId);
-    //
     const userDetailsData = userDetails.data;
     const userData = userDetailsData.data;
     const outletUserId = userData.id;

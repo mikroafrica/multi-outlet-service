@@ -9,7 +9,7 @@ const wallet = ({ server, subBase }) => {
   server.get(`${subBase}/:userId`, getWallet);
   server.get(`${subBase}/:id/summary`, getWalletSummary);
   server.get(`${subBase}/:id/transactions`, getWalletTransactions);
-  server.get(`${subBase}/:id/income-summary`, getIncomeSummary);
+  server.get(`${subBase}/summary`, getIncomeSummary);
 };
 
 export default wallet;

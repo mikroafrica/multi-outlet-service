@@ -6,8 +6,7 @@ import {
 } from "./wallet.service.js";
 
 export const getWallet = (req, res) => {
-  // const ownerId = req.user.userId;
-  const ownerId = req.params.userId;
+  const ownerId = req.user.userId;
 
   walletById({ ownerId })
     .then(({ statusCode, data }) =>
@@ -61,10 +60,10 @@ export const getWalletTransactions = (req, res) => {
 };
 
 export const getIncomeSummary = (req, res) => {
-  const walletId = req.params.id;
+  const ownerId = req.user.userId;
 
   getIncomeAndExpenseSummaryForAdmin({
-    walletId,
+    ownerId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
