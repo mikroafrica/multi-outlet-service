@@ -89,6 +89,7 @@ const allowPublicRoutes = (req) => {
   const routes = [
     "login",
     "signup",
+    "location",
     "reset-password",
     "email-validation",
     "email-verification",

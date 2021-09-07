@@ -8,17 +8,13 @@ import { Owner } from "./owner.model";
 import { CommissionStatus, UserType } from "./user.type";
 import { Outlet } from "../outlet/outlet.model";
 import { fetchOutletDetails } from "../outlet/outlet.service";
-import async from "async";
 import { OwnerCommission } from "../commission/owner.commission.model";
 import { generateReferralCode } from "../../modules/consumer-service";
-import {
-  buildAggregation,
-  ReportIndex,
-  search,
-} from "../../modules/report-service";
+import { ReportIndex, search } from "../../modules/report-service";
 import { handleListOfHits } from "../../modules/util";
 import { BusinessType, BusinessTypeStatus } from "./business.type";
 import { Commission } from "../commission/commission.model";
+import * as ReportService from "../../modules/report-service";
 
 export const getUser = async ({ ownerId }) => {
   try {
@@ -127,57 +123,86 @@ export const getUsers = async ({ userType, page, limit }) => {
       sort: { createdAt: -1 },
     });
 
-    const outletDetails = await fetchOutletDetails(ownersDocs.docs);
+    const filteredOwners = ownersDocs.docs;
 
-    let ownerDetails = [];
-    let owners = ownersDocs.docs;
-    for (let i = 0; i < outletDetails.length; i++) {
-      for (let j = 0; j < owners.length; j++) {
-        const owner = owners[i];
-        if (owner.userId === (outletDetails[j] ? outletDetails[j].id : null)) {
-          const firstName = outletDetails[j].firstName;
-          const lastName = outletDetails[j].lastName;
-          const email = outletDetails[j].email;
-          const businessType = outletDetails[j].businessType;
+    const userIdAndCommissionStatus = filteredOwners.map(function (owner) {
+      return {
+        commissionStatus: owner.commissionStatus,
+        userId: owner.userId,
+        ownerId: owner._id,
+        createdAt: owner.createdAt,
+        updatedAt: owner.updatedAt,
+        referralId: owner.referralId,
+      };
+    });
 
-          const {
-            id: ownerId,
-            phoneNumber,
-            createdAt,
-            updatedAt,
-            referralId,
-            commissionStatus = CommissionStatus.NONE,
-          } = owner;
-          const details = {
-            ownerId,
-            phoneNumber,
-            createdAt,
-            updatedAt,
-            firstName,
-            lastName,
-            email,
-            referralId,
-            commissionStatus,
-            businessType,
-          };
-          ownerDetails.push(details);
-        }
-      }
-    }
+    const should = userIdAndCommissionStatus.map(function (data) {
+      return { match: { userId: data.userId } };
+    });
+
+    const query = {
+      index: ReportIndex.User,
+      from: Math.max(page - 1, 0),
+      size: limit,
+      _source: [
+        "userId",
+        "email",
+        "personalPhoneNumber",
+        "firstName",
+        "lastName",
+      ],
+      body: {
+        query: {
+          bool: {
+            must: {
+              bool: {
+                should: should,
+              },
+            },
+          },
+        },
+        sort: {
+          timeCreated: { order: "desc" },
+        },
+      },
+    };
+
+    const queryResponse = await ReportService.search(query);
+    const { data: queryResponseData } = queryResponse.data;
+
+    const { list: userList, total } = handleListOfHits(queryResponseData);
+
+    // get other details for users based on user id
+    const ownerFullDetails = userList.map(function (user) {
+      const _foundUser = userIdAndCommissionStatus.find(
+        (_user) => _user.userId === user.userId
+      );
+      user.phoneNumber = user.personalPhoneNumber;
+      delete user.personalPhoneNumber;
+      return {
+        ..._foundUser,
+        ...user,
+      };
+    });
 
     return Promise.resolve({
       statusCode: OK,
       data: {
-        page: owners.page,
-        total: owners.total,
-        list: ownerDetails,
+        limit,
+        total: ownersDocs.total,
+        list: ownerFullDetails,
       },
     });
   } catch (e) {
     console.error(e);
+    logger.error(
+      `::: failed to fetch owners with outlets with error [${JSON.stringify(
+        e
+      )}] ::: `
+    );
     return Promise.reject({
-      statusCode: BAD_REQUEST,
-      message: "Could not fetch users by type. Please try again",
+      statusCode: NOT_FOUND,
+      message: "Could not fetch users",
     });
   }
 };
@@ -226,8 +251,6 @@ export const getOwnerWithOutlets = async ({ ownerId, page, limit }) => {
       existingOwner.userType === UserType.OUTLET_OWNER
         ? outlets
         : outlets.data.data.list.list;
-
-    console.log(outletList);
 
     const userList = outletList.map((user) => {
       const { firstName, lastName, email, phoneNumber, status, id } = user;
@@ -301,8 +324,10 @@ export const getUserTickets = async ({
       });
     }
 
-    const ownerId = existingOwner.id;
-    const userIdsList = await getUserIdsUnderOwnerById({ ownerId });
+    const ownerId = existingOwner.userId;
+    const userIdsList = await getUserIdsUnderOwnerById({
+      ownerId,
+    });
     if (userIdsList.length === 0) {
       return Promise.reject({
         statusCode: NOT_FOUND,
