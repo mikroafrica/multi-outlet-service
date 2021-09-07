@@ -112,29 +112,25 @@ export const walletTransactionsById = async ({
 
 export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
   try {
-    const userDetails = await ConsumerService.getUserDetails(ownerId);
-    const userDetailsData = userDetails.data;
-    const userData = userDetailsData.data;
-    const walletId = userData.store[0].wallet[0].id;
+    const owner = await Owner.findOne({ userId: ownerId });
+    const walletId = owner.walletId;
 
-    logger.info(`Fetching user detils as [${JSON.stringify(userDetails)}]`);
+    logger.info(`Fetching owner detils as [${JSON.stringify(owner)}]`);
 
     const params = {
       walletId,
       dateFrom: Date.now() - 15552000000,
       dateTo: Date.now(),
     };
-
     logger.info(
       `Fetch wallet transactions request body [${JSON.stringify(params)}]`
     );
-
     const responseData = await walletTransactionsById(params);
     const walletTransactions = responseData.data.list;
-
     const dateFrom = params.dateFrom;
     const dateTo = params.dateFrom + 2592000000;
-    const transactionSummaryForFirstSixMonth = calculateTransactionSummary(
+
+    const incomeAndExpenseSummary = calculateTransactionSummary(
       dateFrom,
       dateTo,
       walletTransactions
@@ -142,11 +138,18 @@ export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
 
     return Promise.resolve({
       statusCode: OK,
-      data: transactionSummaryForFirstSixMonth,
+      data: {
+        firstMonthSummary: incomeAndExpenseSummary[0],
+        secondMonthSummary: incomeAndExpenseSummary[1],
+        thirdMonthSummary: incomeAndExpenseSummary[2],
+        fourthMonthSummary: incomeAndExpenseSummary[3],
+        fifthMonthSummary: incomeAndExpenseSummary[4],
+        sixthMonthSummary: incomeAndExpenseSummary[5],
+      },
     });
   } catch (e) {
     logger.error(
-      `Error occurred while fetching wallet transaction summary ${walletId} with error ${JSON.stringify(
+      `Error occurred while fetching wallet transaction summary with error ${JSON.stringify(
         e
       )}`
     );
@@ -159,48 +162,52 @@ export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
 };
 
 const calculateTransactionSummary = (dateFrom, dateTo, walletTransactions) => {
-  let transactionSummaryForFirstSixMonth = {};
+  let monthlyTransactionSummary = {};
+  let incomeAndExpenseSummary = [];
+  let summary;
   const startOfTransaction = dateFrom;
   const endOfTransaction = dateFrom + 2592000000;
 
-  if (endOfTransaction >= Date.now()) return;
+  if (endOfTransaction >= Date.now()) {
+    return;
+  } else {
+    const filteredTransactions = walletTransactions.filter(
+      (transaction) =>
+        transaction.timeCreated >= startOfTransaction &&
+        transaction.timeCreated < endOfTransaction
+    );
 
-  const filteredTransactions = walletTransactions.filter(
-    (transaction) =>
-      transaction.timeCreated >= startOfTransaction &&
-      transaction.timeCreated < endOfTransaction
-  );
+    const totalCreditTransactions = filteredTransactions.reduce(
+      (acc, transaction) => {
+        if (transaction.transactionType === "CREDIT") {
+          return acc + transaction.amount;
+        }
+        return acc;
+      },
+      0
+    );
 
-  const totalCreditTransactions = filteredTransactions.reduce(
-    (acc, transaction) => {
-      if (transaction.transactionType === "CREDIT") {
-        return acc + transaction.amount;
-      }
-      return acc;
-    },
-    0
-  );
+    const totalDebitTransactions = filteredTransactions.reduce(
+      (acc, transaction) => {
+        if (transaction.transactionType === "DEBIT") {
+          return acc + transaction.amount;
+        }
+        return acc;
+      },
+      0
+    );
 
-  const totalDebitTransactions = filteredTransactions.reduce(
-    (acc, transaction) => {
-      if (transaction.transactionType === "DEBIT") {
-        return acc + transaction.amount;
-      }
-      return acc;
-    },
-    0
-  );
+    let credit, debit;
+    monthlyTransactionSummary.credit = totalCreditTransactions;
+    monthlyTransactionSummary.debit = totalDebitTransactions;
 
-  let monthlyCredit;
-  let monthlyDebit;
-  transactionSummaryForFirstSixMonth.monthlyCredit = totalCreditTransactions;
-  transactionSummaryForFirstSixMonth.monthlyDebit = totalDebitTransactions;
+    incomeAndExpenseSummary.push(monthlyTransactionSummary);
 
-  calculateTransactionSummary(
-    startOfTransaction + 2592000000,
-    endOfFirstMonth + 2592000000,
-    walletTransactions
-  );
-
-  return transactionSummaryForFirstSixMonth;
+    calculateTransactionSummary(
+      startOfTransaction + 2592000000,
+      endOfTransaction + 2592000000,
+      walletTransactions
+    );
+  }
+  return incomeAndExpenseSummary;
 };
