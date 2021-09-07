@@ -203,10 +203,12 @@ const calculateTransactionSummary = (dateFrom, dateTo, walletTransactions) => {
 
     incomeAndExpenseSummary.push(monthlyTransactionSummary);
 
-    calculateTransactionSummary(
-      startOfTransaction + 2592000000,
-      endOfTransaction + 2592000000,
-      walletTransactions
+    incomeAndExpenseSummary = incomeAndExpenseSummary.concat(
+      calculateTransactionSummary(
+        startOfTransaction + 2592000000,
+        endOfTransaction + 2592000000,
+        walletTransactions
+      )
     );
   }
   return incomeAndExpenseSummary;
