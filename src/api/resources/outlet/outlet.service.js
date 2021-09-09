@@ -79,6 +79,13 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
     zone,
   });
 
+  if (!referralObject) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Acquisition officer is not available for the selected zone.",
+    });
+  }
+
   logger.info(
     `Referral object of the acquisition officer generating referral code for outlet registration: ${JSON.stringify(
       referralObject
@@ -167,7 +174,7 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
         if (existingOutlet) {
           return Promise.reject({
             statusCode: BAD_REQUEST,
-            message: "Outlet has been added previously",
+            message: "Outlet has been previously linked.",
           });
         }
 
