@@ -70,6 +70,15 @@ export const createNewOutlet = async ({ params, ownerId, registrationId }) => {
 
   params = Object.assign(params, { registrationId });
 
+  const canRegister = isAllowedToRegister(params.dob);
+
+  if (!canRegister) {
+    return Promise.reject({
+      statusCode: BAD_REQUEST,
+      message: "Cannot register outlets below the age of 18.",
+    });
+  }
+
   const zone = params.zone;
   const acquisitionOfficers = await ConsumerService.referralByZone();
   const acquisitionOfficersByZones = acquisitionOfficers.data.data.zones;
@@ -223,6 +232,16 @@ const mapAcquisitionOfficerToUser = ({ acquisitionOfficersByZones, zone }) => {
     }
   }
   return referralObject;
+};
+
+const isAllowedToRegister = (dob) => {
+  const currentDate = new Date().toISOString();
+  const currentYear = currentDate.split("-")[0];
+
+  const dateOfBirth = dob.split(" ");
+  const yearOfBirth = dateOfBirth[dateOfBirth.length - 1];
+  if (parseInt(currentYear) - parseInt(yearOfBirth) < 18) return false;
+  return true;
 };
 
 const validateOutletCreationParams = ({ params }) => {

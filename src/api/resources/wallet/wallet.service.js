@@ -117,34 +117,20 @@ export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
 
     logger.info(`Fetching owner detils as [${JSON.stringify(owner)}]`);
 
-    const params = {
-      walletId,
-      dateFrom: Date.now() - 15552000000,
-      dateTo: Date.now(),
-    };
-    logger.info(
-      `Fetch wallet transactions request body [${JSON.stringify(params)}]`
-    );
-    const responseData = await walletTransactionsById(params);
-    const walletTransactions = responseData.data.list;
-    const dateFrom = params.dateFrom;
-    const dateTo = params.dateFrom + 2592000000;
+    const dateFrom = Date.now() - 15552000000;
+    const dateTo = dateFrom + 2592000000;
 
-    const incomeAndExpenseSummary = calculateTransactionSummary(
-      dateFrom,
-      dateTo,
-      walletTransactions
-    );
+    const summary = await getTransactionSummary(walletId, dateFrom, dateTo);
 
     return Promise.resolve({
       statusCode: OK,
       data: {
-        firstMonthSummary: incomeAndExpenseSummary[0],
-        secondMonthSummary: incomeAndExpenseSummary[1],
-        thirdMonthSummary: incomeAndExpenseSummary[2],
-        fourthMonthSummary: incomeAndExpenseSummary[3],
-        fifthMonthSummary: incomeAndExpenseSummary[4],
-        sixthMonthSummary: incomeAndExpenseSummary[5],
+        firstMonthSummary: summary[0],
+        secondMonthSummary: summary[1],
+        thirdMonthSummary: summary[2],
+        fourthMonthSummary: summary[3],
+        fifthMonthSummary: summary[4],
+        sixthMonthSummary: summary[5],
       },
     });
   } catch (e) {
@@ -161,55 +147,54 @@ export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
   }
 };
 
-const calculateTransactionSummary = (dateFrom, dateTo, walletTransactions) => {
+const getTransactionSummary = async (walletId, dateFrom, dateTo) => {
   let monthlyTransactionSummary = {};
   let incomeAndExpenseSummary = [];
-  let summary;
-  const startOfTransaction = dateFrom;
-  const endOfTransaction = dateFrom + 2592000000;
 
-  if (endOfTransaction >= Date.now()) {
-    return;
-  } else {
-    const filteredTransactions = walletTransactions.filter(
-      (transaction) =>
-        transaction.timeCreated >= startOfTransaction &&
-        transaction.timeCreated < endOfTransaction
-    );
+  const params = transactionParams(walletId, dateFrom, dateTo);
 
-    const totalCreditTransactions = filteredTransactions.reduce(
-      (acc, transaction) => {
-        if (transaction.transactionType === "CREDIT") {
-          return acc + transaction.amount;
-        }
-        return acc;
-      },
-      0
-    );
+  let credit, debit;
+  for (let param of params) {
+    try {
+      const responseData = await WalletService.fetchWalletSummaryById(param);
+      const walletTransactions = responseData.data.data;
 
-    const totalDebitTransactions = filteredTransactions.reduce(
-      (acc, transaction) => {
-        if (transaction.transactionType === "DEBIT") {
-          return acc + transaction.amount;
-        }
-        return acc;
-      },
-      0
-    );
+      monthlyTransactionSummary.credit = walletTransactions.totalCredit;
+      monthlyTransactionSummary.debit = walletTransactions.totalDebit;
 
-    let credit, debit;
-    monthlyTransactionSummary.credit = totalCreditTransactions;
-    monthlyTransactionSummary.debit = totalDebitTransactions;
-
-    incomeAndExpenseSummary.push(monthlyTransactionSummary);
-
-    incomeAndExpenseSummary = incomeAndExpenseSummary.concat(
-      calculateTransactionSummary(
-        startOfTransaction + 2592000000,
-        endOfTransaction + 2592000000,
-        walletTransactions
-      )
-    );
+      incomeAndExpenseSummary.push({ ...monthlyTransactionSummary });
+    } catch (err) {
+      logger.error(
+        `Error occurred while fetching wallet transaction summary with error ${JSON.stringify(
+          err
+        )}`
+      );
+    }
   }
-  return incomeAndExpenseSummary;
+
+  return Promise.resolve(incomeAndExpenseSummary);
+};
+
+const transactionParams = (walletId, dateFrom, dateTo) => {
+  const params = [
+    { walletId, dateFrom, dateTo },
+    { walletId, dateFrom: dateFrom + 2592000000, dateTo: dateTo + 2592000000 },
+    { walletId, dateFrom: dateFrom + 5184000000, dateTo: dateTo + 5184000000 },
+    {
+      walletId,
+      dateFrom: dateFrom + 10368000000,
+      dateTo: dateTo + 10368000000,
+    },
+    {
+      walletId,
+      dateFrom: dateFrom + 12960000000,
+      dateTo: dateTo + 12960000000,
+    },
+    {
+      walletId,
+      dateFrom: dateFrom + 15552000000,
+      dateTo: dateTo + 15552000000,
+    },
+  ];
+  return params;
 };
