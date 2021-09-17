@@ -418,4 +418,66 @@ describe("Outlet service Tests", function () {
     findOneOutlet.restore();
     sinon.assert.calledOnce(findOneOutlet);
   });
+
+  it("should create a temporary user when a valid phone number is supplied", async function () {
+    const phoneNumber = "02678346125";
+    const mockTempUserCreationResponse = {
+      status: true,
+      data: {
+        registrationId: "26c6f0b4-f21b-409a-846f",
+        expirationTimeInMilliSecs: 179123,
+      },
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .post(`/user/${phoneNumber}/create`)
+      .reply(OK, mockTempUserCreationResponse);
+
+    const response = await OutletService.createTempUser(phoneNumber);
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+  });
+
+  it("should validate otp code for temporary user.", async function () {
+    const registrationId = "26c6f0b4-f21b-409a-846f";
+    const otpCode = "256734";
+    // const params = { registrationId: "26c6f0b4-f21b-409a-846f" };
+    const mockOtpValidationResponse = {
+      status: true,
+      data: {
+        registrationId: "26c6f0b4-f21b-409a-846f",
+        expirationTimeInMilliSecs: null,
+      },
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .put(`/user/${otpCode}/${registrationId}/validate`)
+      .reply(OK, mockOtpValidationResponse);
+
+    const response = await OutletService.otpValidation(registrationId, otpCode);
+
+    expect(response.statusCode).equals(OK);
+    expect(response.data).to.exist;
+  });
+
+  it("should fail to vaidate otp code if registration Id is not supplied", async function () {
+    const registrationId = null;
+    const otpCode = "256734";
+
+    const mockOtpValidationResponse = {
+      status: false,
+    };
+
+    nock(process.env.CONSUMER_SERVICE_URL)
+      .put(`/user/${otpCode}/${registrationId}/validate`)
+      .reply(BAD_REQUEST, mockOtpValidationResponse);
+
+    try {
+      await OutletService.otpValidation(registrationId, otpCode);
+    } catch (err) {
+      expect(err.statusCode).equals(BAD_REQUEST);
+      expect(err.message).to.equals("Registration id is required.");
+    }
+  });
 });

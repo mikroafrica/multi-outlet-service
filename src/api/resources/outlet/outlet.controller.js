@@ -1,4 +1,7 @@
 import {
+  createTempUser,
+  createNewOutlet,
+  otpValidation,
   linkOwnerToOutlet,
   linkOutletWithoutVerification,
   verifyOutletLinking,
@@ -7,6 +10,45 @@ import {
   switchOutletSuspendedStatus,
   getOutletByUserId,
 } from "./outlet.service";
+
+export const tempUserCreation = (req, res) => {
+  const phoneNumber = req.query.phoneNumber;
+
+  createTempUser(phoneNumber)
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const createOutlet = (req, res) => {
+  const params = req.body;
+  const ownerId = req.user.userId;
+  const registrationId = req.params.registrationId;
+
+  createNewOutlet({ params, ownerId, registrationId })
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch(({ statusCode, message }) => {
+      res.send(statusCode, { status: false, message });
+    });
+};
+
+export const validateOTP = (req, res) => {
+  const registrationId = req.params.registrationId;
+  const otpCode = req.body.otpCode;
+
+  otpValidation(registrationId, otpCode)
+    .then(({ statusCode, data }) => {
+      res.send(statusCode, { status: true, data });
+    })
+    .catch((e) => {
+      res.send(e.statusCode, { status: false, message: e.message });
+    });
+};
 
 export const linkOutlet = (req, res) => {
   const params = req.body;

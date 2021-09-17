@@ -1,4 +1,7 @@
 import {
+  tempUserCreation,
+  createOutlet,
+  validateOTP,
   linkOutlet,
   linkOutletToOwner,
   unlinkOutlet,
@@ -10,6 +13,9 @@ import {
 } from "./outlet.controller";
 
 const outlet = ({ server, subBase }) => {
+  server.post(`${subBase}/verify-phone`, tempUserCreation);
+  server.post(`${subBase}/:registrationId/create`, createOutlet);
+  server.put(`${subBase}/:registrationId/validate`, validateOTP);
   server.post(`${subBase}/link`, linkOutlet);
   server.post(`${subBase}/link-outlet/:id`, linkOutletToOwner);
   server.post(`${subBase}/verify`, verifyLinkedOutlet);
