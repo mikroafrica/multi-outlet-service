@@ -60,10 +60,10 @@ export const getWalletTransactions = (req, res) => {
 };
 
 export const getIncomeSummary = (req, res) => {
-  const ownerId = req.user.userId;
+  const userId = req.user.userId;
 
   getIncomeAndExpenseSummaryForAdmin({
-    ownerId,
+    userId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })

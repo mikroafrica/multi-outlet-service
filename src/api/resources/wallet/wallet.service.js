@@ -110,9 +110,9 @@ export const walletTransactionsById = async ({
     });
 };
 
-export const getIncomeAndExpenseSummaryForAdmin = async ({ ownerId }) => {
+export const getIncomeAndExpenseSummaryForAdmin = async ({ userId }) => {
   try {
-    const owner = await Owner.findOne({ userId: ownerId });
+    const owner = await Owner.findOne({ userId });
     const walletId = owner.walletId;
 
     logger.info(`Fetching owner detils as [${JSON.stringify(owner)}]`);
