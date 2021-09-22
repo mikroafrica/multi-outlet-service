@@ -118,3 +118,9 @@ export const creteTransaction = async (params) => {
   const path = `/transactions/create`;
   return post({ client, path, params });
 };
+
+export const fetchServiceFee = (params, type) => {
+  const client = restifyRequest();
+  const path = `/transactions/${type}/fee`;
+  return post({ client, path, params });
+};

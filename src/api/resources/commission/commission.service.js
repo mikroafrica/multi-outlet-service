@@ -151,7 +151,7 @@ export const update = async ({ params, id }) => {
   } catch (e) {
     return Promise.reject({
       statusCode: BAD_REQUEST,
-      message: "Failed to fetch resource. Kindly try again",
+      message: "Failed to update commission. Kindly try again",
     });
   }
 };

@@ -2,6 +2,7 @@ import {
   walletTransactionsById,
   walletSummaryById,
   walletById,
+  getIncomeAndExpenseSummaryForAdmin,
 } from "./wallet.service.js";
 
 export const getWallet = (req, res) => {
@@ -49,6 +50,20 @@ export const getWalletTransactions = (req, res) => {
     transactionCategory,
     transactionType,
     walletId,
+  })
+    .then(({ statusCode, data }) =>
+      res.send(statusCode, { status: true, data })
+    )
+    .catch(({ statusCode, message }) =>
+      res.send(statusCode, { status: false, message })
+    );
+};
+
+export const getIncomeSummary = (req, res) => {
+  const userId = req.user.userId;
+
+  getIncomeAndExpenseSummaryForAdmin({
+    userId,
   })
     .then(({ statusCode, data }) =>
       res.send(statusCode, { status: true, data })
